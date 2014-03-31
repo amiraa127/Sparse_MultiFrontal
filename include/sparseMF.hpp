@@ -1,7 +1,6 @@
 #ifndef SPARSE_MF_HPP
 #define SPARSE_MF_HPP
 
-#include <Eigen/Sparse>                  
 #include <string>                        
 #include "scotch.h"                      
 #include <fstream>                       
@@ -29,7 +28,7 @@ public:
   void LU_compute();
   Eigen::MatrixXd LU_ExactSolve(const Eigen::MatrixXd & inputRHS);
   Eigen::MatrixXd fastSolve(const Eigen::MatrixXd & inputRHS);
-  
+ 
 private:
   Eigen::SparseMatrix<double> reorderedMatrix;
   Eigen::SparseMatrix<double> L_Matrix;
@@ -49,7 +48,7 @@ private:
   std::string fast_LR_Method;
   
 
-  bool factorized;
+  bool LU_Factorized;
   bool fast_Factorized;
 
   double matrixReorderingTime;
@@ -61,7 +60,13 @@ private:
   double fast_TotalTime;
   double fast_ExtendAddTime;
   double fast_SymbolicFactorTime;
-  
+
+  double LU_FactorizationTime;
+  double LU_SolveTime;
+  double LU_TotalTime;
+  double LU_ExtendAddTime;
+  double LU_SymbolicFactorTime;
+  double LU_AssemblyTime;
   /*************************************Graph Related Functions*******************************/
   Eigen::SparseMatrix<double> reorderMatrix(Eigen::SparseMatrix<double> & inputSpMatrix);
 

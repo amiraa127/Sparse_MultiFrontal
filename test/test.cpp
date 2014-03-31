@@ -14,7 +14,7 @@
 
 int main(int argc, char* argv[]){
   std::cout<<"Reading sparse matrix...."<<std::endl;
-  Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("/home/amir/Documents/solvers/Sparse_MultiFrontal/test/data/input_FETI/localmat0.100k");
+  Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/localmat0.100k");
   std::cout<<"Sparse matrix read successfully."<<std::endl; 
  
   std::cout<<"Solving..."<<std::endl;
@@ -23,10 +23,10 @@ int main(int argc, char* argv[]){
  
   sparseMF solver(inputSpMatrix);
   solver.printResultInfo = true;
-  solver.testResults = true;
+  //solver.testResults = true;
   //Eigen::MatrixXd soln_Sp = solver.exactSolve(RHS_Sp);
-  // Eigen::MatrixXd soln_Sp = solver.fastSolve(RHS_Sp);
-  Eigen::MatrixXd soln_Sp = solver.LU_ExactSolve(RHS_Sp);
+  Eigen::MatrixXd soln_Sp = solver.fastSolve(RHS_Sp);
+  //Eigen::MatrixXd soln_Sp = solver.LU_ExactSolve(RHS_Sp);
   double error_Sp = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
   std::cout<<error_Sp<<std::endl;
   

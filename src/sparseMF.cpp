@@ -36,7 +36,13 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   fast_SolveTime = 0;
   fast_TotalTime = 0;
   fast_SymbolicFactorTime = 0;
-  factorized = false;
+  LU_FactorizationTime = 0;
+  LU_SolveTime = 0;
+  LU_TotalTime = 0;
+  LU_ExtendAddTime = 0;
+  LU_SymbolicFactorTime = 0;
+  LU_AssemblyTime = 0;
+  LU_Factorized = false;
   fast_Factorized = false;
   testResults = false;
   printResultInfo = false;
@@ -217,8 +223,10 @@ void sparseMF::createFrontalAndUpdateMatrixFromNode(eliminationTree::node* root)
   for (int k = 0; k < colMatrix.outerSize(); ++k)
     for (Eigen::SparseMatrix<double>::InnerIterator it(colMatrix,k); it; ++it)
       idxSet.insert(it.row() + minIdx);
-      
+  double startTime = clock();    
   updateNodeIdxWithChildrenFillins(root,idxSet);
+  double endTime = clock();
+  LU_SymbolicFactorTime += (endTime - startTime)/CLOCKS_PER_SEC;
   for (int k = 0; k < rowMatrix.outerSize(); ++k)
     for (Eigen::SparseMatrix<double>::InnerIterator it(rowMatrix,k); it; ++it)     
       idxSet.insert(it.col() + minIdx);
@@ -249,8 +257,10 @@ void sparseMF::createFrontalAndUpdateMatrixFromNode(eliminationTree::node* root)
       frontalMatrix(idxMap[it.row() + minIdx],idxMap[it.col() + minIdx]) = it.value();
 
   // Update frontal matrix using updates from children
+  startTime = clock();
   nodeExtendAddUpdate(root,frontalMatrix,mappingVector);
-  
+  endTime = clock();
+  LU_ExtendAddTime += (endTime - startTime)/CLOCKS_PER_SEC;
   
   // Create update matrices
   Eigen::MatrixXd nodeMatrix = frontalMatrix.topLeftCorner(nodeSize,nodeSize);
@@ -596,7 +606,7 @@ void sparseMF::assembleLUMatrix(){
   // Erase triplet vectors
   L_TripletVec.erase(L_TripletVec.begin(),L_TripletVec.end());
   U_TripletVec.erase(U_TripletVec.begin(),U_TripletVec.end());
-  factorized = true;
+  LU_Factorized = true;
   
   // Test factorization
   if (testResults == true)
@@ -614,38 +624,87 @@ void sparseMF::testLUFactorization(){
 }
 
 void sparseMF::LU_compute(){
+  double startTime = clock();
   LU_FactorizeMatrix();
+  double endTime = clock();
+  LU_FactorizationTime = (endTime - startTime)/CLOCKS_PER_SEC;
+
+  startTime = clock();
   assembleLUMatrix();
-  factorized = true;
+  endTime = clock();
+  LU_AssemblyTime = (endTime - startTime)/CLOCKS_PER_SEC;
+
+  LU_Factorized = true;
 }
 
 Eigen::MatrixXd sparseMF::LU_ExactSolve(const Eigen::MatrixXd & inputRHS){
-  if (factorized == false){
+  if (LU_Factorized == false){
     LU_compute();
   }
+  double permTime;
+  double startTime = clock();
   Eigen::MatrixXd permutedRHS = permuteRows(inputRHS,permVector,false);
+  double endTime = clock();
+  permTime = (endTime - startTime)/CLOCKS_PER_SEC;
+
+  startTime = clock();
   Eigen::MatrixXd L_Soln = L_Matrix.triangularView<Eigen::UnitLower>().solve(permutedRHS);
   Eigen::MatrixXd U_Soln = U_Matrix.triangularView<Eigen::Upper>().solve(L_Soln);
-  return permuteRows(U_Soln,permVector,true);
+  endTime = clock();
+  LU_SolveTime = (endTime - startTime)/CLOCKS_PER_SEC;
+
+  startTime = clock();
+  Eigen::MatrixXd result = permuteRows(U_Soln,permVector,true);
+  endTime = clock();
+
+  LU_TotalTime = matrixReorderingTime + LU_FactorizationTime + LU_AssemblyTime + LU_SolveTime + permTime;
+
+  if (printResultInfo == true){
+    std::cout<<"**************************************************"<<std::endl;
+    std::cout<<"Solver Type                           = "<<"LU_Explicit"<<std::endl;
+    std::cout<<"Matrix Reordering Time                = "<<matrixReorderingTime<<" seconds"<<std::endl;
+    std::cout<<"     Matrix Graph Conversion Time     = "<<matrixGraphConversionTime<<" seconds"<<std::endl;
+    std::cout<<"     SCOTCH Reordering Time           = "<<SCOTCH_ReorderingTime<<" seconds"<<std::endl;
+    std::cout<<"Factorization Time                    = "<<LU_FactorizationTime<<" seconds"<<std::endl;
+    std::cout<<"     Extend Add Time                  = "<<LU_ExtendAddTime<<" seconds"<<std::endl;   
+    std::cout<<"     Symbolic Factorization Time      = "<<LU_SymbolicFactorTime<<" seconds"<<std::endl;
+    std::cout<<"LU Assembly Time                      = "<<LU_AssemblyTime<<" seconds"<<std::endl;
+    std::cout<<"Solve Time                            = "<<LU_SolveTime<<" seconds"<<std::endl;
+    std::cout<<"Total Solve Time                      = "<<LU_TotalTime<<" seconds"<<std::endl;
+    std::cout<<"Residula l2 Relative Error            = "<<((reorderedMatrix * U_Soln) - permutedRHS).norm()/permutedRHS.norm()<<std::endl;
+  }
+  return result;
 }
 
 Eigen::MatrixXd sparseMF::fastSolve(const Eigen::MatrixXd & inputRHS){
   if (fast_Factorized == false){
     fast_FactorizeMatrix();
   }
-  Eigen::MatrixXd permutedRHS = permuteRows(inputRHS,permVector,false);
-  
+  double permTime;
   double startTime = clock();
+  Eigen::MatrixXd permutedRHS = permuteRows(inputRHS,permVector,false);
+  double endTime = clock();
+  permTime = (endTime - startTime)/CLOCKS_PER_SEC;
+
+  startTime = clock();
   Eigen::MatrixXd fastSolve_UpwardPass_Soln = fastSolve_UpwardPass(permutedRHS);
   std::cout<<"Upward pass completed. Attempting downward pass..."<<std::endl;
   Eigen::MatrixXd finalSoln = fastSolve_DownwardPass(fastSolve_UpwardPass_Soln);
   std::cout<<"Downward pass completed"<<std::endl;
-  double endTime = clock();
+  endTime = clock();
   fast_SolveTime = (endTime - startTime)/CLOCKS_PER_SEC;
-  fast_TotalTime = matrixReorderingTime + fast_FactorizationTime + fast_SolveTime; 
+ 
+  startTime = clock();
   Eigen::MatrixXd result = permuteRows(finalSoln,permVector,true);
+  endTime = clock();
+  permTime += (endTime - startTime)/CLOCKS_PER_SEC;
+ 
+  fast_TotalTime = matrixReorderingTime + fast_FactorizationTime + fast_SolveTime + permTime; 
+   
   if (printResultInfo == true){
     std::cout<<"**************************************************"<<std::endl;
+    std::cout<<"Solver Type                           = "<<"Fast_Implicit"<<std::endl;
+    std::cout<<"Low-Rank Tolerance                    = "<<fast_LR_Tol<<std::endl;
     std::cout<<"Matrix Reordering Time                = "<<matrixReorderingTime<<" seconds"<<std::endl;
     std::cout<<"     Matrix Graph Conversion Time     = "<<matrixGraphConversionTime<<" seconds"<<std::endl;
     std::cout<<"     SCOTCH Reordering Time           = "<<SCOTCH_ReorderingTime<<" seconds"<<std::endl;
@@ -751,7 +810,7 @@ void sparseMF::fastSolve_DownwardPass(eliminationTree::node* root,const Eigen::M
 }
  
 Eigen::MatrixXd sparseMF::fast_NodeToUpdateMultiply(eliminationTree::node* root,const Eigen::MatrixXd & RHS){
-  if ((root->nodeToUpdate_LR == false)){
+  if (root->nodeToUpdate_LR == false){
     return root->nodeToUpdate_U * RHS;
   }else{
     return root->nodeToUpdate_U * ((root->nodeToUpdate_V.transpose()) * RHS);
@@ -759,7 +818,7 @@ Eigen::MatrixXd sparseMF::fast_NodeToUpdateMultiply(eliminationTree::node* root,
 }
 
 Eigen::MatrixXd sparseMF::fast_UpdateToNodeMultiply(eliminationTree::node* root,const Eigen::MatrixXd & RHS){
-  if ((root->updateToNode_LR == false)){
+  if (root->updateToNode_LR == false){
     return root->updateToNode_U * RHS;
   }else{
     return root->updateToNode_U * ((root->updateToNode_V.transpose()) * RHS);
