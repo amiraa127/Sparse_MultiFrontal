@@ -68,7 +68,7 @@ private:
   double LU_SymbolicFactorTime;
   double LU_AssemblyTime;
   /*************************************Graph Related Functions*******************************/
-  Eigen::SparseMatrix<double> reorderMatrix(Eigen::SparseMatrix<double> & inputSpMatrix);
+  void reorderMatrix(Eigen::SparseMatrix<double> & inputSpMatrix);
 
 
   /**********************************Exact LU Factorization Functions*************************/
@@ -101,6 +101,10 @@ private:
 
  Eigen::MatrixXd getRowBlkMatrix(const Eigen::MatrixXd & inputMatrix, const std::vector<int> & inputIndex);
   void setRowBlkMatrix(const Eigen::MatrixXd &srcMatrix, Eigen::MatrixXd &destMatrix, const std::vector<int> &destIndex);
+  /**************************************Ultra Fast Solve***************************************/
+  void ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* root);
+
+
 };
 
 #endif
