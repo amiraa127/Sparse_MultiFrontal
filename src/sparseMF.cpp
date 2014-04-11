@@ -51,7 +51,7 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   assert (numCols == numRows);
   Sp_MatrixSize = numRows;
   LU_Permutation = Eigen::VectorXd::LinSpaced(Eigen::Sequential,Sp_MatrixSize,0,Sp_MatrixSize - 1);
-  fast_MatrixSizeThresh = 1000;
+  fast_MatrixSizeThresh = 10000;
   fast_HODLR_LeafSize = 30;
   fast_LR_Tol = 1;
   fast_MinValueACA = 0;
@@ -142,9 +142,10 @@ void sparseMF::reorderMatrix(Eigen::SparseMatrix<double> & inputSpMatrix){
     exit(EXIT_FAILURE);
   }
   
-  std::string orderingStratStr = "n{sep=m{vert=50,low=h{pass=10},asc=f{bal=0.1}}|m{vert=50,low=h{pass=10},asc=f{bal=0.1}},ole=s,ose=g}";
+  //std::string orderingStratStr = "n{sep=m{vert=50,low=h{pass=10},asc=f{bal=0.1}}|m{vert=50,low=h{pass=10},asc=f{bal=0.1}},ole=s,ose=g}";
   //std::string orderingStratStr = "n{sep=/(vert>2000)?m{vert=50,low=h{pass=10},asc=f{bal=0.1}}|m{vert=50,low=h{pass=10},asc=f{bal=0.1}};,ole=s,ose=g}"; 
-  
+
+  std::string orderingStratStr =  "c{rat=0.7,cpr=n{sep=/(vert>120)?m{rat=0.8,vert=100,low=h{pass=10},asc=f{bal=0.2}}|m{rat=0.8,vert=100,low=h{pass=10},asc=f{bal=0.2}};,ole=f{cmin=0,cmax=100000,frat=0.0},ose=g},unc=n{sep=/(vert>120)?(m{rat=0.8,vert=100,low=h{pass=10},asc=f{bal=0.2}})|m{rat=0.8,vert=100,low=h{pass=10},asc=f{bal=0.2}};,ole=f{cmin=15,cmax=100000,frat=0.08},ose=g}}";
   if(SCOTCH_stratGraphOrder(orderingStratPtr , orderingStratStr.c_str()) != 0){
     std::cout<<"Error! Could not set strategy string."<<std::endl;
     exit(EXIT_FAILURE);
@@ -169,26 +170,29 @@ void sparseMF::reorderMatrix(Eigen::SparseMatrix<double> & inputSpMatrix){
   std::cout<<"reordering complete"<<std::endl;
   endTime = clock();
   SCOTCH_ReorderingTime = (endTime - startTime)/CLOCKS_PER_SEC;
+
+  // Permute rows and columns of the original sparse matrix and RHS                   
+  permVector = std::vector<int>(permtab, permtab + numVertices);
+  reorderedMatrix =  permuteRowsCols(inputSpMatrix, permVector);
+  
   // Create elimination tree  
   int numBlocks = *cblknbr;
   std::cout<<numBlocks<<std::endl;
   std::vector<int> rangVector(rangtab, rangtab + numBlocks + 1);
   std::vector<int> treeVector(treetab, treetab + numBlocks);
   std::cout<<"Creating elimination tree.."<<std::endl;
-  matrixElmTreePtr = new eliminationTree(numVertices,numBlocks,rangVector,treeVector);     
-  std::cout<<"Elimination tree created successfully."<<std::endl;
-
-  // Permute rows and columns of the original sparse matrix and RHS                   
-  //std::vector<int> localPermVector(permtab, permtab + numVertices);
-  //permVector = localPermVector;
-  permVector = std::vector<int>(permtab, permtab + numVertices);
-  reorderedMatrix =  permuteRowsCols(inputSpMatrix, permVector);
-
-  eliminationTree test;
   int* col_Ptr = reorderedMatrix.outerIndexPtr();
   int* row_Ind = reorderedMatrix.innerIndexPtr();
+ //matrixElmTreePtr = new eliminationTree(numVertices,numBlocks,rangVector,treeVector);     
+  matrixElmTreePtr = new eliminationTree(col_Ptr,row_Ind,numVertices);
+
+  std::cout<<"Elimination tree created successfully."<<std::endl;
+
+
+  //eliminationTree test;
  
-  test.test(col_Ptr,row_Ind,numVertices);
+  
+  //test.test(col_Ptr,row_Ind,numVertices);
 
   // Free space     
   free(permtab);
@@ -210,8 +214,8 @@ void sparseMF::createFrontalAndUpdateMatrixFromNode(eliminationTree::node* root)
   int minIdx = root->min_Col;
   int maxIdx = root->max_Col;
   int blkSize = Sp_MatrixSize - minIdx;
-  std::cout<<"currLevel = "<<root->currLevel<<std::endl;
-  std::cout<<"minIdx = "<<minIdx<<" maxIdx = "<<maxIdx<<std::endl;
+  //std::cout<<"currLevel = "<<root->currLevel<<std::endl;
+  //std::cout<<"minIdx = "<<minIdx<<" maxIdx = "<<maxIdx<<std::endl;
   int nodeSize = root->numCols;
   Eigen::SparseMatrix<double> colMatrix = reorderedMatrix.block(minIdx,minIdx,blkSize,nodeSize);
   Eigen::SparseMatrix<double> rowMatrix = reorderedMatrix.block(minIdx,minIdx,nodeSize,blkSize);
@@ -276,7 +280,7 @@ void sparseMF::createFrontalAndUpdateMatrixFromNode(eliminationTree::node* root)
   Eigen::MatrixXd updateMatrix = frontalMatrix.bottomRightCorner(updateMatrixSize,updateMatrixSize) - updateToNode * nodeMatrix_LU.solve(nodeToUpdate);
   root->updateMatrix = updateMatrix;
   root->updateIdxVector = updateIdxVector;
-  std::cout<<frontalMatrixSize<<" "<<nodeSize<<" "<<mappingVector[0]<<std::endl;
+  //std::cout<<frontalMatrixSize<<" "<<nodeSize<<" "<<mappingVector[0]<<std::endl;
   
   // Update L and U factors
   Eigen::MatrixXd nodeMatrix_LUMatrix = nodeMatrix_LU.matrixLU();
@@ -302,7 +306,7 @@ void sparseMF::createFrontalAndUpdateMatrixFromNode(eliminationTree::node* root)
     saveMatrixXdToBinary(nodeMatrix,outputFileName);
     frontID ++;
   }
-  std::cout<<"**********************"<<std::endl;
+  //std::cout<<"**********************"<<std::endl;
 };
 
 
@@ -311,8 +315,8 @@ void sparseMF::ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node*
   int minIdx = root->min_Col;
   int maxIdx = root->max_Col;
   int blkSize = Sp_MatrixSize - minIdx;
-  std::cout<<"currLevel = "<<root->currLevel<<std::endl;
-  std::cout<<"minIdx = "<<minIdx<<" maxIdx = "<<maxIdx<<std::endl;
+  //std::cout<<"currLevel = "<<root->currLevel<<std::endl;
+  //std::cout<<"minIdx = "<<minIdx<<" maxIdx = "<<maxIdx<<std::endl;
   int nodeSize = root->numCols;
   Eigen::SparseMatrix<double> colMatrix = reorderedMatrix.block(minIdx,minIdx,blkSize,nodeSize);
   Eigen::SparseMatrix<double> rowMatrix = reorderedMatrix.block(minIdx,minIdx,nodeSize,blkSize);
@@ -347,8 +351,8 @@ void sparseMF::ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node*
   for(int i = 0; i < frontalMatrixSize; i++)
     idxMap[mappingVector[i]] = i; 
   Eigen::MatrixXd frontalMatrix = Eigen::MatrixXd::Zero(frontalMatrixSize,frontalMatrixSize);
-  Eigen::SparseMatrix<double> B = rowMatrix.block(0,nodeSize,nodeSize,updateMatrixSize);
-  std::cout<<B.nonZeros()<<std::endl;
+  //Eigen::SparseMatrix<double> B = rowMatrix.block(0,nodeSize,nodeSize,updateMatrixSize);
+  //std::cout<<B.nonZeros()<<std::endl;
   // Assemble frontal and update matrices                              
 
   // Row matrix entries                                                                  
@@ -458,10 +462,10 @@ void sparseMF::ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node*
   root->updateToNode_V = updateToNode_V;
   fast_CreateUpdateMatrixForNode(root,updateSoln,frontalMatrix.bottomRightCorner(updateMatrixSize,updateMatrixSize));
 
-  std::cout<<frontalMatrixSize<<" "<<nodeSize<<" "<<mappingVector[0]<<std::endl;
+  //std::cout<<frontalMatrixSize<<" "<<nodeSize<<" "<<mappingVector[0]<<std::endl;
   
   
-  std::cout<<"**********************"<<std::endl;
+  //std::cout<<"**********************"<<std::endl;
 };
 
 void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* root){
@@ -469,8 +473,8 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
   int minIdx = root->min_Col;
   int maxIdx = root->max_Col;
   int blkSize = Sp_MatrixSize - minIdx;
-  std::cout<<"currLevel = "<<root->currLevel<<std::endl;
-  std::cout<<"minIdx = "<<minIdx<<" maxIdx = "<<maxIdx<<std::endl;
+  //std::cout<<"currLevel = "<<root->currLevel<<std::endl;
+  //OAstd::cout<<"minIdx = "<<minIdx<<" maxIdx = "<<maxIdx<<std::endl;
   int nodeSize = root->numCols;
   Eigen::SparseMatrix<double> colMatrix = reorderedMatrix.block(minIdx,minIdx,blkSize,nodeSize);
   Eigen::SparseMatrix<double> rowMatrix = reorderedMatrix.block(minIdx,minIdx,nodeSize,blkSize);
@@ -579,10 +583,10 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
   root->updateToNode_V = updateToNode_V;
   fast_CreateUpdateMatrixForNode(root,updateSoln,frontalMatrix.bottomRightCorner(updateMatrixSize,updateMatrixSize));
 
-  std::cout<<frontalMatrixSize<<" "<<nodeSize<<" "<<mappingVector[0]<<std::endl;
+  //std::cout<<frontalMatrixSize<<" "<<nodeSize<<" "<<mappingVector[0]<<std::endl;
   
   
-  std::cout<<"**********************"<<std::endl;
+  //std::cout<<"**********************"<<std::endl;
 };
 
 void sparseMF::fast_CreateUpdateMatrixForNode(eliminationTree::node* root,const Eigen::MatrixXd & nodeUpdateSoln,const Eigen::MatrixXd & bottomRightMatrix){
@@ -611,7 +615,7 @@ void sparseMF::updateNodeIdxWithChildrenFillins(eliminationTree::node* root,std:
     std::vector<int> childUpdateIdxVector = childNode->updateIdxVector;
     int updateIdxVectorSize = childUpdateIdxVector.size();
     Eigen::MatrixXd childUpdateMatrix = childNode->updateMatrix;
-    std::cout<<root->min_Col<<" "<<childUpdateIdxVector[0]<<" "<<childNode->min_Col<<" "<<childNode->max_Col<<std::endl;
+    //std::cout<<root->min_Col<<" "<<childUpdateIdxVector[0]<<" "<<childNode->min_Col<<" "<<childNode->max_Col<<std::endl;
     for (int j = 0; j < updateIdxVectorSize; j++)
       idxSet.insert(childUpdateIdxVector[j]);
   }

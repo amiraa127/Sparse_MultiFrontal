@@ -58,8 +58,8 @@ private:
   void freeTree(node* root);
   std::vector<int> createParentVec(const int* colPtr,const int* row_ind,const int input_NumCols);
   std::vector<int> createRangVec(const std::vector<int> & parentVec,const int input_NumCols);
-  std::vector<int> createTreeVec(const std::vector<int> & parentVec,const std::vector<int> & rangVec);
-
+  std::vector<int> createTreeVec(const std::vector<int> & parentVec,std::vector<int> & rangVec);
+  void build_eliminationTree(const int input_numCols,const int input_numBlocks,const std::vector<int> & rangVec,const std::vector<int> & treeVec);
   void createTree(const std::vector<int> & rangVec,const std::vector<int> & treeVec);
   void analyzeTree(node *root);
   int  countColsAtLevel(const int level,const node* root)const;
