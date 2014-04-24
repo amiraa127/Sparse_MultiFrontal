@@ -22,7 +22,7 @@ public:
     std::vector<int> updateIdxVector;
    
     // Fast solver data
-    
+    /***************************/
     // Update Matrix
     Eigen::MatrixXd fast_UpdateMatrix;
 
@@ -38,7 +38,11 @@ public:
     // Node Matrix
     HODLR_Matrix fast_NodeMatrix_HODLR;
     Eigen::MatrixXd fast_NodeMatrix_LU, fast_NodeMatrix_P;
-   
+    // Ultra solver data
+    /*******************************/
+    Eigen::MatrixXd updateU;
+    Eigen::MatrixXd updateV;
+
   };
   
   int numCols;
