@@ -400,34 +400,18 @@ void sparseMF::ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node*
     }
     if (root->isLeaf == false){
       panelHODLR.set_LRTolerance(fast_LR_Tol);
-      int sumChildRanks = 0;
-      std::vector<Eigen::MatrixXd*>   LR_UpdateU_PtrVec;
-      std::vector<Eigen::MatrixXd*>   LR_UpdateV_PtrVec;
-      std::vector<std::vector<int>* > updateIdxPtrVec;
-      // Go over all childern
-      std::vector<eliminationTree::node*> nodeChildren = root->children;
-      int numChildren = nodeChildren.size();
-      for (int i = 0; i < numChildren; i++){
-	eliminationTree::node* childNode = nodeChildren[i];
-	updateIdxPtrVec.push_back(&(childNode->updateIdxVector));
-	LR_UpdateU_PtrVec.push_back(&(childNode->updateU));
-	LR_UpdateV_PtrVec.push_back(&(childNode->updateV));
-	sumChildRanks += (childNode->updateU).cols(); 
-	std::cout<<(childNode->updateU).cols()<<std::endl;
-      }
-      std::cout<<sumChildRanks<<std::endl;
-      //Extend Add Update
-      panelHODLR.extendAddUpdate(mappingVector,LR_UpdateU_PtrVec,LR_UpdateV_PtrVec,updateIdxPtrVec,sumChildRanks);
-      
+      ultra_NodeExtendAddUpdate(root,panelHODLR,mappingVector);
       if (root->currLevel != 0){
+	HODLR_Matrix A = *(panelHODLR.topDiag());
+	HODLR_Matrix D = *(panelHODLR.bottDiag());	
 	Eigen::MatrixXd UB = panelHODLR.returnTopOffDiagU();
 	Eigen::MatrixXd VB = panelHODLR.returnTopOffDiagV();
 	Eigen::MatrixXd KB = panelHODLR.returnTopOffDiagK();
 	Eigen::MatrixXd UC = panelHODLR.returnBottOffDiagU();
 	Eigen::MatrixXd VC = panelHODLR.returnBottOffDiagV();
 	Eigen::MatrixXd KC = panelHODLR.returnBottOffDiagK();
-	root->updateU       = UC * KC;
-	root->updateV       = VB * (KB.transpose() * UB.transpose() * VC);
+	root->updateU       = -UC * KC;
+	root->updateV       = (VC.transpose() * A.recLU_Solve(UB) * KB * VB.transpose()).transpose();
 
       }
     }
@@ -765,6 +749,47 @@ void sparseMF::fast_NodeExtendAddUpdate(eliminationTree::node* root,Eigen::Matri
     // Free Children Memory
     (childNode->fast_UpdateMatrix).resize(0,0);
   }
+}
+
+void sparseMF::ultra_NodeExtendAddUpdate(eliminationTree::node* root,HODLR_Matrix & panelHODLR,std::vector<int> & parentIdxVec){
+  
+  int sumChildRanks = 0;
+  // Go over all childern
+  std::vector<eliminationTree::node*> nodeChildren = root->children;
+  int numChildren = nodeChildren.size();
+  // Find size of U and V
+  for (int i = 0; i < numChildren; i++){
+      eliminationTree::node* childNode = nodeChildren[i];
+      sumChildRanks += (childNode->updateU).cols(); 
+      std::cout<<(childNode->updateU).cols()<<std::endl;
+  }
+  int panelSize = parentIdxVec.size();
+  Eigen::MatrixXd updateExtendU = Eigen::MatrixXd::Zero(panelSize,sumChildRanks);
+  Eigen::MatrixXd updateExtendV = Eigen::MatrixXd::Zero(panelSize,sumChildRanks);
+  for (int i = 0; i < numChildren; i++){
+    eliminationTree::node* childNode = nodeChildren[i];
+    int j_ind = 0;  
+    int currRank = (childNode->updateU).cols();
+    int updateMatrixSize = (childNode->updateIdxVector).size();
+    // Find update matrix extend add indices
+    std::vector<int> childUpdateExtendVec(updateMatrixSize);
+    for (int j = 0; j < updateMatrixSize; j++){
+      std::vector<int>::iterator iter;
+      iter = std::lower_bound(parentIdxVec.begin(),parentIdxVec.end(),(childNode->updateIdxVector)[j]);
+      int extendPos = iter - parentIdxVec.begin();
+      childUpdateExtendVec[j] = extendPos;
+    }
+    // Go over all rows and columns in the update matrix
+    for (int j = 0; j < updateMatrixSize; j++){
+      for (int k = 0; k < currRank; k++){
+	int rowIdx = childUpdateExtendVec[j];
+	updateExtendU(rowIdx,k + j_ind) = (childNode->updateU)(j,k);	
+	updateExtendV(rowIdx,k + j_ind) = (childNode->updateV)(j,k);	
+      }
+    }
+    j_ind += currRank;
+  }
+  panelHODLR.extendAddUpdate(updateExtendU,updateExtendV);
 }
 
 void sparseMF::LU_FactorizeMatrix(){

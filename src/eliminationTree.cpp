@@ -195,7 +195,7 @@ void eliminationTree::test(const int* colPtr,const int* row_ind,const int input_
   std::vector<int> rangVec   = createRangVec(parentVec,input_NumCols);
   std::vector<int> treeVec   = createTreeVec(parentVec,rangVec);
   build_eliminationTree(input_NumCols,treeVec.size(),rangVec,treeVec);
-  for (int i = 0; i < treeVec.size(); i++)
+  for (unsigned int i = 0; i < treeVec.size(); i++)
     std::cout<<rangVec[i]<<" "<<treeVec[i]<<std::endl;
   std::cout<<rangVec[treeVec.size()]<<std::endl;
   std::cout<<"done"<<std::endl;

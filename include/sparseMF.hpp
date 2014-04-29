@@ -103,6 +103,7 @@ private:
   void setRowBlkMatrix(const Eigen::MatrixXd &srcMatrix, Eigen::MatrixXd &destMatrix, const std::vector<int> &destIndex);
   /**************************************Ultra Fast Solve***************************************/
   void ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* root);
+  void ultra_NodeExtendAddUpdate(eliminationTree::node* root,HODLR_Matrix & panelHODLR,std::vector<int> & parentIdxVec);
 
 
 };
