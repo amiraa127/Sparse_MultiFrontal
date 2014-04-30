@@ -38,11 +38,16 @@ public:
     // Node Matrix
     HODLR_Matrix fast_NodeMatrix_HODLR;
     Eigen::MatrixXd fast_NodeMatrix_LU, fast_NodeMatrix_P;
+
     // Ultra solver data
     /*******************************/
     Eigen::MatrixXd updateU;
     Eigen::MatrixXd updateV;
-
+    Eigen::MatrixXd updateD;
+    HODLR_Matrix D_HODLR;
+    bool D_UpdateDense;
+    bool criterion;
+    int frontSize;
   };
   
   int numCols;
