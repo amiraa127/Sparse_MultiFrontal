@@ -24,9 +24,10 @@ int main(int argc, char* argv[]){
   sparseMF solver(inputSpMatrix);
   solver.printResultInfo = true;
   //solver.testResults = true;
-  //Eigen::MatrixXd soln_Sp = solver.exactSolve(RHS_Sp);
-  Eigen::MatrixXd soln_Sp = solver.fastSolve(RHS_Sp);
+  //Eigen::MatrixXd soln_Sp = solver.fastSolve(RHS_Sp);
   //Eigen::MatrixXd soln_Sp = solver.LU_ExactSolve(RHS_Sp);
+  Eigen::MatrixXd soln_Sp = solver.ultraSolve(RHS_Sp);
+  
   double error_Sp = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
   std::cout<<error_Sp<<std::endl;
   

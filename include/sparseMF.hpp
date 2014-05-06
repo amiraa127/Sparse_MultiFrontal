@@ -28,7 +28,8 @@ public:
   void LU_compute();
   Eigen::MatrixXd LU_ExactSolve(const Eigen::MatrixXd & inputRHS);
   Eigen::MatrixXd fastSolve(const Eigen::MatrixXd & inputRHS);
- 
+  Eigen::MatrixXd ultraSolve(const Eigen::MatrixXd & inputRHS);
+
 private:
   Eigen::SparseMatrix<double> reorderedMatrix;
   Eigen::SparseMatrix<double> L_Matrix;
@@ -50,7 +51,8 @@ private:
 
   bool LU_Factorized;
   bool fast_Factorized;
-
+  bool ultra_Factorized;
+  
   double matrixReorderingTime;
   double SCOTCH_ReorderingTime;
   double matrixGraphConversionTime;
@@ -61,12 +63,20 @@ private:
   double fast_ExtendAddTime;
   double fast_SymbolicFactorTime;
 
+  double ultra_FactorizationTime;
+  double ultra_SolveTime;
+  double ultra_TotalTime;
+  double ultra_ExtendAddTime;
+  double ultra_SymbolicFactorTime;
+
   double LU_FactorizationTime;
   double LU_SolveTime;
   double LU_TotalTime;
   double LU_ExtendAddTime;
   double LU_SymbolicFactorTime;
   double LU_AssemblyTime;
+
+
   /*************************************Graph Related Functions*******************************/
   void reorderMatrix(Eigen::SparseMatrix<double> & inputSpMatrix);
 
@@ -104,8 +114,12 @@ private:
   /**************************************Ultra Fast Solve***************************************/
   void ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* root);
   void ultra_NodeExtendAddUpdate(eliminationTree::node* root,HODLR_Matrix & panelHODLR,std::vector<int> & parentIdxVec);
+  
+  void ultra_FactorizeMatrix();
+ 
 
-
+  /**************************************General Extend Add*************************************/
+  std::vector<int> extendVec(std::vector<int> & childIdxVec, std::vector<int> & parentIdxVec);
 };
 
 #endif
