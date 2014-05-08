@@ -417,7 +417,7 @@ void sparseMF::ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node*
     }else{
       panelHODLR = HODLR_Matrix(frontalMatrix_Sp,fast_HODLR_LeafSize);
     }
-    if (root->isLeaf == false){
+    //if (root->isLeaf == false){
       panelHODLR.set_LRTolerance(fast_LR_Tol);
       ultra_NodeExtendAddUpdate(root,panelHODLR,mappingVector);
       if (root->currLevel != 0){
@@ -433,7 +433,7 @@ void sparseMF::ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node*
 	root->updateV      = (VC.transpose() * A.recLU_Solve(UB) * KB * VB.transpose()).transpose();
 	root->D_HODLR      = D;
       }
-    }
+      //}
   }
 
 
@@ -762,6 +762,7 @@ void sparseMF::ultra_NodeExtendAddUpdate(eliminationTree::node* root,HODLR_Matri
   if (root->isLeaf == true)
     return;
   int sumChildRanks = 0;
+
   /************Low-Rank Update************/
   // Go over all childern
   std::vector<eliminationTree::node*> nodeChildren = root->children;
@@ -802,21 +803,9 @@ void sparseMF::ultra_NodeExtendAddUpdate(eliminationTree::node* root,HODLR_Matri
     std::vector<int> childUpdateExtendVec = extendVec(childNode->updateIdxVector,parentIdxVec);
     if (childNode->D_UpdateDense == true){
       std::cout<<"dense D"<<std::endl;
-      Eigen::MatrixXd extendD = Eigen::MatrixXd::Zero(panelSize,panelSize);
-      // Go over all rows and columns in the update matrix
-      for (int j = 0; j < updateMatrixSize; j++){
-	for (int k = 0; k < updateMatrixSize; k++){
-	  int rowIdx = childUpdateExtendVec[j];
-	  int colIdx = childUpdateExtendVec[k];
-	  extendD(rowIdx,colIdx) = (childNode->updateD)(j,k);		
-	}
-      }
-      panelHODLR.extendAddUpdate(extendD);
+      panelHODLR.extendAddUpdate(childNode->updateD,childUpdateExtendVec,"PS_Random");
     }else{
-     
-      int parentSize = parentIdxVec.size();
-      std::cout<<"parent "<<parentSize<<" "<< (childNode->D_HODLR).get_MatrixSize()<<" "<<childNode->updateD.rows()<<std::endl;
-      (childNode->D_HODLR).extend(childUpdateExtendVec,parentSize);
+      (childNode->D_HODLR).extend(childUpdateExtendVec,panelSize);
 
     }
   }
