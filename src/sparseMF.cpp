@@ -68,7 +68,7 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   LU_Permutation = Eigen::VectorXd::LinSpaced(Eigen::Sequential,Sp_MatrixSize,0,Sp_MatrixSize - 1);
   fast_MatrixSizeThresh = 10000;
   fast_HODLR_LeafSize = 30;
-  fast_LR_Tol = 1e-2;
+  fast_LR_Tol = 1e-5;
   fast_MinValueACA = 0;
   fast_LR_Method = "partialPiv_ACA";
   inputSpMatrix.prune(1e-40);  
@@ -396,7 +396,6 @@ void sparseMF::ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node*
   
 
   // Update frontal matrix using updates from children
-  bool isHODLR =  false;
   root->D_UpdateDense = true;
   root->frontSize = frontalMatrixSize;
 
@@ -404,7 +403,7 @@ void sparseMF::ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node*
     root->D_UpdateDense = false;
     HODLR_Matrix panelHODLR;
     if (root->currLevel != 0){  
-      isHODLR = true;
+      //isHODLR = true;
       user_IndexTree usrTree;
       usrTree.rootNode = new user_IndexTree::node;
       usrTree.rootNode->splitIndex          = nodeSize - 1;
@@ -419,12 +418,13 @@ void sparseMF::ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node*
     }
       panelHODLR.set_LRTolerance(fast_LR_Tol);
       ultra_NodeExtendAddUpdate(root,panelHODLR,mappingVector);
+      //std::cout<<"check Panel"<<std::endl;
+      //std::cout<<"leaf = "<<root->isLeaf<<std::endl;
+      //panelHODLR.check_Structure();
       if (root->currLevel != 0){
 	HODLR_Matrix A     = panelHODLR.topDiag();
 	root->fast_NodeMatrix_HODLR = A;
-	std::cout<<"check Panel"<<std::endl;
-	//panelHODLR.check_Structure();
-	std::cout<<"check A"<<std::endl;
+	//std::cout<<"check A"<<std::endl;
 	//A.check_Structure();
 	HODLR_Matrix D        = panelHODLR.bottDiag();	
 	Eigen::MatrixXd UB    = panelHODLR.returnTopOffDiagU();
@@ -434,7 +434,7 @@ void sparseMF::ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node*
 	Eigen::MatrixXd VC    = panelHODLR.returnBottOffDiagV();
 	Eigen::MatrixXd KC    = panelHODLR.returnBottOffDiagK();
 	root->updateU         = -UC * KC;
-	std::cout<<"check norms"<<std::endl;
+	//std::cout<<"check norms"<<std::endl;
 
 	root->updateV         = (VC.transpose() * A.recLU_Solve(UB) * KB * VB.transpose()).transpose();
 	//std::cout<<root->updateU.norm()<<" "<<root->updateV.norm()<<std::endl;
@@ -781,22 +781,24 @@ void sparseMF::fast_NodeExtendAddUpdate(eliminationTree::node* root,Eigen::Matri
 }
 
 void sparseMF::ultra_NodeExtendAddUpdate(eliminationTree::node* root,HODLR_Matrix & panelHODLR,std::vector<int> & parentIdxVec){
-  if (root->isLeaf == true)
+  if (root->isLeaf == true){
+    panelHODLR.set_FreeMatrixMemory(true);
+    panelHODLR.storeLRinTree();
     return;
+  }  
   // Go over all childern
   std::vector<eliminationTree::node*> nodeChildren = root->children;
   int numChildren = nodeChildren.size();
   for (int i = 0; i < numChildren; i++){
     eliminationTree::node* childNode = nodeChildren[i]; 
-    int updateMatrixSize = (childNode->updateIdxVector).size();
     // Find update matrix extend add indices
     std::vector<int> childUpdateExtendVec = extendVec(childNode->updateIdxVector,parentIdxVec);
-    panelHODLR.extendAddUpdate(childNode->updateU,childNode->updateV,childUpdateExtendVec);
+    panelHODLR.extendAddUpdate(childNode->updateU,childNode->updateV,childUpdateExtendVec,fast_LR_Tol,"Compress_LU");
     if (childNode->D_UpdateDense == true){
       std::cout<<"dense D"<<std::endl;
       panelHODLR.extendAddUpdate(childNode->updateD,childUpdateExtendVec,"PS_Random");
     }else{
-      panelHODLR.extendAddUpdate(childNode->D_HODLR,childUpdateExtendVec);
+      panelHODLR.extendAddUpdate(childNode->D_HODLR,childUpdateExtendVec,"PS_Random");
     }
   }
 }
@@ -1144,7 +1146,7 @@ Eigen::MatrixXd sparseMF::fast_UpdateToNodeMultiply(eliminationTree::node* root,
 
 
 Eigen::MatrixXd sparseMF::fastSolve_NodeSolve(eliminationTree::node* root,const Eigen::MatrixXd & RHS){
-  int nodeMatrixSize = root->max_Col - root->min_Col + 1;
+  //int nodeMatrixSize = root->max_Col - root->min_Col + 1;
   Eigen::MatrixXd result;
   //if (nodeMatrixSize > fast_MatrixSizeThresh)
   if (root->criterion == true){
@@ -1165,7 +1167,7 @@ Eigen::MatrixXd sparseMF::fastSolve_NodeSolve(eliminationTree::node* root,const 
   int numRows = inputMatrix.rows();
   int numCols = inputMatrix.cols();
   if (input_LRMethod == "fullPiv_ACA"){
-    inputMatrix_HODLR.fullPivACA_LowRankApprox(U,V,0,numRows - 1,0,numCols - 1,LR_Tol,calculatedRank);
+    fullPivACA_LowRankApprox(inputMatrix,U,V,0,numRows - 1,0,numCols - 1,LR_Tol,calculatedRank);
   }else if (input_LRMethod == "partialPiv_ACA"){
     inputMatrix_HODLR.partialPivACA_LowRankApprox(U,V,0,numRows - 1,0,numCols - 1,LR_Tol,calculatedRank);
   }
