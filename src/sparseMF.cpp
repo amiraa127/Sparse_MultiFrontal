@@ -368,13 +368,7 @@ void sparseMF::ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node*
   Eigen::MatrixXd frontalMatrix = Eigen::MatrixXd::Zero(frontalMatrixSize,frontalMatrixSize);
   Eigen::SparseMatrix<double> frontalMatrix_Sp(frontalMatrixSize,frontalMatrixSize); 
   std::vector<Eigen::Triplet<double,int> > Sp_TripletVec;
-  Eigen::SparseMatrix<double> B = rowMatrix.block(0,nodeSize,nodeSize,updateMatrixSize);
-  //std::cout<<B.nonZeros()<<std::endl;
-  HODLR_Matrix B_HODLR(B);
-  Eigen::MatrixXd W,V,K;
-  int calculatedRank;
-  B_HODLR.PS_LowRankApprox_Sp(W,V,K,0,B.rows() - 1,0, B.cols() - 1,fast_LR_Tol,calculatedRank);
-  //std::cout<<"rank = "<<calculatedRank<<" "<<W.cols()<<" "<<V.cols()<<std::endl;
+
   // Assemble frontal and update matrices                              
 
   // Row matrix entries                                                                  
@@ -392,18 +386,19 @@ void sparseMF::ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node*
       Eigen::Triplet<double,int> entryTriplet(idxMap[it.row() + minIdx],idxMap[it.col() + minIdx],it.value());
       Sp_TripletVec.push_back(entryTriplet);
     }
-  frontalMatrix_Sp.setFromTriplets(Sp_TripletVec.begin(),Sp_TripletVec.end());
+  //frontalMatrix_Sp.setFromTriplets(Sp_TripletVec.begin(),Sp_TripletVec.end());
+  frontalMatrix_Sp = frontalMatrix.sparseView();
+  //std::cout<<(frontalMatrix - Eigen::MatrixXd(frontalMatrix_Sp)).norm()<<std::endl; 
   
-
+  
   // Update frontal matrix using updates from children
   root->D_UpdateDense = true;
   root->frontSize = frontalMatrixSize;
-
+  root->criterion = (frontalMatrixSize >= 1000);
   if (root->criterion == true /*fast_MatrixSizeThresh*/){
     root->D_UpdateDense = false;
     HODLR_Matrix panelHODLR;
     if (root->currLevel != 0){  
-      //isHODLR = true;
       user_IndexTree usrTree;
       usrTree.rootNode = new user_IndexTree::node;
       usrTree.rootNode->splitIndex          = nodeSize - 1;
@@ -416,85 +411,50 @@ void sparseMF::ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node*
     }else{
       panelHODLR = HODLR_Matrix(frontalMatrix_Sp,fast_HODLR_LeafSize);
     }
-      panelHODLR.set_LRTolerance(fast_LR_Tol);
-      ultra_NodeExtendAddUpdate(root,panelHODLR,mappingVector);
-      //std::cout<<"check Panel"<<std::endl;
-      //std::cout<<"leaf = "<<root->isLeaf<<std::endl;
-      //panelHODLR.check_Structure();
-      if (root->currLevel != 0){
-	HODLR_Matrix A     = panelHODLR.topDiag();
-	root->fast_NodeMatrix_HODLR = A;
-	//std::cout<<"check A"<<std::endl;
-	//A.check_Structure();
-	HODLR_Matrix D        = panelHODLR.bottDiag();	
-	Eigen::MatrixXd UB    = panelHODLR.returnTopOffDiagU();
-	Eigen::MatrixXd VB    = panelHODLR.returnTopOffDiagV();
-	Eigen::MatrixXd KB    = panelHODLR.returnTopOffDiagK();
-	Eigen::MatrixXd UC    = panelHODLR.returnBottOffDiagU();
-	Eigen::MatrixXd VC    = panelHODLR.returnBottOffDiagV();
-	Eigen::MatrixXd KC    = panelHODLR.returnBottOffDiagK();
-	root->updateU         = -UC * KC;
-	//std::cout<<"check norms"<<std::endl;
-
-	root->updateV         = (VC.transpose() * A.recLU_Solve(UB) * KB * VB.transpose()).transpose();
-	//std::cout<<root->updateU.norm()<<" "<<root->updateV.norm()<<std::endl;
-	root->D_HODLR         = D;
-	root->nodeToUpdate_U  = UB * KB;
-	root->nodeToUpdate_V  = VB;
-	root->updateToNode_U  = UC * KC;
-	root->updateToNode_V  = VC;
-	root->nodeToUpdate_LR = true;
-	root->updateToNode_LR = true;
-
-      }else{
-	root->fast_NodeMatrix_HODLR = panelHODLR;
-      }
-      (root->fast_NodeMatrix_HODLR).recLU_Compute();
+    //std::cout<<(frontalMatrix - panelHODLR.get_Block(0,0,frontalMatrixSize,frontalMatrixSize)).norm()<<std::endl;
+    panelHODLR.set_LRTolerance(fast_LR_Tol);
+    ultra_NodeExtendAddUpdate(root,panelHODLR,mappingVector);
+    //std::cout<<"check Panel"<<std::endl;
+    //std::cout<<"leaf = "<<root->isLeaf<<std::endl;
+    //panelHODLR.check_Structure();
+    if (root->currLevel != 0){
+      root->fast_NodeMatrix_HODLR = panelHODLR.topDiag();
+      Eigen::MatrixXd UB    = panelHODLR.returnTopOffDiagU();
+      Eigen::MatrixXd VB    = panelHODLR.returnTopOffDiagV();
+      Eigen::MatrixXd KB    = panelHODLR.returnTopOffDiagK();
+      Eigen::MatrixXd UC    = panelHODLR.returnBottOffDiagU();
+      Eigen::MatrixXd VC    = panelHODLR.returnBottOffDiagV();
+      Eigen::MatrixXd KC    = panelHODLR.returnBottOffDiagK();
+      root->updateU         = -UC * KC;
+      root->updateV         = (VC.transpose() * root->fast_NodeMatrix_HODLR.recLU_Solve(UB) * KB * VB.transpose()).transpose();
+      root->D_HODLR         = panelHODLR.bottDiag();
+      root->nodeToUpdate_U  = UB * KB;
+      root->nodeToUpdate_V  = VB;
+      root->updateToNode_U  = UC * KC;
+      root->updateToNode_V  = VC;
+      root->nodeToUpdate_LR = true;
+      root->updateToNode_LR = true;
+      
+    }else{
+      root->fast_NodeMatrix_HODLR = panelHODLR;
+    }
+    (root->fast_NodeMatrix_HODLR).recLU_Compute();
   }else{
     startTime = clock();
     fast_NodeExtendAddUpdate(root,frontalMatrix,mappingVector);
     endTime = clock();
     ultra_ExtendAddTime += (endTime - startTime)/CLOCKS_PER_SEC;
     Eigen::MatrixXd updateSoln,updateMatrix;
-    Eigen::MatrixXd nodeToUpdate_U,nodeToUpdate_V;
-    Eigen::MatrixXd updateToNode_U,updateToNode_V;
+    Eigen::MatrixXd nodeToUpdate_U;
+    Eigen::MatrixXd updateToNode_U;
     
     // Create update matrices
-    Eigen::MatrixXd nodeMatrix = frontalMatrix.topLeftCorner(nodeSize,nodeSize);
+    Eigen::MatrixXd nodeMatrix   = frontalMatrix.topLeftCorner(nodeSize,nodeSize);
     Eigen::MatrixXd nodeToUpdate = frontalMatrix.topRightCorner(nodeSize,updateMatrixSize);
     Eigen::MatrixXd updateToNode = frontalMatrix.bottomLeftCorner(updateMatrixSize,nodeSize);
-    /*
-  if (nodeSize > fast_MatrixSizeThresh){
-    // Factorize node matrix
-    root->fast_NodeMatrix_HODLR = HODLR_Matrix(nodeMatrix,fast_HODLR_LeafSize);
-    (root->fast_NodeMatrix_HODLR).set_def_LRMethod(fast_LR_Method);
-    (root->fast_NodeMatrix_HODLR).set_LRTolerance(fast_LR_Tol);
-    (root->fast_NodeMatrix_HODLR).set_MinValueACA(fast_MinValueACA);
-    (root->fast_NodeMatrix_HODLR).set_FreeMatrixMemory(true);
-    (root->fast_NodeMatrix_HODLR).recLU_Compute();
-    //(root->fast_NodeMatrix_HODLR).printResultInfo = true;
-    //(root->fast_NodeMatrix_HODLR).printLevelAccuracy = true;
-    nodeMatrix.resize(0,0);
-    if (root->currLevel != 0){
-      // Decompose nodeToUpdate to LR
-      int nodeToUpdate_Rank;
-      fastSolve_LRApprox(nodeToUpdate,nodeToUpdate_U,nodeToUpdate_V,nodeToUpdate_Rank,fast_LR_Tol,fast_LR_Method);
-      root->nodeToUpdate_LR = true;
-
-      // Decompose updateToNode to LR
-      int updateToNode_Rank;
-      fastSolve_LRApprox(updateToNode,updateToNode_U,updateToNode_V,updateToNode_Rank,fast_LR_Tol,fast_LR_Method);
-      root->updateToNode_LR = true;
-
-      // Obtain Update  
-      updateSoln =  (root->fast_NodeMatrix_HODLR).recLU_Solve(nodeToUpdate_U);
-     
-    }
-    }*/
-    //else{
     Eigen::PartialPivLU<Eigen::MatrixXd> fast_NodeMatrix_LU = Eigen::PartialPivLU<Eigen::MatrixXd>(nodeMatrix);
     (root->fast_NodeMatrix_LU) = (fast_NodeMatrix_LU).matrixLU();
-    (root->fast_NodeMatrix_P) = (fast_NodeMatrix_LU).permutationP();
+    (root->fast_NodeMatrix_P ) = (fast_NodeMatrix_LU).permutationP();
     if (root->currLevel != 0){
       updateSoln = (fast_NodeMatrix_LU).solve(nodeToUpdate);
       root->nodeToUpdate_LR = false;
@@ -502,31 +462,13 @@ void sparseMF::ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node*
       nodeToUpdate_U = nodeToUpdate;
       updateToNode_U = updateToNode;
       root->nodeToUpdate_U  = nodeToUpdate_U;
-      root->nodeToUpdate_V  = nodeToUpdate_V;
+      //root->nodeToUpdate_V  = nodeToUpdate_V;
       root->updateToNode_U  = updateToNode_U;
-      root->updateToNode_V  = updateToNode_V;
+      //root->updateToNode_V  = updateToNode_V;
       fast_CreateUpdateMatrixForNode(root,updateSoln,frontalMatrix.bottomRightCorner(updateMatrixSize,updateMatrixSize));
-      root->updateU     = updateToNode_U;
-      root->updateV     = updateSoln.transpose();  
     }
   }
-   root->updateIdxVector = updateIdxVector;
-  /*
   root->updateIdxVector = updateIdxVector;
-  root->nodeToUpdate_U  = nodeToUpdate_U;
-  root->nodeToUpdate_V  = nodeToUpdate_V;
-  root->updateToNode_U  = updateToNode_U;
-  root->updateToNode_V  = updateToNode_V;
-  */
-  //if (isHODLR == false){
-  //root->updateU     = updateToNode_U;
-  // root->updateV     = updateSoln.transpose();  
-  //}
-  if (root->D_UpdateDense == true)
-    root->updateD = frontalMatrix.bottomRightCorner(updateMatrixSize,updateMatrixSize);
-
-  //fast_CreateUpdateMatrixForNode(root,updateSoln,frontalMatrix.bottomRightCorner(updateMatrixSize,updateMatrixSize));
-  
 };
 
 void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* root){
@@ -598,7 +540,7 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
   Eigen::MatrixXd nodeToUpdate = frontalMatrix.topRightCorner(nodeSize,updateMatrixSize);
   Eigen::MatrixXd updateToNode = frontalMatrix.bottomLeftCorner(updateMatrixSize,nodeSize);
 
-  if (nodeSize > fast_MatrixSizeThresh){
+  if (nodeSize > 10000){
     // Factorize node matrix
     root->fast_NodeMatrix_HODLR = HODLR_Matrix(nodeMatrix,fast_HODLR_LeafSize);
     (root->fast_NodeMatrix_HODLR).set_def_LRMethod(fast_LR_Method);
@@ -793,12 +735,14 @@ void sparseMF::ultra_NodeExtendAddUpdate(eliminationTree::node* root,HODLR_Matri
     eliminationTree::node* childNode = nodeChildren[i]; 
     // Find update matrix extend add indices
     std::vector<int> childUpdateExtendVec = extendVec(childNode->updateIdxVector,parentIdxVec);
-    panelHODLR.extendAddUpdate(childNode->updateU,childNode->updateV,childUpdateExtendVec,fast_LR_Tol,"Compress_LU");
+   
     if (childNode->D_UpdateDense == true){
       std::cout<<"dense D"<<std::endl;
-      panelHODLR.extendAddUpdate(childNode->updateD,childUpdateExtendVec,"PS_Random");
+      panelHODLR.extendAddUpdate(childNode->fast_UpdateMatrix,childUpdateExtendVec,fast_LR_Tol,"Compress_LU");
     }else{
-      panelHODLR.extendAddUpdate(childNode->D_HODLR,childUpdateExtendVec,"PS_Random");
+      std::cout<<"HODLR D"<<std::endl;
+      panelHODLR.extendAddUpdate(childNode->updateU,childNode->updateV,childUpdateExtendVec,fast_LR_Tol,"Compress_LU");
+      panelHODLR.extendAddUpdate(childNode->D_HODLR,childUpdateExtendVec,fast_LR_Tol,"Compress_LU");
     }
   }
 }
@@ -850,17 +794,17 @@ void sparseMF::fast_FactorizeMatrix(){
 
 void sparseMF::ultra_FactorizeMatrix(){
   double startTime = clock();
-  bool criterion = false;
+  //bool criterion = false;
   for (int i = 1; i <=  matrixElmTreePtr->numLevels; i++){
     int currLevel = matrixElmTreePtr->numLevels - i ;
     std::cout<<"Eliminating nodes at level "<<currLevel<<std::endl;
     std::vector<eliminationTree::node*> currLevelNodesVec = matrixElmTreePtr->nodeLevelVec[currLevel];
     for (unsigned int j = 0; j < currLevelNodesVec.size(); j++){
       eliminationTree::node* currNodePtr = currLevelNodesVec[j];
-      currNodePtr->criterion = criterion; 
+      //currNodePtr->criterion = criterion; 
       ultra_CreateFrontalAndUpdateMatrixFromNode(currNodePtr);
-      if (currNodePtr->frontSize > 500)
-	criterion = true;
+      //if (currNodePtr->frontSize > 500)
+      //	criterion = true;
     }   
   }
   double permuteErr = (LU_Permutation -  Eigen::VectorXd::LinSpaced(Eigen::Sequential,Sp_MatrixSize,0,Sp_MatrixSize - 1)).norm();
