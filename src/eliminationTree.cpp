@@ -11,6 +11,7 @@ eliminationTree::eliminationTree(const int* colPtr,const int* row_ind,const int 
   std::vector<int> parentVec = createParentVec(colPtr,row_ind,input_NumCols);
   std::vector<int> rangVec   = createRangVec(parentVec,input_NumCols);
   std::vector<int> treeVec   = createTreeVec(parentVec,rangVec);
+  std::cout<<treeVec.size()<<std::endl;
   build_eliminationTree(input_NumCols,treeVec.size(),rangVec,treeVec);
 }
 
@@ -35,12 +36,24 @@ void eliminationTree::build_eliminationTree(const int input_numCols,const int in
   
   // Create elimination tree 
   numLevels = 1;
-  createTree(rangVec,treeVec);
-  analyzeTree(root);
-  levelCols.resize(numLevels);
-  for (int i = 0; i < numLevels; i++)
-    levelCols[i] = countColsAtLevel(i,root);
-  
+  if (numBlocks > 1){
+    createTree(rangVec,treeVec);
+    analyzeTree(root);
+    levelCols.resize(numLevels);
+    for (int i = 0; i < numLevels; i++)
+      levelCols[i] = countColsAtLevel(i,root);
+  }else{
+    root = new node;
+    root->isLeaf = true;
+    root->currLevel = 0;
+    root->numCols = numCols;
+    root->min_Col = 0;
+    root->max_Col = numCols - 1;
+    levelCols.push_back(numCols);
+    std::vector<node*> rootPtr;
+    rootPtr.push_back(root);
+    nodeLevelVec.push_back(rootPtr);
+  }
   // Sanity check
   int sum = 0;
   for (int i = 0; i < numLevels; i++)

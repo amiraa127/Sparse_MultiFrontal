@@ -21,10 +21,10 @@ public:
     Eigen::MatrixXd updateMatrix;
     std::vector<int> updateIdxVector;
    
-    // Fast solver data
+    // Implicit solver data
     /***************************/
     // Update Matrix
-    Eigen::MatrixXd fast_UpdateMatrix;
+    //Eigen::MatrixXd implicit_UpdateMatrix;
 
     // Coupling Matrices
     bool nodeToUpdate_LR;
@@ -43,7 +43,6 @@ public:
     /*******************************/
     Eigen::MatrixXd updateU;
     Eigen::MatrixXd updateV;
-    Eigen::MatrixXd updateD;
     HODLR_Matrix D_HODLR;
     bool D_UpdateDense;
     bool criterion;

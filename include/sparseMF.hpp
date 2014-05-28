@@ -25,9 +25,9 @@ public:
   ~sparseMF();
 
   /*************************************Exact LU Solver***************************************/
-  void LU_compute();
-  Eigen::MatrixXd LU_ExactSolve(const Eigen::MatrixXd & inputRHS);
-  Eigen::MatrixXd fastSolve(const Eigen::MatrixXd & inputRHS);
+  void LU_Compute();
+  Eigen::MatrixXd LU_Solve(const Eigen::MatrixXd & inputRHS);
+  Eigen::MatrixXd implicit_Solve(const Eigen::MatrixXd & inputRHS);
   Eigen::MatrixXd ultraSolve(const Eigen::MatrixXd & inputRHS);
 
 private:
@@ -50,18 +50,18 @@ private:
   
 
   bool LU_Factorized;
-  bool fast_Factorized;
+  bool implicit_Factorized;
   bool ultra_Factorized;
   
   double matrixReorderingTime;
   double SCOTCH_ReorderingTime;
   double matrixGraphConversionTime;
 
-  double fast_FactorizationTime;
-  double fast_SolveTime;
-  double fast_TotalTime;
-  double fast_ExtendAddTime;
-  double fast_SymbolicFactorTime;
+  double implicit_FactorizationTime;
+  double implicit_SolveTime;
+  double implicit_TotalTime;
+  double implicit_ExtendAddTime;
+  double implicit_SymbolicFactorTime;
 
   double ultra_FactorizationTime;
   double ultra_SolveTime;
@@ -77,49 +77,58 @@ private:
   double LU_AssemblyTime;
 
 
-  /*************************************Graph Related Functions*******************************/
+  /*************************************Reordering Related Functions*******************************/
   void reorderMatrix(Eigen::SparseMatrix<double> & inputSpMatrix);
 
-
-  /**********************************Exact LU Factorization Functions*************************/
-  
-  void createFrontalAndUpdateMatrixFromNode(eliminationTree::node* root);
+  /***********************************Symbolic Factorization Functions****************************/
   void updateNodeIdxWithChildrenFillins(eliminationTree::node* root,std::set<int> & idxSet);
+  
+  
+  
+  /**********************************Numerical Factorization Functions*****************************/
+  void LU_FactorizeMatrix();
+  void implicit_FactorizeMatrix();
+  void ultra_FactorizeMatrix();
+  
+  void LU_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* root);
+  void implicit_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* root);
+  void ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* root);
+
+  // Extend/Add
+  void nodeExtendAddUpdate(eliminationTree::node* root,Eigen::MatrixXd & nodeFrontalMatrix, std::vector<int> & nodeMappingVector);
+  void ultra_NodeExtendAddUpdate(eliminationTree::node* root,HODLR_Matrix & panelHODLR,std::vector<int> & parentIdxVec);
+  
+
+  /*****************************************Solve Functions****************************************/
+
+  //LU
   void assembleUFactor(const Eigen::MatrixXd & nodeMatrix_U, const Eigen::MatrixXd & update_U, const std::vector<int> & mappingVector);
   void assembleLFactor(const Eigen::MatrixXd & nodeMatrix_L, const Eigen::MatrixXd & update_L, const std::vector<int> & mappingVector);
-  void nodeExtendAddUpdate(eliminationTree::node* root,Eigen::MatrixXd & nodeFrontalMatrix, std::vector<int> & nodeMappingVector);
-  void LU_FactorizeMatrix();
   void assembleLUMatrix();
-  void testLUFactorization();
 
-  /************************************Fast Solve Functions***********************************/
-  void fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* root);
-  void fast_NodeExtendAddUpdate(eliminationTree::node* root,Eigen::MatrixXd & nodeFrontalMatrix, std::vector<int> & nodeMappingVector);
-  void fast_FactorizeMatrix();
-  Eigen::MatrixXd fastSolve_UpwardPass(const Eigen::MatrixXd &inputRHS);
-  void fast_CreateUpdateMatrixForNode(eliminationTree::node* root,const Eigen::MatrixXd & nodeUpdateSoln,const Eigen::MatrixXd & bottomRightMatrix);
+  //Implicit
+  Eigen::MatrixXd implicit_UpwardPass(const Eigen::MatrixXd &inputRHS);
+  void implicit_CreateUpdateMatrixForNode(eliminationTree::node* root,const Eigen::MatrixXd & nodeUpdateSoln,const Eigen::MatrixXd & bottomRightMatrix);
   Eigen::MatrixXd fast_NodeToUpdateMultiply(eliminationTree::node* root,const Eigen::MatrixXd & RHS);
   Eigen::MatrixXd fast_UpdateToNodeMultiply(eliminationTree::node* root,const Eigen::MatrixXd & RHS);
 
-  void fastSolve_UpwardPass_Update(eliminationTree::node* root,Eigen::MatrixXd &modifiedRHS);
-  Eigen::MatrixXd fastSolve_DownwardPass(const Eigen::MatrixXd & upwardPassRHS);
-  void fastSolve_DownwardPass(eliminationTree::node* root,const Eigen::MatrixXd & upwardPassRHS,Eigen::MatrixXd & finalSoln);
+  void implicit_UpwardPass_Update(eliminationTree::node* root,Eigen::MatrixXd &modifiedRHS);
+  Eigen::MatrixXd implicit_DownwardPass(const Eigen::MatrixXd & upwardPassRHS);
+  void implicit_DownwardPass(eliminationTree::node* root,const Eigen::MatrixXd & upwardPassRHS,Eigen::MatrixXd & finalSoln);
   Eigen::MatrixXd fastSolve_NodeSolve(eliminationTree::node* root,const Eigen::MatrixXd & RHS);
-  void fastSolve_LRApprox(Eigen::MatrixXd & inputMatrix,Eigen::MatrixXd & U, Eigen::MatrixXd & V,int & calculatedRank,double LR_Tol, std::string input_LRMethod);
+ 
 
 
 
  Eigen::MatrixXd getRowBlkMatrix(const Eigen::MatrixXd & inputMatrix, const std::vector<int> & inputIndex);
   void setRowBlkMatrix(const Eigen::MatrixXd &srcMatrix, Eigen::MatrixXd &destMatrix, const std::vector<int> &destIndex);
-  /**************************************Ultra Fast Solve***************************************/
-  void ultra_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* root);
-  void ultra_NodeExtendAddUpdate(eliminationTree::node* root,HODLR_Matrix & panelHODLR,std::vector<int> & parentIdxVec);
-  
-  void ultra_FactorizeMatrix();
- 
+
+  /******************************************Test************************************************/
+  void test_LU_Factorization();
+
 
   /**************************************General Extend Add*************************************/
-  std::vector<int> extendVec(std::vector<int> & childIdxVec, std::vector<int> & parentIdxVec);
+  std::vector<int> extendIdxVec(std::vector<int> & childIdxVec, std::vector<int> & parentIdxVec);
 };
 
 #endif
