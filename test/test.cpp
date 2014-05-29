@@ -23,8 +23,8 @@ class Sparse_Solver_Test: public CppUnit::TestCase
   /*----------------Creating a Test Suite----------------------*/
   CPPUNIT_TEST_SUITE(Sparse_Solver_Test);
   
-  //CPPUNIT_TEST(LU_Solver_Test_Small);
-  //CPPUNIT_TEST(implicit_Solver_Test_Small);
+  CPPUNIT_TEST(LU_Solver_Test_Small);
+  CPPUNIT_TEST(implicit_Solver_Test_Small);
   CPPUNIT_TEST(LU_Solver_Test);
   CPPUNIT_TEST(implicit_Solver_Test);
   
@@ -34,6 +34,7 @@ public:
   Sparse_Solver_Test(): CppUnit::TestCase("Sparse Solver Test"){}
   
   void LU_Solver_Test_Small(){
+    std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
     std::cout<<"Testing full LU factorization on a small matrix...."<<std::endl;
     Eigen::MatrixXd inputMatrix = Eigen::MatrixXd::Zero(12,12);
     for (int i = 0; i < 12; i++){
@@ -65,8 +66,9 @@ public:
   }
 
   void implicit_Solver_Test_Small(){
+    std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
     std::cout<<"Testing implicit solver on a small matrix...."<<std::endl;
-     Eigen::MatrixXd inputMatrix = Eigen::MatrixXd::Zero(12,12);
+    Eigen::MatrixXd inputMatrix = Eigen::MatrixXd::Zero(12,12);
     for (int i = 0; i < 12; i++){
       inputMatrix(i,i)  = 10;
       inputMatrix(0,1)   = 2 ; inputMatrix(0,4) = 4;
@@ -96,7 +98,8 @@ public:
   }
 
   void LU_Solver_Test(){
-    std::cout<<"Testing full LU factorization...."<<std::endl;
+    std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
+    std::cout<<"Testing full LU factorization on a 100k matrix...."<<std::endl;
     Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/localmat0.100k");
     Eigen::VectorXd exactSoln_Sp = Eigen::MatrixXd::Random(inputSpMatrix.rows(),1);
     Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
@@ -109,7 +112,8 @@ public:
   }
 
   void implicit_Solver_Test(){
-    std::cout<<"Testing implicit solver...."<<std::endl;
+    std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
+    std::cout<<"Testing implicit solver on a 100k matrix...."<<std::endl;
     Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/localmat0.100k");
     Eigen::VectorXd exactSoln_Sp = Eigen::MatrixXd::Random(inputSpMatrix.rows(),1);
     Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
@@ -129,6 +133,7 @@ public:
 
 
 int main(int argc, char* argv[]){
+  
   CppUnit::TextUi::TestRunner runner;
   runner.addTest(Sparse_Solver_Test::suite());
   runner.run();
@@ -143,7 +148,7 @@ int main(int argc, char* argv[]){
  
   sparseMF solver(inputSpMatrix);
   solver.printResultInfo = true;
-  Eigen::MatrixXd soln_Sp = solver.ultraSolve(RHS_Sp);
+  Eigen::MatrixXd soln_Sp = solver.ultra_Solve(RHS_Sp);
   
   double error_Sp = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
   std::cout<<error_Sp<<std::endl;

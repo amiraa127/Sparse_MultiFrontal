@@ -24,11 +24,10 @@ public:
   sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix);
   ~sparseMF();
 
-  /*************************************Exact LU Solver***************************************/
   void LU_Compute();
   Eigen::MatrixXd LU_Solve(const Eigen::MatrixXd & inputRHS);
   Eigen::MatrixXd implicit_Solve(const Eigen::MatrixXd & inputRHS);
-  Eigen::MatrixXd ultraSolve(const Eigen::MatrixXd & inputRHS);
+  Eigen::MatrixXd ultra_Solve(const Eigen::MatrixXd & inputRHS);
 
 private:
   Eigen::SparseMatrix<double> reorderedMatrix;
@@ -108,14 +107,26 @@ private:
 
   //Implicit
   Eigen::MatrixXd implicit_UpwardPass(const Eigen::MatrixXd &inputRHS);
-  void implicit_CreateUpdateMatrixForNode(eliminationTree::node* root,const Eigen::MatrixXd & nodeUpdateSoln,const Eigen::MatrixXd & bottomRightMatrix);
+  void implicit_UpwardPass_Update(eliminationTree::node* root,Eigen::MatrixXd &modifiedRHS);
+
+  Eigen::MatrixXd implicit_DownwardPass(const Eigen::MatrixXd & upwardPassRHS);
+  void implicit_DownwardPass(eliminationTree::node* root,const Eigen::MatrixXd & upwardPassRHS,Eigen::MatrixXd & finalSoln);
+  
+
+  Eigen::MatrixXd ultra_UpwardPass(const Eigen::MatrixXd &inputRHS);
+  void ultra_UpwardPass_Update(eliminationTree::node* root,Eigen::MatrixXd &modifiedRHS);
+
+  Eigen::MatrixXd ultra_DownwardPass(const Eigen::MatrixXd & upwardPassRHS);
+  void ultra_DownwardPass(eliminationTree::node* root,const Eigen::MatrixXd & upwardPassRHS,Eigen::MatrixXd & finalSoln);
+  
+
+
+  void ultra_CreateUpdateMatrixForNode(eliminationTree::node* root,const Eigen::MatrixXd & nodeUpdateSoln,const Eigen::MatrixXd & bottomRightMatrix);
+
   Eigen::MatrixXd fast_NodeToUpdateMultiply(eliminationTree::node* root,const Eigen::MatrixXd & RHS);
   Eigen::MatrixXd fast_UpdateToNodeMultiply(eliminationTree::node* root,const Eigen::MatrixXd & RHS);
 
-  void implicit_UpwardPass_Update(eliminationTree::node* root,Eigen::MatrixXd &modifiedRHS);
-  Eigen::MatrixXd implicit_DownwardPass(const Eigen::MatrixXd & upwardPassRHS);
-  void implicit_DownwardPass(eliminationTree::node* root,const Eigen::MatrixXd & upwardPassRHS,Eigen::MatrixXd & finalSoln);
-  Eigen::MatrixXd fastSolve_NodeSolve(eliminationTree::node* root,const Eigen::MatrixXd & RHS);
+  Eigen::MatrixXd fast_NodeSolve(eliminationTree::node* root,const Eigen::MatrixXd & RHS);
  
 
 

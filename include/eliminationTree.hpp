@@ -23,8 +23,7 @@ public:
    
     // Implicit solver data
     /***************************/
-    // Update Matrix
-    //Eigen::MatrixXd implicit_UpdateMatrix;
+    
 
     // Coupling Matrices
     bool nodeToUpdate_LR;
