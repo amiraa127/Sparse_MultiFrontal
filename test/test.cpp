@@ -39,17 +39,17 @@ public:
     Eigen::MatrixXd inputMatrix = Eigen::MatrixXd::Zero(12,12);
     for (int i = 0; i < 12; i++){
       inputMatrix(i,i)   = 10;
-      inputMatrix(0,1)   = 2 ; inputMatrix(0,4) = 4;
-      inputMatrix(1,2)   = -1; inputMatrix(1,5) = -3;
-      inputMatrix(2,3)   = 2 ; inputMatrix(2,6) = -1;
-      inputMatrix(3,7)   = 5 ;
-      inputMatrix(4,5)   = -3; inputMatrix(4,8) = 2;
-      inputMatrix(5,6)   = -2; inputMatrix(5,9) = -1;
-      inputMatrix(6,7)   = 4;  inputMatrix(6,10) = -2; inputMatrix(6,11) = 3 ; 
+      inputMatrix(0,1)   =  2; inputMatrix(0,4)  =  4;
+      inputMatrix(1,2)   = -1; inputMatrix(1,5)  = -3;
+      inputMatrix(2,3)   =  2 ; inputMatrix(2,6)  = -1;
+      inputMatrix(3,7)   =  5 ;
+      inputMatrix(4,5)   = -3; inputMatrix(4,8)  =  2;
+      inputMatrix(5,6)   = -2; inputMatrix(5,9)  = -1;
+      inputMatrix(6,7)   =  4; inputMatrix(6,10) = -2; inputMatrix(6,11) = 3 ; 
       inputMatrix(7,11)  = -1;
       inputMatrix(8,9)   = -3;
-      inputMatrix(9,10)  = 5;
-      inputMatrix(10,11) = 2;
+      inputMatrix(9,10)  =  5;
+      inputMatrix(10,11) =  2;
     }
     for (int i = 0; i < 12;i++)
       for (int j = i; j < 12; j++)
@@ -124,12 +124,7 @@ public:
     std::cout<<error<<std::endl;
     CPPUNIT_ASSERT(error < 1e-14);
   }
-
-
 };
-
-
-
 
 
 int main(int argc, char* argv[]){
@@ -148,7 +143,7 @@ int main(int argc, char* argv[]){
  
   sparseMF solver(inputSpMatrix);
   solver.printResultInfo = true;
-  Eigen::MatrixXd soln_Sp = solver.ultra_Solve(RHS_Sp);
+  Eigen::MatrixXd soln_Sp = solver.fast_Solve(RHS_Sp);
   
   double error_Sp = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
   std::cout<<error_Sp<<std::endl;

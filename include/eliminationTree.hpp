@@ -18,8 +18,9 @@ public:
     int numCols;
     int min_Col;
     int max_Col;    
-    Eigen::MatrixXd updateMatrix;
+    Eigen::MatrixXd  updateMatrix;
     std::vector<int> updateIdxVector;
+    std::vector<int> panelIdxVector;
    
     // Implicit solver data
     /***************************/
