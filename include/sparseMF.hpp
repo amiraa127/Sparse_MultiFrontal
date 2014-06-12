@@ -43,7 +43,7 @@ private:
   int fast_MatrixSizeThresh;
   int fast_HODLR_LeafSize;
   double fast_LR_Tol;
-  double fast_MinValueACA;
+  double fast_MinPivot;
   
   bool symbolic_Factorized;
   bool LU_Factorized;

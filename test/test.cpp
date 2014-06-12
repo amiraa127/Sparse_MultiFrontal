@@ -37,20 +37,20 @@ public:
     std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
     std::cout<<"Testing full LU factorization on a small matrix...."<<std::endl;
     Eigen::MatrixXd inputMatrix = Eigen::MatrixXd::Zero(12,12);
-    for (int i = 0; i < 12; i++){
+    for (int i = 0; i < 12; i++)
       inputMatrix(i,i)   = 10;
-      inputMatrix(0,1)   =  2; inputMatrix(0,4)  =  4;
-      inputMatrix(1,2)   = -1; inputMatrix(1,5)  = -3;
-      inputMatrix(2,3)   =  2 ; inputMatrix(2,6)  = -1;
-      inputMatrix(3,7)   =  5 ;
-      inputMatrix(4,5)   = -3; inputMatrix(4,8)  =  2;
-      inputMatrix(5,6)   = -2; inputMatrix(5,9)  = -1;
-      inputMatrix(6,7)   =  4; inputMatrix(6,10) = -2; inputMatrix(6,11) = 3 ; 
-      inputMatrix(7,11)  = -1;
-      inputMatrix(8,9)   = -3;
-      inputMatrix(9,10)  =  5;
-      inputMatrix(10,11) =  2;
-    }
+    inputMatrix(0,1)   =  2; inputMatrix(0,4)  =  4;
+    inputMatrix(1,2)   = -1; inputMatrix(1,5)  = -3;
+    inputMatrix(2,3)   =  2 ; inputMatrix(2,6)  = -1;
+    inputMatrix(3,7)   =  5 ;
+    inputMatrix(4,5)   = -3; inputMatrix(4,8)  =  2;
+    inputMatrix(5,6)   = -2; inputMatrix(5,9)  = -1;
+    inputMatrix(6,7)   =  4; inputMatrix(6,10) = -2; inputMatrix(6,11) = 3 ; 
+    inputMatrix(7,11)  = -1;
+    inputMatrix(8,9)   = -3;
+    inputMatrix(9,10)  =  5;
+    inputMatrix(10,11) =  2;
+    
     for (int i = 0; i < 12;i++)
       for (int j = i; j < 12; j++)
 	inputMatrix(j,i) = inputMatrix(i,j);
@@ -69,20 +69,20 @@ public:
     std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
     std::cout<<"Testing implicit solver on a small matrix...."<<std::endl;
     Eigen::MatrixXd inputMatrix = Eigen::MatrixXd::Zero(12,12);
-    for (int i = 0; i < 12; i++){
+    for (int i = 0; i < 12; i++)
       inputMatrix(i,i)  = 10;
-      inputMatrix(0,1)   = 2 ; inputMatrix(0,4) = 4;
-      inputMatrix(1,2)   = -1; inputMatrix(1,5) = -3;
-      inputMatrix(2,3)   = 2 ; inputMatrix(2,6) = -1;
-      inputMatrix(3,7)   = 5 ;
-      inputMatrix(4,5)   = -3; inputMatrix(4,8) = 2;
-      inputMatrix(5,6)   = -2; inputMatrix(5,9) = -1;
-      inputMatrix(6,7)   =  4; inputMatrix(6,10) = -2; inputMatrix(6,11) = 3 ; 
-      inputMatrix(7,11)  = -1;
-      inputMatrix(8,9)   = -3;
-      inputMatrix(9,10)  = 5;
-      inputMatrix(10,11) = 2;
-    }
+    inputMatrix(0,1)   = 2 ; inputMatrix(0,4) = 4;
+    inputMatrix(1,2)   = -1; inputMatrix(1,5) = -3;
+    inputMatrix(2,3)   = 2 ; inputMatrix(2,6) = -1;
+    inputMatrix(3,7)   = 5 ;
+    inputMatrix(4,5)   = -3; inputMatrix(4,8) = 2;
+    inputMatrix(5,6)   = -2; inputMatrix(5,9) = -1;
+    inputMatrix(6,7)   =  4; inputMatrix(6,10) = -2; inputMatrix(6,11) = 3 ; 
+    inputMatrix(7,11)  = -1;
+    inputMatrix(8,9)   = -3;
+    inputMatrix(9,10)  = 5;
+    inputMatrix(10,11) = 2;
+    
     for (int i = 0; i < 12;i++)
       for (int j = i; j < 12; j++)
 	inputMatrix(j,i) = inputMatrix(i,j);
@@ -128,11 +128,11 @@ public:
 
 
 int main(int argc, char* argv[]){
-  
+  /*
   CppUnit::TextUi::TestRunner runner;
   runner.addTest(Sparse_Solver_Test::suite());
   runner.run();
-  
+  */
   std::cout<<"Reading sparse matrix...."<<std::endl;
   Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/localmat0.100k");
   std::cout<<"Sparse matrix read successfully."<<std::endl; 
