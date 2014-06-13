@@ -8,10 +8,130 @@
 #include "HODLR_Matrix.hpp"
 #include "sparseMF.hpp"
 #include <string>
+#include <cppunit/ui/text/TestRunner.h>
+#include <cppunit/TestCase.h>
+#include <cppunit/TestCaller.h>
+#include <cppunit/extensions/HelperMacros.h>
 
 #define thresh 30
 
+/*This file contains various tests for the Sparse Solver package*/
+
+class Sparse_Solver_Test: public CppUnit::TestCase
+{
+  /*----------------Creating a Test Suite----------------------*/
+  CPPUNIT_TEST_SUITE(Sparse_Solver_Test);
+  
+  CPPUNIT_TEST(LU_Solver_Test_Small);
+  CPPUNIT_TEST(implicit_Solver_Test_Small);
+  CPPUNIT_TEST(LU_Solver_Test);
+  CPPUNIT_TEST(implicit_Solver_Test);
+  
+  CPPUNIT_TEST_SUITE_END();
+
+public:
+  Sparse_Solver_Test(): CppUnit::TestCase("Sparse Solver Test"){}
+  
+  void LU_Solver_Test_Small(){
+    std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
+    std::cout<<"Testing full LU factorization on a small matrix...."<<std::endl;
+    Eigen::MatrixXd inputMatrix = Eigen::MatrixXd::Zero(12,12);
+    for (int i = 0; i < 12; i++)
+      inputMatrix(i,i)   = 10;
+    inputMatrix(0,1)   =  2; inputMatrix(0,4)  =  4;
+    inputMatrix(1,2)   = -1; inputMatrix(1,5)  = -3;
+    inputMatrix(2,3)   =  2 ; inputMatrix(2,6)  = -1;
+    inputMatrix(3,7)   =  5 ;
+    inputMatrix(4,5)   = -3; inputMatrix(4,8)  =  2;
+    inputMatrix(5,6)   = -2; inputMatrix(5,9)  = -1;
+    inputMatrix(6,7)   =  4; inputMatrix(6,10) = -2; inputMatrix(6,11) = 3 ; 
+    inputMatrix(7,11)  = -1;
+    inputMatrix(8,9)   = -3;
+    inputMatrix(9,10)  =  5;
+    inputMatrix(10,11) =  2;
+    
+    for (int i = 0; i < 12;i++)
+      for (int j = i; j < 12; j++)
+	inputMatrix(j,i) = inputMatrix(i,j);
+    Eigen::SparseMatrix<double> inputSpMatrix = inputMatrix.sparseView();
+    Eigen::VectorXd exactSoln_Sp = Eigen::MatrixXd::Random(12,1);
+    Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
+    sparseMF solver(inputSpMatrix);
+    solver.printResultInfo = true;
+    Eigen::MatrixXd soln_Sp = solver.LU_Solve(RHS_Sp);
+    double error = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
+    std::cout<<error<<std::endl;
+    CPPUNIT_ASSERT(error < 1e-14);
+  }
+
+  void implicit_Solver_Test_Small(){
+    std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
+    std::cout<<"Testing implicit solver on a small matrix...."<<std::endl;
+    Eigen::MatrixXd inputMatrix = Eigen::MatrixXd::Zero(12,12);
+    for (int i = 0; i < 12; i++)
+      inputMatrix(i,i)  = 10;
+    inputMatrix(0,1)   = 2 ; inputMatrix(0,4) = 4;
+    inputMatrix(1,2)   = -1; inputMatrix(1,5) = -3;
+    inputMatrix(2,3)   = 2 ; inputMatrix(2,6) = -1;
+    inputMatrix(3,7)   = 5 ;
+    inputMatrix(4,5)   = -3; inputMatrix(4,8) = 2;
+    inputMatrix(5,6)   = -2; inputMatrix(5,9) = -1;
+    inputMatrix(6,7)   =  4; inputMatrix(6,10) = -2; inputMatrix(6,11) = 3 ; 
+    inputMatrix(7,11)  = -1;
+    inputMatrix(8,9)   = -3;
+    inputMatrix(9,10)  = 5;
+    inputMatrix(10,11) = 2;
+    
+    for (int i = 0; i < 12;i++)
+      for (int j = i; j < 12; j++)
+	inputMatrix(j,i) = inputMatrix(i,j);
+    Eigen::SparseMatrix<double> inputSpMatrix = inputMatrix.sparseView();
+    Eigen::VectorXd exactSoln_Sp = Eigen::MatrixXd::Random(12,1);
+    Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
+    sparseMF solver(inputSpMatrix);
+    solver.printResultInfo = true;
+    Eigen::MatrixXd soln_Sp = solver.implicit_Solve(RHS_Sp);
+    double error = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
+    std::cout<<error<<std::endl;
+    CPPUNIT_ASSERT(error < 1e-14);
+  }
+
+  void LU_Solver_Test(){
+    std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
+    std::cout<<"Testing full LU factorization on a 100k matrix...."<<std::endl;
+    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/localmat0.100k");
+    Eigen::VectorXd exactSoln_Sp = Eigen::MatrixXd::Random(inputSpMatrix.rows(),1);
+    Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
+    sparseMF solver(inputSpMatrix);
+    solver.printResultInfo = true;
+    Eigen::MatrixXd soln_Sp = solver.LU_Solve(RHS_Sp);
+    double error = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
+    std::cout<<error<<std::endl;
+    CPPUNIT_ASSERT(error < 1e-14);
+  }
+
+  void implicit_Solver_Test(){
+    std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
+    std::cout<<"Testing implicit solver on a 100k matrix...."<<std::endl;
+    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/localmat0.100k");
+    Eigen::VectorXd exactSoln_Sp = Eigen::MatrixXd::Random(inputSpMatrix.rows(),1);
+    Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
+    sparseMF solver(inputSpMatrix);
+    solver.printResultInfo = true;
+    Eigen::MatrixXd soln_Sp = solver.implicit_Solve(RHS_Sp);
+    double error = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
+    std::cout<<error<<std::endl;
+    CPPUNIT_ASSERT(error < 1e-14);
+  }
+};
+
+
 int main(int argc, char* argv[]){
+  /*
+  CppUnit::TextUi::TestRunner runner;
+  runner.addTest(Sparse_Solver_Test::suite());
+  runner.run();
+  */
   std::cout<<"Reading sparse matrix...."<<std::endl;
   Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/localmat0.100k");
   std::cout<<"Sparse matrix read successfully."<<std::endl; 
@@ -22,13 +142,10 @@ int main(int argc, char* argv[]){
  
   sparseMF solver(inputSpMatrix);
   solver.printResultInfo = true;
-  //solver.testResults = true;
-  //Eigen::MatrixXd soln_Sp = solver.exactSolve(RHS_Sp);
-  Eigen::MatrixXd soln_Sp = solver.fastSolve(RHS_Sp);
-  //Eigen::MatrixXd soln_Sp = solver.LU_ExactSolve(RHS_Sp);
+  Eigen::MatrixXd soln_Sp = solver.fast_Solve(RHS_Sp);
+  
   double error_Sp = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
   std::cout<<error_Sp<<std::endl;
-  
 
   /* // Eigen Conventional Solve
   Eigen::SparseLU<Eigen::SparseMatrix<double>,Eigen::MetisOrdering<int> > Eigen_Solver;
@@ -75,5 +192,6 @@ int main(int argc, char* argv[]){
   double end = clock();
   std::cout<<(end - start)/CLOCKS_PER_SEC<<std::endl;
   */
+  
   return 0;
 }

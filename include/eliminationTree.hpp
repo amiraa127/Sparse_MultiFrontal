@@ -18,13 +18,13 @@ public:
     int numCols;
     int min_Col;
     int max_Col;    
-    Eigen::MatrixXd updateMatrix;
+    Eigen::MatrixXd  updateMatrix;
     std::vector<int> updateIdxVector;
+    std::vector<int> panelIdxVector;
    
-    // Fast solver data
+    // Implicit solver data
+    /***************************/
     
-    // Update Matrix
-    Eigen::MatrixXd fast_UpdateMatrix;
 
     // Coupling Matrices
     bool nodeToUpdate_LR;
@@ -38,7 +38,15 @@ public:
     // Node Matrix
     HODLR_Matrix fast_NodeMatrix_HODLR;
     Eigen::MatrixXd fast_NodeMatrix_LU, fast_NodeMatrix_P;
-   
+
+    // Ultra solver data
+    /*******************************/
+    Eigen::MatrixXd updateU;
+    Eigen::MatrixXd updateV;
+    HODLR_Matrix D_HODLR;
+    bool D_UpdateDense;
+    bool criterion;
+    int frontSize;
   };
   
   int numCols;
@@ -49,11 +57,17 @@ public:
   std::vector<std::vector<node*> > nodeLevelVec;
 
   eliminationTree();
+  void test(const int* colPtr,const int* row_ind,const int input_numCols);
+  eliminationTree(const int* colPtr,const int* row_ind,const int input_numCols);
   eliminationTree(const int input_numCols,const int input_numBlocks,const std::vector<int> & rangVec,const std::vector<int> & treeVec);
   ~eliminationTree();
   
 private:
   void freeTree(node* root);
+  std::vector<int> createParentVec(const int* colPtr,const int* row_ind,const int input_NumCols);
+  std::vector<int> createRangVec(const std::vector<int> & parentVec,const int input_NumCols);
+  std::vector<int> createTreeVec(const std::vector<int> & parentVec,std::vector<int> & rangVec);
+  void build_eliminationTree(const int input_numCols,const int input_numBlocks,const std::vector<int> & rangVec,const std::vector<int> & treeVec);
   void createTree(const std::vector<int> & rangVec,const std::vector<int> & treeVec);
   void analyzeTree(node *root);
   int  countColsAtLevel(const int level,const node* root)const;
