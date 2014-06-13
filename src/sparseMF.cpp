@@ -51,9 +51,9 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   assert (numCols == numRows);
   Sp_MatrixSize = numRows;
   LU_Permutation = Eigen::VectorXd::LinSpaced(Eigen::Sequential,Sp_MatrixSize,0,Sp_MatrixSize - 1);
-  fast_MatrixSizeThresh = 10000;
+  fast_MatrixSizeThresh = 1000;
   fast_HODLR_LeafSize = 30;
-  fast_LR_Tol = 1;
+  fast_LR_Tol = 1e-5;
   fast_MinValueACA = 0;
   fast_LR_Method = "partialPiv_ACA";
   inputSpMatrix.prune(1e-40);  
@@ -63,7 +63,6 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   double endTime = clock();
   matrixReorderingTime = (endTime - startTime)/CLOCKS_PER_SEC;
   
-
 }
 
 sparseMF:: ~sparseMF(){
@@ -144,7 +143,10 @@ Eigen::SparseMatrix<double> sparseMF::reorderMatrix(Eigen::SparseMatrix<double> 
   
   std::string orderingStratStr = "n{sep=m{vert=50,low=h{pass=10},asc=f{bal=0.1}}|m{vert=50,low=h{pass=10},asc=f{bal=0.1}},ole=s,ose=g}";
   //std::string orderingStratStr = "n{sep=/(vert>2000)?m{vert=50,low=h{pass=10},asc=f{bal=0.1}}|m{vert=50,low=h{pass=10},asc=f{bal=0.1}};,ole=s,ose=g}"; 
-  
+  //std::string orderingStratStr =  "c{rat=0.7,cpr=n{sep=/(vert>120)?m{rat=0.8,vert=100,low=h{pass=10},asc=f{bal=0.2}}|m{rat=0.8,vert=100,low=h{pass=10},asc=f{bal=0.2}};,ole=f{cmin=0,cmax=100000,frat=0.0},ose=g},unc=n{sep=/(vert>120)?(m{rat=0.8,vert=100,low=h{pass=10},asc=f{bal=0.2}})|m{rat=0.8,vert=100,low=h{pass=10},asc=f{bal=0.2}};,ole=f{cmin=15,cmax=100000,frat=0.08},ose=g}}";
+
+
+
   if(SCOTCH_stratGraphOrder(orderingStratPtr , orderingStratStr.c_str()) != 0){
     std::cout<<"Error! Could not set strategy string."<<std::endl;
     exit(EXIT_FAILURE);

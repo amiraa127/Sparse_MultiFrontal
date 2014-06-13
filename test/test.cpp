@@ -4,7 +4,6 @@
 #include "scotch.h"
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
-#include <Eigen/MetisSupport>
 #include "helperFunctions.hpp"
 #include "HODLR_Matrix.hpp"
 #include "sparseMF.hpp"
@@ -30,6 +29,7 @@ int main(int argc, char* argv[]){
   double error_Sp = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
   std::cout<<error_Sp<<std::endl;
   
+
   /* // Eigen Conventional Solve
   Eigen::SparseLU<Eigen::SparseMatrix<double>,Eigen::MetisOrdering<int> > Eigen_Solver;
   double startTime = clock();
