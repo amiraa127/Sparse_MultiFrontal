@@ -7,6 +7,7 @@
 #include "helperFunctions.hpp"
 #include "HODLR_Matrix.hpp"
 #include "sparseMF.hpp"
+#include "matrixIO.hpp"
 #include <string>
 #include <cppunit/ui/text/TestRunner.h>
 #include <cppunit/TestCase.h>
@@ -99,7 +100,7 @@ public:
   void LU_Solver_Test(){
     std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
     std::cout<<"Testing full LU factorization on a 100k matrix...."<<std::endl;
-    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/localmat0.100k");
+    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.100k");
     Eigen::VectorXd exactSoln_Sp = Eigen::MatrixXd::Random(inputSpMatrix.rows(),1);
     Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
     sparseMF solver(inputSpMatrix);
@@ -113,7 +114,7 @@ public:
   void implicit_Solver_Test(){
     std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
     std::cout<<"Testing implicit solver on a 100k matrix...."<<std::endl;
-    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/localmat0.100k");
+    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.100k");
     Eigen::VectorXd exactSoln_Sp = Eigen::MatrixXd::Random(inputSpMatrix.rows(),1);
     Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
     sparseMF solver(inputSpMatrix);
@@ -127,13 +128,13 @@ public:
 
 
 int main(int argc, char* argv[]){
-  /*
+  
   CppUnit::TextUi::TestRunner runner;
   runner.addTest(Sparse_Solver_Test::suite());
   runner.run();
-  */
+  
   std::cout<<"Reading sparse matrix...."<<std::endl;
-  Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/localmat0.100k");
+  Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.100k");
   std::cout<<"Sparse matrix read successfully."<<std::endl; 
  
   std::cout<<"Solving..."<<std::endl;
@@ -146,7 +147,7 @@ int main(int argc, char* argv[]){
   
   double error_Sp = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
   std::cout<<error_Sp<<std::endl;
-
+  
   /* // Eigen Conventional Solve
   Eigen::SparseLU<Eigen::SparseMatrix<double>,Eigen::MetisOrdering<int> > Eigen_Solver;
   double startTime = clock();

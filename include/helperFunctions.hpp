@@ -1,7 +1,6 @@
 #ifndef HELPERFUNCTIONS_SPARSE_MF_HPP
 #define HELPERFUNCTIONS_SPARSE_MF_HPP
 
-#include <Eigen/Sparse>
 #include <string>
 #include "scotch.h"
 #include <fstream>

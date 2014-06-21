@@ -15,7 +15,7 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   implicit_SolveTime           = 0;
   implicit_TotalTime           = 0;
   implicit_SymbolicFactorTime  = 0;
-≈
+
   fast_ExtendAddTime      = 0;
   fast_FactorizationTime  = 0;
   fast_SolveTime          = 0;
@@ -33,7 +33,7 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   symbolic_Factorized     = false;
   LU_Factorized           = false;
   implicit_Factorized     = false;
-  fast_Factorized        = false;
+  fast_Factorized         = false;
 
   testResults             = false;
   
@@ -46,8 +46,6 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   fast_MatrixSizeThresh = 1000;
   fast_HODLR_LeafSize = 30;
   fast_LR_Tol = 1e-5;
-  fast_MinValueACA = 0;
-  fast_LR_Method = "partialPiv_ACA";
   fast_MinPivot = 0;
   inputSpMatrix.prune(1e-40);  
 
@@ -364,16 +362,16 @@ void sparseMF::implicit_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::no
   root->nodeToUpdate_U = nodeToUpdate_U;
   root->updateToNode_U = updateToNode_U;
   root->updateMatrix =  frontalMatrix.bottomRightCorner(updateMatrixSize,updateMatrixSize) - (root->updateToNode_U) * updateSoln;
-
+   /*
   //Special Operations :DD
-  /*
-  if (nodeSize >= 2000){
+    std::cout<<nodeSize<<std::endl;
+  if (nodeSize >= 1500){
     std::stringstream ss,ss2;
     int minIdx = root->min_Col;
     ss << frontID; 
     ss2<< root->currLevel;
-    std::string outputFileName = "400_front_num_" + ss.str() +"_level_" + ss2.str();
-    std::string outputFileNameSp = "400_front_num_" + ss.str() +"_level_" +  ss2.str() + "_Graph";
+    std::string outputFileName = "300_front_num_" + ss.str() +"_level_" + ss2.str();
+    std::string outputFileNameSp = "300_front_num_" + ss.str() +"_level_" +  ss2.str() + "_Graph";
     saveMatrixXdToBinary(nodeMatrix,outputFileName); 
     saveSparseMatrixIntoMtx(reorderedMatrix.block(minIdx,minIdx,nodeSize,nodeSize),outputFileNameSp);
     frontID ++;
