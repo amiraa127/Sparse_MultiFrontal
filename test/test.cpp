@@ -23,10 +23,10 @@ class Sparse_Solver_Test: public CppUnit::TestCase
   /*----------------Creating a Test Suite----------------------*/
   CPPUNIT_TEST_SUITE(Sparse_Solver_Test);
   
-  CPPUNIT_TEST(LU_Solver_Test_Small);
-  CPPUNIT_TEST(implicit_Solver_Test_Small);
-  CPPUNIT_TEST(LU_Solver_Test);
-  CPPUNIT_TEST(implicit_Solver_Test);
+  //CPPUNIT_TEST(LU_Solver_Test_Small);
+  //CPPUNIT_TEST(implicit_Solver_Test_Small);
+  //CPPUNIT_TEST(LU_Solver_Test);
+  //CPPUNIT_TEST(implicit_Solver_Test);
   
   CPPUNIT_TEST_SUITE_END();
 
@@ -134,7 +134,7 @@ int main(int argc, char* argv[]){
   runner.run();
   
   std::cout<<"Reading sparse matrix...."<<std::endl;
-  Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.100k");
+  Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.400k");
   std::cout<<"Sparse matrix read successfully."<<std::endl; 
  
   std::cout<<"Solving..."<<std::endl;
