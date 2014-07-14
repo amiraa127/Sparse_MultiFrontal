@@ -134,7 +134,7 @@ int main(int argc, char* argv[]){
   runner.run();
   
   std::cout<<"Reading sparse matrix...."<<std::endl;
-  Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.400k");
+  Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.100k");
   std::cout<<"Sparse matrix read successfully."<<std::endl; 
  
   std::cout<<"Solving..."<<std::endl;
