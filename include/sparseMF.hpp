@@ -14,7 +14,7 @@
 #include "eliminationTree.hpp"
 #include "helperFunctions.hpp"
 #include "HODLR_Matrix.hpp"
-
+#include "extendAdd.hpp"
 class sparseMF{
 
 public:

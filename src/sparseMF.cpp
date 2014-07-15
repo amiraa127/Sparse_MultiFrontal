@@ -590,11 +590,14 @@ void sparseMF::fast_NodeExtendAddUpdate(eliminationTree::node* root,HODLR_Matrix
    
     if (childNode->D_UpdateDense == true){
       std::cout<<"dense D"<<std::endl;
-      panelHODLR.extendAddUpdate(childNode->updateMatrix,childUpdateExtendVec,fast_LR_Tol,"PS_Boundary");
+      //panelHODLR.extendAddUpdate(childNode->updateMatrix,childUpdateExtendVec,fast_LR_Tol,"PS_Boundary");
+      extendAddUpdate(panelHODLR,childNode->updateMatrix,childUpdateExtendVec,fast_LR_Tol,"PS_Boundary");
     }else{
       std::cout<<"HODLR D"<<std::endl;
-      panelHODLR.extendAddUpdate(childNode->updateU,childNode->updateV,childUpdateExtendVec,fast_LR_Tol,"Compress_LU");
-      panelHODLR.extendAddUpdate(childNode->D_HODLR,childUpdateExtendVec,fast_LR_Tol,"PS_Boundary");
+      //panelHODLR.extendAddUpdate(childNode->updateU,childNode->updateV,childUpdateExtendVec,fast_LR_Tol,"Compress_LU");
+      //panelHODLR.extendAddUpdate(childNode->D_HODLR,childUpdateExtendVec,fast_LR_Tol,"PS_Boundary");
+      extendAddUpdate(panelHODLR,childNode->updateU,childNode->updateV,childUpdateExtendVec,fast_LR_Tol,"Compress_LU");
+      extendAddUpdate(panelHODLR,childNode->D_HODLR,childUpdateExtendVec,fast_LR_Tol,"PS_Boundary");
     }
   }
 }
