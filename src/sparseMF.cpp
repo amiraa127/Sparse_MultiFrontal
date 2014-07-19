@@ -395,7 +395,8 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
   root->criterion = (frontalMatrixSize >= fast_MatrixSizeThresh);
   //root->criterion = (root->currLevel == 0);
   if (root->criterion == true /*fast_MatrixSizeThresh*/){
-    Eigen::SparseMatrix<double> frontalMatrix_Sp = createPanelMatrix(root).sparseView();
+    //Eigen::SparseMatrix<double> frontalMatrix_Sp = createPanelMatrix(root).sparseView();
+    Eigen::SparseMatrix<double> frontalMatrix_Sp = frontalMatrix.sparseView();
     root->D_UpdateDense = false;
     HODLR_Matrix panelHODLR;
     if (root->currLevel != 0){  
@@ -441,7 +442,7 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
     }
     (root->fast_NodeMatrix_HODLR).recLU_Compute();
   }else{
-    Eigen::MatrixXd frontalMatrix = createPanelMatrix(root);
+    //Eigen::MatrixXd frontalMatrix = createPanelMatrix(root);
     double startTime = clock();
     nodeExtendAddUpdate(root,frontalMatrix,root->panelIdxVector);
     double endTime = clock();
@@ -596,7 +597,7 @@ void sparseMF::fast_NodeExtendAddUpdate(eliminationTree::node* root,HODLR_Matrix
       std::cout<<"HODLR D"<<std::endl;
       //panelHODLR.extendAddUpdate(childNode->updateU,childNode->updateV,childUpdateExtendVec,fast_LR_Tol,"Compress_LU");
       //panelHODLR.extendAddUpdate(childNode->D_HODLR,childUpdateExtendVec,fast_LR_Tol,"PS_Boundary");
-      extendAddUpdate(panelHODLR,childNode->updateU,childNode->updateV,childUpdateExtendVec,fast_LR_Tol,"Compress_LU");
+      extendAddUpdate(panelHODLR,childNode->updateU,childNode->updateV,childUpdateExtendVec,fast_LR_Tol,"PS_Boundary");
       extendAddUpdate(panelHODLR,childNode->D_HODLR,childUpdateExtendVec,fast_LR_Tol,"PS_Boundary");
     }
   }
@@ -790,11 +791,11 @@ Eigen::MatrixXd sparseMF::implicit_Solve(const Eigen::MatrixXd & inputRHS){
     std::cout<<"Matrix Reordering Time                = "<<matrixReorderingTime<<" seconds"<<std::endl;
     std::cout<<"     Matrix Graph Conversion Time     = "<<matrixGraphConversionTime<<" seconds"<<std::endl;
     std::cout<<"     SCOTCH Reordering Time           = "<<SCOTCH_ReorderingTime<<" seconds"<<std::endl;
-    std::cout<<"Fast Factorization Time               = "<<implicit_FactorizationTime<<" seconds"<<std::endl;
-    std::cout<<"     Fast Extend Add Time             = "<<implicit_ExtendAddTime<<" seconds"<<std::endl;   
-    std::cout<<"     Fast Symbolic Factorization Time = "<<symbolic_FactorizationTime<<" seconds"<<std::endl;
-    std::cout<<"Fast Solve Time                       = "<<implicit_SolveTime<<" seconds"<<std::endl;
-    std::cout<<"Fast Total Solve Time                 = "<<implicit_TotalTime<<" seconds"<<std::endl;
+    std::cout<<"Factorization Time                    = "<<implicit_FactorizationTime<<" seconds"<<std::endl;
+    std::cout<<"     Extend Add Time                  = "<<implicit_ExtendAddTime<<" seconds"<<std::endl;   
+    std::cout<<"     Symbolic Factorization Time      = "<<symbolic_FactorizationTime<<" seconds"<<std::endl;
+    std::cout<<"Solve Time                            = "<<implicit_SolveTime<<" seconds"<<std::endl;
+    std::cout<<"Total Solve Time                      = "<<implicit_TotalTime<<" seconds"<<std::endl;
     std::cout<<"Residula l2 Relative Error            = "<<((reorderedMatrix * finalSoln) - permutedRHS).norm()/permutedRHS.norm()<<std::endl;
   }
   return result;
@@ -833,11 +834,11 @@ Eigen::MatrixXd sparseMF::fast_Solve(const Eigen::MatrixXd & inputRHS){
     std::cout<<"Matrix Reordering Time                = "<<matrixReorderingTime<<" seconds"<<std::endl;
     std::cout<<"     Matrix Graph Conversion Time     = "<<matrixGraphConversionTime<<" seconds"<<std::endl;
     std::cout<<"     SCOTCH Reordering Time           = "<<SCOTCH_ReorderingTime<<" seconds"<<std::endl;
-    std::cout<<"Fast Factorization Time               = "<<fast_FactorizationTime<<" seconds"<<std::endl;
-    std::cout<<"     Fast Extend Add Time             = "<<fast_ExtendAddTime<<" seconds"<<std::endl;   
-    std::cout<<"     Fast Symbolic Factorization Time = "<<symbolic_FactorizationTime<<" seconds"<<std::endl;
-    std::cout<<"Fast Solve Time                       = "<<fast_SolveTime<<" seconds"<<std::endl;
-    std::cout<<"Fast Total Solve Time                 = "<<fast_TotalTime<<" seconds"<<std::endl;
+    std::cout<<"Factorization Time                    = "<<fast_FactorizationTime<<" seconds"<<std::endl;
+    std::cout<<"     Extend Add Time                  = "<<fast_ExtendAddTime<<" seconds"<<std::endl;   
+    std::cout<<"     Symbolic Factorization Time      = "<<symbolic_FactorizationTime<<" seconds"<<std::endl;
+    std::cout<<"Solve Time                            = "<<fast_SolveTime<<" seconds"<<std::endl;
+    std::cout<<"Total Solve Time                      = "<<fast_TotalTime<<" seconds"<<std::endl;
     std::cout<<"Residula l2 Relative Error            = "<<((reorderedMatrix * finalSoln) - permutedRHS).norm()/permutedRHS.norm()<<std::endl;
   }
   return result;

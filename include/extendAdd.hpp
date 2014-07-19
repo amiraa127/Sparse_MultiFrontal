@@ -19,27 +19,8 @@ void extendAddUpdate(HODLR_Matrix & parentHODLR, Eigen::MatrixXd & D,std::vector
 void extendAddUpdate(HODLR_Matrix & parentHODLR, HODLR_Matrix & D_HODLR,std::vector<int> & updateIdxVec,double tol,std::string mode);
 
 // done 
-void extendAddUpdate(HODLR_Matrix & parentHODLR, Eigen::MatrixXd & updateU,Eigen::MatrixXd & updateV,std::vector<int> & updateIdxVec,double tol,std::string mode);
+void extendAddUpdate(HODLR_Matrix & parentHODLR, Eigen::MatrixXd & U,Eigen::MatrixXd & V,std::vector<int> & updateIdxVec,double tol,std::string mode);
 
 int add_LR(Eigen::MatrixXd & result_U,Eigen::MatrixXd & result_K,Eigen::MatrixXd & result_V,const Eigen::MatrixXd & U1, const Eigen::MatrixXd & V1, const Eigen::MatrixXd & U2, const Eigen::MatrixXd & V2,double tol,std::string mode);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #endif
