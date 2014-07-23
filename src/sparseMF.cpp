@@ -45,7 +45,7 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   LU_Permutation = Eigen::VectorXd::LinSpaced(Eigen::Sequential,Sp_MatrixSize,0,Sp_MatrixSize - 1);
   fast_MatrixSizeThresh = 2000;
   fast_HODLR_LeafSize = 100;
-  fast_LR_Tol = 1e-1;
+  fast_LR_Tol = 1e-5;
   fast_MinPivot = 0;
   inputSpMatrix.prune(1e-40);  
 
@@ -415,7 +415,9 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
     panelHODLR.set_LRTolerance(fast_LR_Tol);
     panelHODLR.storeLRinTree();
     double startTime = clock();
-    fast_NodeExtendAddUpdate(root,panelHODLR,root->panelIdxVector);
+    //fast_NodeExtendAddUpdate(root,panelHODLR,root->panelIdxVector);
+    fast_NodeExtendAddUpdate_Array(root,panelHODLR,root->panelIdxVector);
+    
     double endTime = clock();
     std::cout<<"extendAdd done"<<std::endl;
     fast_ExtendAddTime += (endTime - startTime)/CLOCKS_PER_SEC;
@@ -601,6 +603,50 @@ void sparseMF::fast_NodeExtendAddUpdate(eliminationTree::node* root,HODLR_Matrix
       extendAddUpdate(panelHODLR,childNode->D_HODLR,childUpdateExtendVec,fast_LR_Tol,"PS_Boundary");
     }
   }
+}
+
+
+void sparseMF::fast_NodeExtendAddUpdate_Array(eliminationTree::node* root,HODLR_Matrix & panelHODLR,std::vector<int> & parentIdxVec){
+  if (root->isLeaf == true){
+    panelHODLR.set_FreeMatrixMemory(true);
+    //panelHODLR.storeLRinTree();
+    return;
+  }  
+  // Go over all childern
+  std::vector<Eigen::MatrixXd *> U_Array,V_Array;
+  std::vector<Eigen::MatrixXd *> D_Array;
+  std::vector<HODLR_Matrix *>    D_HODLR_Array;
+  std::vector<std::vector<int> > updateIdxVec_Array_D;
+  std::vector<std::vector<int> > updateIdxVec_Array_D_HODLR;
+  std::vector<eliminationTree::node*> nodeChildren = root->children;
+  int numChildren = nodeChildren.size();
+  for (int i = 0; i < numChildren; i++){
+    eliminationTree::node* childNode = nodeChildren[i]; 
+    // Find update matrix extend add indices
+    std::vector<int> childUpdateExtendVec = extendIdxVec(childNode->updateIdxVector,parentIdxVec);
+    if (childNode->D_UpdateDense == true){
+      std::cout<<"dense D"<<std::endl;
+      //extendAddUpdate(panelHODLR,childNode->updateMatrix,childUpdateExtendVec,fast_LR_Tol,"PS_Boundary");
+      D_Array.push_back(&(childNode->updateMatrix));
+      updateIdxVec_Array_D.push_back(childUpdateExtendVec);
+   
+    }else{
+      std::cout<<"HODLR D"<<std::endl;
+      //extendAddUpdate(panelHODLR,childNode->updateU,childNode->updateV,childUpdateExtendVec,fast_LR_Tol,"PS_Boundary");
+      //extendAddUpdate(panelHODLR,childNode->D_HODLR,childUpdateExtendVec,fast_LR_Tol,"PS_Boundary");
+      U_Array.push_back(&(childNode->updateU));
+      V_Array.push_back(&(childNode->updateV));
+      D_HODLR_Array.push_back(&(childNode->D_HODLR));
+      updateIdxVec_Array_D_HODLR.push_back(childUpdateExtendVec);
+    }
+  }
+
+  extendAddUpdate(panelHODLR,D_Array,D_HODLR_Array,U_Array,V_Array,updateIdxVec_Array_D,updateIdxVec_Array_D_HODLR,fast_LR_Tol,"PS_Boundary");
+
+
+
+
+
 }
 
 
