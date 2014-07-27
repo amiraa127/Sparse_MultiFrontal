@@ -32,7 +32,7 @@ class Sparse_Solver_Test: public CppUnit::TestCase
   //CPPUNIT_TEST(extractFromMatrixBlk_Test);
   //CPPUNIT_TEST(extractFromLR_Test);
   //CPPUNIT_TEST(extractFromChild_Test);
-
+  //CPPUNIT_TEST(extendAdd_DenseToHODLR_Array_Test);
 
 
   //CPPUNIT_TEST(extendAdd_DenseToHODLR_Test);
@@ -155,7 +155,7 @@ public:
     idxVec = createUniqueRndIdx(0,subBlkSize - 1,extractSize);
     extract = extractFromLR(U,V,min_i,min_j,subBlkSize,subBlkSize,idxVec,"Cols",extractSize + 100);
     exactExtract = Eigen::MatrixXd::Zero(subBlkSize,extractSize);
-    for(int i = 0; i <extractSize; i++)
+    for(int i = 0; i < extractSize; i++)
       exactExtract.col(i) = exactUpdate.col(min_j + idxVec[i]).block(min_i,0,subBlkSize,1);
     error = (exactExtract - extract.leftCols(extractSize)).norm();
     CPPUNIT_ASSERT(error < 1e-16);
@@ -169,16 +169,17 @@ public:
     int min_i = 3456;
     int min_j = 2342;
     std::cout<< "Testing Col Child Extraction From a Dense Child Matrix...." <<std::endl;
-    Eigen::MatrixXd childMatrix = Eigen::MatrixXd::Random(childSize,childSize);
-    std::vector<int> updateIdxVec  =  createUniqueRndIdx(0,parentSize - 1,childSize);
-    std::vector<int> extractIdxVec =  createUniqueRndIdx(0,subBlkSize - 1, extractSize);
-    Eigen::MatrixXd childExtract = Eigen::MatrixXd::Zero(subBlkSize,extractSize + 100);
+    Eigen::MatrixXd childMatrix    = Eigen::MatrixXd::Random(childSize,childSize);
+    std::vector<int> updateIdxVec  = createUniqueRndIdx(0,parentSize - 1,childSize);
+    std::vector<int> extractIdxVec = createUniqueRndIdx(0,subBlkSize - 1,extractSize);
+    Eigen::MatrixXd childExtract   = Eigen::MatrixXd::Zero(subBlkSize,extractSize + 100);
     extractFromChild(parentSize,min_i,min_j,subBlkSize,subBlkSize,childMatrix,extractIdxVec,updateIdxVec,"Cols",childExtract);
     Eigen::MatrixXd childExtend = extend(updateIdxVec,parentSize,childMatrix,0,0,childSize,childSize,"RowsCols");
     Eigen::MatrixXd exactExtract = Eigen::MatrixXd::Zero(subBlkSize,extractSize);
-    for (int i = 1; i < extractSize; i++)
+    for (int i = 0; i < extractSize; i++)
       exactExtract.col(i) = childExtend.col(min_j + extractIdxVec[i]).block(min_i,0,subBlkSize,1);
     double error = (exactExtract - childExtract.leftCols(extractSize)).norm();
+    std::cout<<error<<std::endl;
     CPPUNIT_ASSERT(error < 1e-16);
   }
   /*
@@ -248,6 +249,37 @@ public:
     CPPUNIT_ASSERT(error < 1e-4);
   } 
 */
+
+
+  void extendAdd_DenseToHODLR_Array_Test(){
+    std::cout<<"Testing Dense to HODLR Array Extend-Add..."<<std::endl;
+    int parentSize = 2000;
+    HODLR_Matrix    parentHODLR;
+    Eigen::MatrixXd exact_Parent  = parentHODLR.createExactHODLR(10,parentSize,30);
+    int updateSize1 = parentSize/2;
+    int updateSize2 = parentSize/3;
+    std::vector<int> updateIdxVec1 = createUniqueRndIdx(0,parentSize-1,updateSize1);
+    std::vector<int> updateIdxVec2 = createUniqueRndIdx(0,parentSize-1,updateSize2);
+    Eigen::MatrixXd D1 = Eigen::MatrixXd::Random(updateSize1,updateSize1);
+    Eigen::MatrixXd D2 = Eigen::MatrixXd::Random(updateSize2,updateSize2);
+    std::vector<std::vector<int> > updateIdxVec_Array;
+    std::vector<std::vector<int> > updateIdxVec_Array_HODLR;
+    updateIdxVec_Array.push_back(updateIdxVec1);
+    updateIdxVec_Array.push_back(updateIdxVec2);
+    std::vector<Eigen::MatrixXd *> D_Array;
+    D_Array.push_back(&D1);
+    D_Array.push_back(&D2);
+    std::vector<HODLR_Matrix*> D_HODLR_Array;
+    std::vector<Eigen::MatrixXd*> U_Array;
+    std::vector<Eigen::MatrixXd*> V_Array;
+    extendAddUpdate(parentHODLR,D_Array,D_HODLR_Array,U_Array,V_Array,updateIdxVec_Array,updateIdxVec_Array_HODLR,1e-6,"PS_Boundary");
+    Eigen::MatrixXd exact_Result = exact_Parent + extend(updateIdxVec1,parentSize,D1,0,0,updateSize1,updateSize1,"RowsCols") + extend(updateIdxVec2,parentSize,D2,0,0,updateSize2,updateSize2,"RowsCols");
+    double error =(parentHODLR.block(0,0,parentSize,parentSize) - exact_Result).norm();
+    std::cout<<error<<std::endl;
+    CPPUNIT_ASSERT(error < 1e-5);
+
+  }
+
   void LU_Solver_Test_Small(){
     std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
     std::cout<<"Testing full LU factorization on a small matrix...."<<std::endl;
@@ -359,7 +391,9 @@ int main(int argc, char* argv[]){
  
   sparseMF solver(inputSpMatrix);
   solver.printResultInfo = true;
-  Eigen::MatrixXd soln_Sp = solver.fast_Solve(RHS_Sp);
+  //Eigen::MatrixXd soln_Sp = solver.fast_Solve(RHS_Sp);
+  Eigen::MatrixXd soln_Sp = solver.iterative_Solve(RHS_Sp,1000,1e-10,1e-1);
+  
   
   double error_Sp = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
   std::cout<<error_Sp<<std::endl;

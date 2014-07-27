@@ -45,10 +45,10 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   LU_Permutation = Eigen::VectorXd::LinSpaced(Eigen::Sequential,Sp_MatrixSize,0,Sp_MatrixSize - 1);
   fast_MatrixSizeThresh = 2000;
   fast_HODLR_LeafSize = 100;
-  fast_LR_Tol = 1e-5;
+  fast_LR_Tol = 1e-1;
   fast_MinPivot = 0;
   inputSpMatrix.prune(1e-40);  
-
+  originalMatrix = inputSpMatrix;
   double startTime = clock();
   reorderMatrix(inputSpMatrix);
   double endTime = clock();
@@ -817,9 +817,9 @@ Eigen::MatrixXd sparseMF::implicit_Solve(const Eigen::MatrixXd & inputRHS){
 
   startTime = clock();
   Eigen::MatrixXd fast_UpwardPass_Soln = implicit_UpwardPass(permutedRHS);
-  std::cout<<"Upward pass completed. Attempting downward pass..."<<std::endl;
+  //std::cout<<"Upward pass completed. Attempting downward pass..."<<std::endl;
   Eigen::MatrixXd finalSoln = implicit_DownwardPass(fast_UpwardPass_Soln);
-  std::cout<<"Downward pass completed"<<std::endl;
+  //std::cout<<"Downward pass completed"<<std::endl;
   endTime = clock();
   implicit_SolveTime = (endTime - startTime)/CLOCKS_PER_SEC;
  
@@ -860,9 +860,9 @@ Eigen::MatrixXd sparseMF::fast_Solve(const Eigen::MatrixXd & inputRHS){
   
   startTime = clock();
   Eigen::MatrixXd ultraSolve_UpwardPass_Soln = fast_UpwardPass(permutedRHS);
-  std::cout<<"Upward pass completed. Attempting downward pass..."<<std::endl;
+  //std::cout<<"Upward pass completed. Attempting downward pass..."<<std::endl;
   Eigen::MatrixXd finalSoln = fast_DownwardPass(ultraSolve_UpwardPass_Soln);
-  std::cout<<"Downward pass completed"<<std::endl;
+  //std::cout<<"Downward pass completed"<<std::endl;
   endTime = clock();
   fast_SolveTime = (endTime - startTime)/CLOCKS_PER_SEC;
  
@@ -888,6 +888,7 @@ Eigen::MatrixXd sparseMF::fast_Solve(const Eigen::MatrixXd & inputRHS){
     std::cout<<"Residula l2 Relative Error            = "<<((reorderedMatrix * finalSoln) - permutedRHS).norm()/permutedRHS.norm()<<std::endl;
   }
   return result;
+
 }
 
 
@@ -895,7 +896,7 @@ Eigen::MatrixXd sparseMF::implicit_UpwardPass(const Eigen::MatrixXd &inputRHS){
   Eigen::MatrixXd modifiedRHS = inputRHS;
   for (int i = 1; i <  matrixElmTreePtr->numLevels; i++){
     int currLevel = matrixElmTreePtr->numLevels - i ;
-      std::cout<<"Upward pass solving nodes at level "<<currLevel<<std::endl;
+    //std::cout<<"Upward pass solving nodes at level "<<currLevel<<std::endl;
       std::vector<eliminationTree::node*> currLevelNodesVec = matrixElmTreePtr->nodeLevelVec[currLevel];
       for (unsigned int j = 0; j < currLevelNodesVec.size(); j++){
 	eliminationTree::node* currNodePtr = currLevelNodesVec[j];
@@ -927,7 +928,7 @@ Eigen::MatrixXd sparseMF::fast_UpwardPass(const Eigen::MatrixXd &inputRHS){
   Eigen::MatrixXd modifiedRHS = inputRHS;
   for (int i = 1; i <  matrixElmTreePtr->numLevels; i++){
     int currLevel = matrixElmTreePtr->numLevels - i ;
-      std::cout<<"Upward pass solving nodes at level "<<currLevel<<std::endl;
+    //std::cout<<"Upward pass solving nodes at level "<<currLevel<<std::endl;
       std::vector<eliminationTree::node*> currLevelNodesVec = matrixElmTreePtr->nodeLevelVec[currLevel];
       for (unsigned int j = 0; j < currLevelNodesVec.size(); j++){
 	eliminationTree::node* currNodePtr = currLevelNodesVec[j];
@@ -962,7 +963,7 @@ Eigen::MatrixXd sparseMF::implicit_DownwardPass(const Eigen::MatrixXd & upwardPa
 
 void sparseMF::implicit_DownwardPass(eliminationTree::node* root,const Eigen::MatrixXd & upwardPassRHS,Eigen::MatrixXd & finalSoln){
 
-  std::cout<<"Downward pass solving nodes at level "<<root->currLevel<<std::endl;
+  //std::cout<<"Downward pass solving nodes at level "<<root->currLevel<<std::endl;
  
   // Solve for node matrix
   int nodeSize = root->max_Col - root->min_Col + 1;
@@ -1002,7 +1003,7 @@ Eigen::MatrixXd sparseMF::fast_DownwardPass(const Eigen::MatrixXd & upwardPassRH
 
 void sparseMF::fast_DownwardPass(eliminationTree::node* root,const Eigen::MatrixXd & upwardPassRHS,Eigen::MatrixXd & finalSoln){
 
-  std::cout<<"Downward pass solving nodes at level "<<root->currLevel<<std::endl;
+  //std::cout<<"Downward pass solving nodes at level "<<root->currLevel<<std::endl;
  
   // Solve for node matrix
   int nodeSize = root->max_Col - root->min_Col + 1;
@@ -1077,4 +1078,70 @@ Eigen::MatrixXd sparseMF::fast_NodeSolve(eliminationTree::node* root,const Eigen
     result = (root->fast_NodeMatrix_LU).triangularView<Eigen::Upper>().solve(L_soln);
   }
   return result;
+}
+
+
+Eigen::MatrixXd sparseMF::oneStep_Iterate(const Eigen::MatrixXd & prevStep_result, const Eigen::MatrixXd & initSolveGuess, Eigen::MatrixXd & prevStep_Product){
+  prevStep_Product = originalMatrix * prevStep_result;
+  Eigen::MatrixXd update = prevStep_result - fast_Solve(prevStep_Product);
+  return initSolveGuess + update;  
+}
+
+
+Eigen::MatrixXd sparseMF::iterative_Solve(const Eigen::MatrixXd & input_RHS, const int maxIterations, const double stop_tolerance,const double LR_Tolerance){
+    
+  //assert(input_RHS.rows() == matrixSize);
+  // double prev_LRTolerance = LR_Tolerance;
+  fast_LR_Tol = LR_Tolerance;
+  bool prev_printResultInfo = printResultInfo;
+  printResultInfo = false;
+  double startTime = clock();
+  Eigen::MatrixXd init_Guess    = fast_Solve(input_RHS);
+  Eigen::MatrixXd currStep_Soln = init_Guess;
+  Eigen::MatrixXd nextStep_Soln;
+  Eigen::MatrixXd currStep_Product;
+  int num_Iter         = 1;
+  double tolerance     = 1;
+  double iterSolveTime = fast_SolveTime;
+  std::vector<int> iter_IterTimeVec,iter_IterAccuracyVec;
+  while (tolerance > stop_tolerance){
+    iter_IterTimeVec.push_back(iterSolveTime);
+    double iterStartTime = clock();
+    nextStep_Soln = oneStep_Iterate(currStep_Soln,init_Guess,currStep_Product);
+    //tolerance = (nextStep_Soln - currStep_Soln).norm()/currStep_Soln.norm();
+    tolerance = (currStep_Product - input_RHS).norm()/input_RHS.norm();
+    double iterEndTime = clock();
+    iterSolveTime = (iterEndTime - iterStartTime)/CLOCKS_PER_SEC;
+    iter_IterAccuracyVec.push_back(tolerance);
+    currStep_Soln = nextStep_Soln;      
+    std::cout<<num_Iter<<" "<<tolerance<<std::endl;
+    num_Iter ++;
+    if (num_Iter > maxIterations)
+      break;
+  }
+  
+  double endTime = clock();
+  int totalIter_SolveTime = (endTime-startTime)/CLOCKS_PER_SEC;
+  
+  // restore previous state;
+  //set_LRTolerance(prev_LRTolerance);
+  //set_def_LRMethod(prev_LRMethod);
+  printResultInfo = prev_printResultInfo;   
+  if (printResultInfo == true){
+    std::cout<<"**************************************************"<<std::endl;
+    std::cout<<"Solver Type                           = "<<"Iterative"<<std::endl;
+    std::cout<<"Low-Rank Tolerance                    = "<<fast_LR_Tol<<std::endl;
+    std::cout<<"Matrix Reordering Time                = "<<matrixReorderingTime<<" seconds"<<std::endl;
+    std::cout<<"     Matrix Graph Conversion Time     = "<<matrixGraphConversionTime<<" seconds"<<std::endl;
+    std::cout<<"     SCOTCH Reordering Time           = "<<SCOTCH_ReorderingTime<<" seconds"<<std::endl;
+    std::cout<<"Factorization Time                    = "<<fast_FactorizationTime<<" seconds"<<std::endl;
+    std::cout<<"     Extend Add Time                  = "<<fast_ExtendAddTime<<" seconds"<<std::endl;   
+    std::cout<<"     Symbolic Factorization Time      = "<<symbolic_FactorizationTime<<" seconds"<<std::endl;
+    std::cout<<"Num Iterations                        = "<<num_Iter<<" seconds"<<std::endl;
+    std::cout<<"Total Solve Time                      = "<<totalIter_SolveTime<<" seconds"<<std::endl;
+    std::cout<<"Residula l2 Relative Error            = "<<tolerance<<std::endl;
+  }
+  return currStep_Soln;
+
+
 }

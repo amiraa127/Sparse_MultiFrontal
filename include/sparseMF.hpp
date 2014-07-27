@@ -27,9 +27,11 @@ public:
   Eigen::MatrixXd LU_Solve(const Eigen::MatrixXd & inputRHS);
   Eigen::MatrixXd implicit_Solve(const Eigen::MatrixXd & inputRHS);
   Eigen::MatrixXd fast_Solve(const Eigen::MatrixXd & inputRHS);
+  Eigen::MatrixXd iterative_Solve(const Eigen::MatrixXd & input_RHS, const int maxIterations, const double stop_tolerance,const double LR_Tolerance);
 
 private:
   Eigen::SparseMatrix<double> reorderedMatrix;
+  Eigen::SparseMatrix<double> originalMatrix;  
   Eigen::SparseMatrix<double> L_Matrix;
   Eigen::SparseMatrix<double> U_Matrix;
   Eigen::VectorXd LU_Permutation;
@@ -133,11 +135,15 @@ private:
 
   Eigen::MatrixXd fast_NodeSolve(eliminationTree::node* root,const Eigen::MatrixXd & RHS);
  
-
-
-
- Eigen::MatrixXd getRowBlkMatrix(const Eigen::MatrixXd & inputMatrix, const std::vector<int> & inputIndex);
+  Eigen::MatrixXd getRowBlkMatrix(const Eigen::MatrixXd & inputMatrix, const std::vector<int> & inputIndex);
   void setRowBlkMatrix(const Eigen::MatrixXd &srcMatrix, Eigen::MatrixXd &destMatrix, const std::vector<int> &destIndex);
+  
+  
+  
+
+  Eigen::MatrixXd oneStep_Iterate(const Eigen::MatrixXd & prevStep_result, const Eigen::MatrixXd & initSolveGuess, Eigen::MatrixXd & prevStep_Product);
+
+
 
   /******************************************Test************************************************/
   void test_LU_Factorization();
