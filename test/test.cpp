@@ -23,16 +23,16 @@ class Sparse_Solver_Test: public CppUnit::TestCase
 {
   /*----------------Creating a Test Suite----------------------*/
   CPPUNIT_TEST_SUITE(Sparse_Solver_Test);
-  //CPPUNIT_TEST(LU_Solver_Test_Small);
-  //CPPUNIT_TEST(implicit_Solver_Test_Small);
-  //CPPUNIT_TEST(LU_Solver_Test);
-  //CPPUNIT_TEST(implicit_Solver_Test);
+  CPPUNIT_TEST(LU_Solver_Test_Small);
+  CPPUNIT_TEST(implicit_Solver_Test_Small);
+  CPPUNIT_TEST(LU_Solver_Test);
+  CPPUNIT_TEST(implicit_Solver_Test);
   
-  //CPPUNIT_TEST(extendAdd_LowRankToHODLR_LUQR_Test);
-  //CPPUNIT_TEST(extractFromMatrixBlk_Test);
-  //CPPUNIT_TEST(extractFromLR_Test);
-  //CPPUNIT_TEST(extractFromChild_Test);
-  //CPPUNIT_TEST(extendAdd_DenseToHODLR_Array_Test);
+  CPPUNIT_TEST(extendAdd_LowRankToHODLR_LUQR_Test);
+  CPPUNIT_TEST(extractFromMatrixBlk_Test);
+  CPPUNIT_TEST(extractFromLR_Test);
+  CPPUNIT_TEST(extractFromChild_Test);
+  CPPUNIT_TEST(extendAdd_DenseToHODLR_Array_Test);
 
 
   //CPPUNIT_TEST(extendAdd_DenseToHODLR_Test);
@@ -392,7 +392,7 @@ int main(int argc, char* argv[]){
   sparseMF solver(inputSpMatrix);
   solver.printResultInfo = true;
   //Eigen::MatrixXd soln_Sp = solver.fast_Solve(RHS_Sp);
-  Eigen::MatrixXd soln_Sp = solver.iterative_Solve(RHS_Sp,1000,1e-10,1e-1);
+  Eigen::MatrixXd soln_Sp = solver.iterative_Solve(RHS_Sp,100,1e-10,1e-1);
   
   
   double error_Sp = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();

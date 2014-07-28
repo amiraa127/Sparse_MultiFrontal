@@ -146,17 +146,32 @@ Eigen::MatrixXd extend(std::vector<int> & extendIdxVec,int parentSize,Eigen::Mat
       }
     }
   }else if (mode == "Cols"){
-    result = Eigen::MatrixXd::Zero(child.rows(),parentSize);
+    std::vector<int> extractBlk = extractBlocks(std::vector<int>(extendIdxVec.begin() + min_j,extendIdxVec.begin() + max_j + 1));
+    result = Eigen::MatrixXd::Zero(child_NumRows,parentSize);
+    for (int i = 0; i < (int)extractBlk.size() - 1; i++){
+      int numBlkCols = extractBlk[i + 1] - extractBlk[i];
+      result.block(0,extendIdxVec[extractBlk[i]],child_NumRows,numBlkCols) = child.block(0,extractBlk[i],child_NumRows,numBlkCols);  
+    }
+  
+    
+  /*
     for (int j = min_j; j <= max_j; j++){
       int colIdx = extendIdxVec[j];
       result.col(colIdx) = child.col(j);
-    }
+      }*/
   }else if (mode == "Rows"){
-    result = Eigen::MatrixXd::Zero(parentSize,child.cols());
-    for (int i = min_i; i <= max_i; i++){
+    std::vector<int> extractBlk = extractBlocks(std::vector<int>(extendIdxVec.begin() + min_i,extendIdxVec.begin() + max_i + 1));
+    result = Eigen::MatrixXd::Zero(parentSize,child_NumCols);
+    for (int i = 0; i < (int)extractBlk.size() - 1; i++){
+      int numBlkRows = extractBlk[i + 1] - extractBlk[i];
+      result.block(extendIdxVec[extractBlk[i]],0,numBlkRows,child_NumCols) = child.block(extractBlk[i],0,numBlkRows,child_NumCols);
+    }
+
+    
+    /*for (int i = min_i; i <= max_i; i++){
       int rowIdx = extendIdxVec[i];
       result.row(rowIdx) = child.row(i);
-    }
+      }*/
   }else{
     std::cout<<"Error! Unknown operation mode."<<std::endl;
     exit(EXIT_FAILURE);

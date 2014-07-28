@@ -90,6 +90,9 @@ private:
   
   /**********************************Numerical Factorization Functions*****************************/
   Eigen::MatrixXd createPanelMatrix(eliminationTree::node* root);
+  Eigen::SparseMatrix<double> createPanelMatrix_Sp(eliminationTree::node* root);
+  Eigen::SparseMatrix<double> createPanelGraph(eliminationTree::node* root);
+
 
   void LU_FactorizeMatrix();
   void implicit_FactorizeMatrix();
