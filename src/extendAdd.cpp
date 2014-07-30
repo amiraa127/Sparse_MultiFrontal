@@ -471,17 +471,22 @@ void calcPseudoInvInTree(HODLR_Tree::node* HODLR_Root,double tol){
   tempU = HODLR_Root->topOffDiagU;
   tempV = HODLR_Root->topOffDiagV;
   //HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->topOffDiagU,HODLR_Root->topOffDiagV,HODLR_Root->topOffDiagK,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
-  HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,U,V,K,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
-  HODLR_Root->topOffDiagU    = U * K;
-  HODLR_Root->topOffDiagV    = V;
+  //HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,U,V,K,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
+  //HODLR_Root->topOffDiagU    = U * K;
+  //HODLR_Root->topOffDiagV    = V;
+  
+  HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->topOffDiagU,HODLR_Root->topOffDiagV,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
+
 
   tempU = HODLR_Root->bottOffDiagU;
   tempV = HODLR_Root->bottOffDiagV;
   //HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->bottOffDiagU,HODLR_Root->bottOffDiagV,HODLR_Root->bottOffDiagK,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU");
-  HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,U,V,K,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU");
-  HODLR_Root->bottOffDiagU = U * K;
-  HODLR_Root->bottOffDiagV = V;
+  //HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,U,V,K,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU");
+  //HODLR_Root->bottOffDiagU = U * K;
+  //HODLR_Root->bottOffDiagV = V;
 
+  HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->bottOffDiagU,HODLR_Root->bottOffDiagV,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU");
+ 
   calcPseudoInvInTree(HODLR_Root->left,tol);
   calcPseudoInvInTree(HODLR_Root->right,tol);
 
@@ -721,16 +726,21 @@ void extendAddinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,T &
     */
     tempU = U1_TopOffDiag + U2_TopOffDiag;
     tempV = V1_TopOffDiag + V2_TopOffDiag;
-    HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,U,V,K,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
-    HODLR_Root->topOffDiagU    = U * K;
-    HODLR_Root->topOffDiagV    = V;
+    //HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,U,V,K,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
+    //HODLR_Root->topOffDiagU    = U * K;
+    //HODLR_Root->topOffDiagV    = V;
     
+    HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->topOffDiagU,HODLR_Root->topOffDiagV,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
+   
+
     tempU = U1_BottOffDiag + U2_BottOffDiag;
     tempV = V1_BottOffDiag + V2_BottOffDiag;
-    HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,U,V,K,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU");
-    HODLR_Root->bottOffDiagU = U * K;
-    HODLR_Root->bottOffDiagV = V;
-
+    //HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,U,V,K,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU");
+    //HODLR_Root->bottOffDiagU = U * K;
+    //HODLR_Root->bottOffDiagV = V;
+    
+    HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->bottOffDiagU,HODLR_Root->bottOffDiagV,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU");
+  
 
 
     extendAddinTree(parentHODLR,HODLR_Root->left ,extendD,D,updateIdxVec,tol,mode);
@@ -869,16 +879,21 @@ void extendAddLRinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,E
     
     tempU = U1_TopOffDiag + U2_TopOffDiag;
     tempV = V1_TopOffDiag + V2_TopOffDiag;
-    HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,U,V,K,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
-    HODLR_Root->topOffDiagU    = U * K;
-    HODLR_Root->topOffDiagV    = V;
+    //HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,U,V,K,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
+    //HODLR_Root->topOffDiagU    = U * K;
+    // HODLR_Root->topOffDiagV    = V;
     
+    HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->topOffDiagU,HODLR_Root->topOffDiagV,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
+   
+
     tempU = U1_BottOffDiag + U2_BottOffDiag;
     tempV = V1_BottOffDiag + V2_BottOffDiag;
-    HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,U,V,K,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU");
-    HODLR_Root->bottOffDiagU = U * K;
-    HODLR_Root->bottOffDiagV = V;
-
+    //HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,U,V,K,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU");
+    //HODLR_Root->bottOffDiagU = U * K;
+    //HODLR_Root->bottOffDiagV = V;
+    
+    HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->bottOffDiagU,HODLR_Root->bottOffDiagV,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU");
+   
     extendAddLRinTree(parentHODLR,HODLR_Root->left ,extendU,extendV,updateIdxVec,tol,mode);
     extendAddLRinTree(parentHODLR,HODLR_Root->right,extendU,extendV,updateIdxVec,tol,mode);
    
