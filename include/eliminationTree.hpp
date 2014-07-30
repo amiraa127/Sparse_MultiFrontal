@@ -37,7 +37,6 @@ public:
 
     // Node Matrix
     HODLR_Matrix fast_NodeMatrix_HODLR;
-    //Eigen::MatrixXd fast_NodeMatrix_LU, fast_NodeMatrix_P;
     Eigen::PartialPivLU<Eigen::MatrixXd> nodeMatrix_LU;
 
     // Ultra solver data
