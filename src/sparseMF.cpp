@@ -22,7 +22,6 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   fast_TotalTime          = 0;
   fast_SymbolicFactorTime = 0;
 
-
   LU_FactorizationTime     = 0;
   LU_SolveTime             = 0;
   LU_TotalTime             = 0;
@@ -218,26 +217,9 @@ void sparseMF::symbolic_Factorize(eliminationTree::node* root){
   int blkSize = Sp_MatrixSize - minIdx;
   int nodeSize = root->numCols;
   int endNodeIdx = minIdx + nodeSize - 1;
-  //Eigen::SparseMatrix<double> colMatrix = reorderedMatrix.block(minIdx,minIdx,blkSize,nodeSize);
-  //Eigen::SparseMatrix<double> rowMatrix = reorderedMatrix.block(minIdx,minIdx,nodeSize,blkSize);
-  //Eigen::MatrixXd LU_Permutation_Blk = LU_Permutation.block(minIdx,0,nodeSize,1);
   std::set<int> idxSet;
   std::map<int,int> idxMap;
   // Find the set of connected indices                                       
-  
-
-
-  /*
-  // Row connection                                                                        
-  for (int k = 0; k < rowMatrix.outerSize(); ++k)
-    for (Eigen::SparseMatrix<double>::InnerIterator it(rowMatrix,k); it; ++it)     
-      idxSet.insert(it.col() + minIdx);
-  
-  // Col connection                                                                              
-  for (int k = 0; k < colMatrix.outerSize(); ++k)
-    for (Eigen::SparseMatrix<double>::InnerIterator it(colMatrix,k); it; ++it)
-      idxSet.insert(it.row() + minIdx);
-  */
   for (int k = minIdx; k < reorderedMatrix.outerSize(); ++k)
     for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it)     {
       int rowIdx = it.row();
@@ -266,35 +248,17 @@ void sparseMF::symbolic_Factorize(eliminationTree::node* root){
 
 
 Eigen::MatrixXd sparseMF::createPanelMatrix(eliminationTree::node* root){
-  //int minIdx = root->min_Col;
   int panelSize = root->panelIdxVector.size();
   int minIdx = root->panelIdxVector[0];
   int maxIdx = root->panelIdxVector[panelSize - 1];
-  //int blkSize = Sp_MatrixSize - minIdx;
   int nodeSize = root->numCols;
   int endNodeIdx = minIdx + nodeSize - 1;
-  
-  //Eigen::SparseMatrix<double> colMatrix = reorderedMatrix.block(minIdx,minIdx,blkSize,nodeSize);
-  //Eigen::SparseMatrix<double> rowMatrix = reorderedMatrix.block(minIdx,minIdx,nodeSize,blkSize);
   std::map<int,int> idxMap;
   for(int i = 0; i < panelSize; i++)
     idxMap[root->panelIdxVector[i]] = i; 
   Eigen::MatrixXd panelMatrix = Eigen::MatrixXd::Zero(panelSize,panelSize);
-
-  /*
-  // Row matrix entries                                                                  
-  for (int k = 0; k < rowMatrix.outerSize(); ++k)
-    for (Eigen::SparseMatrix<double>::InnerIterator it(rowMatrix,k); it; ++it)
-      frontalMatrix(idxMap[it.row() + minIdx],idxMap[it.col() + minIdx]) = it.value();
- 
-  // Col matrix entries                                            
-  for (int k = 0; k < colMatrix.outerSize(); ++k)
-    for (Eigen::SparseMatrix<double>::InnerIterator it(colMatrix,k); it; ++it)
-      frontalMatrix(idxMap[it.row() + minIdx],idxMap[it.col() + minIdx]) = it.value();
-  return frontalMatrix;
-  */
   std::set<int> idxSet(root->panelIdxVector.begin(), root->panelIdxVector.end());
-  // Row matrix entries                                                                  
+           
   for (int k = minIdx; k <= maxIdx; ++k)
     for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it){
       int rowIdx = it.row();
@@ -303,63 +267,14 @@ Eigen::MatrixXd sparseMF::createPanelMatrix(eliminationTree::node* root){
 	break;
       if (rowIdx > endNodeIdx && colIdx > endNodeIdx)
 	break;
-      //bool rowFind = std::binary_search (root->panelIdxVector.begin(), root->panelIdxVector.end(),rowIdx);
-      //bool colFind = std::binary_search (root->panelIdxVector.begin(), root->panelIdxVector.end(),colIdx);
       bool rowFind = idxSet.count(rowIdx);
       bool colFind = idxSet.count(colIdx);
-     
       if (rowFind && colFind)
 	panelMatrix(idxMap[rowIdx],idxMap[colIdx]) = it.value();
     }
   return panelMatrix;
-
-}
-
-/*
-Eigen::SparseMatrix<double> sparseMF::createPanelMatrix_Sp(eliminationTree::node* root){
-  int minIdx = root->min_Col;
-  int blkSize = Sp_MatrixSize - minIdx;
-  int nodeSize = root->numCols;
-  Eigen::SparseMatrix<double> colMatrix = reorderedMatrix.block(minIdx + nodeSize,minIdx,blkSize - nodeSize,nodeSize);
-  Eigen::SparseMatrix<double> rowMatrix = reorderedMatrix.block(minIdx,minIdx,nodeSize,blkSize);
-  int frontalMatrixSize = root->panelIdxVector.size();
-  std::map<int,int> idxMap;
-  for(int i = 0; i < frontalMatrixSize; i++)
-    idxMap[root->panelIdxVector[i]] = i; 
-  Eigen::SparseMatrix<double> frontalMatrix(frontalMatrixSize,frontalMatrixSize);
-  std::vector<Eigen::Triplet<double,int> > tripletVec;
-  
-  // Row matrix entries                                                                  
-  for (int k = 0; k < rowMatrix.outerSize(); ++k)
-    for (Eigen::SparseMatrix<double>::InnerIterator it(rowMatrix,k); it; ++it){
-      Eigen::Triplet<double,int> currEntry(idxMap[it.row() + minIdx],idxMap[it.col() + minIdx],it.value());
-      tripletVec.push_back(currEntry);
-    }
-  // Col matrix entries                                            
-  for (int k = 0; k < colMatrix.outerSize(); ++k)
-    for (Eigen::SparseMatrix<double>::InnerIterator it(colMatrix,k); it; ++it){
-      Eigen::Triplet<double,int> currEntry(idxMap[it.row() + minIdx + nodeSize],idxMap[it.col() + minIdx],it.value());
-      tripletVec.push_back(currEntry);
-    }
-  frontalMatrix.setFromTriplets(tripletVec.begin(),tripletVec.end());
-  return frontalMatrix;
-}
-
-
-Eigen::SparseMatrix<double> sparseMF::createPanelGraph(eliminationTree::node* root){
-  int frontalMatrixSize = root->panelIdxVector.size();
-  
-  Eigen::MatrixXd frontalGraph = Eigen::MatrixXd::Zero(frontalMatrixSize,frontalMatrixSize);
-
-  for (int i = 0; i < frontalMatrixSize; i++)
-    for (int j = 0; j < frontalMatrixSize; j++){
-      if (reorderedMatrix.coeff(root->panelIdxVector[i],root->panelIdxVector[j]) != 0)
-	frontalGraph(i,j) = 1;
-    }
-  return frontalGraph.sparseView();
   
 }
-*/
 
 void sparseMF::createPanelAndGraphMatrix(eliminationTree::node* root, Eigen::SparseMatrix<double> & panelMatrix, Eigen::SparseMatrix<double> & panelGraph){
   int panelSize = root->panelIdxVector.size();
@@ -375,8 +290,7 @@ void sparseMF::createPanelAndGraphMatrix(eliminationTree::node* root, Eigen::Spa
   std::map<int,int> idxMap;
   for(int i = 0; i < panelSize; i++)
     idxMap[root->panelIdxVector[i]] = i; 
-  
-  // std::vector<Eigen::Triplet<double,int> > tripletVec_Matrix1;
+
   for (int k = minIdx; k <= maxIdx; ++k)
     for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it){
       int rowIdx = it.row();
@@ -393,28 +307,8 @@ void sparseMF::createPanelAndGraphMatrix(eliminationTree::node* root, Eigen::Spa
 	tripletVec_Graph.push_back(currEntry);
       }
     }
-  
-  /*
-  for (int k = 0; k < subBlk.outerSize(); ++k)
-    for (Eigen::SparseMatrix<double>::InnerIterator it(subBlk,k); it; ++it){
-      int rowIdx = it.row() + minIdx;
-      int colIdx = it.col() + minIdx;
-      bool rowFind = std::binary_search (root->panelIdxVector.begin(), root->panelIdxVector.end(),rowIdx);
-      bool colFind = std::binary_search (root->panelIdxVector.begin(), root->panelIdxVector.end(),colIdx);
-      
-      if (rowFind && colFind){
-	Eigen::Triplet<double,int> currEntry(idxMap[rowIdx],idxMap[colIdx],it.value());
-	if (rowIdx <= nodeIdx || colIdx <= nodeIdx)
-	  tripletVec_Matrix.push_back(currEntry);
-	tripletVec_Graph.push_back(currEntry);
-      }
-    }
-  */
   panelMatrix.setFromTriplets(tripletVec_Matrix.begin(),tripletVec_Matrix.end());
   panelGraph.setFromTriplets(tripletVec_Graph.begin(),tripletVec_Graph.end());
-  
-
-
 }
 
 void sparseMF::LU_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* root){
@@ -537,7 +431,6 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
   if (root->criterion == true){
     Eigen::SparseMatrix<double> panelMatrix,panelGraph;
     createPanelAndGraphMatrix(root,panelMatrix,panelGraph);
-     
     //Eigen::SparseMatrix<double> frontalMatrix_Sp = createPanelMatrix_Sp(root);
     root->D_UpdateDense = false;
     HODLR_Matrix panelHODLR;
@@ -550,14 +443,9 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
       usrTree.rootNode->LR_Method           = "PS_Sparse";
       usrTree.rootNode->left                = NULL;
       usrTree.rootNode->right               = NULL;
-      //Eigen::SparseMatrix<double> panelGraph = createPanelGraph(root);
-      //std::cout<<(testGraph - panelGraph).norm()<<std::endl;
-      //std::cout<<(testMatrix - frontalMatrix_Sp).norm()<<std::endl;
-      //panelHODLR = HODLR_Matrix(frontalMatrix_Sp,panelGraph,fast_HODLR_LeafSize,usrTree);
       panelHODLR = HODLR_Matrix(panelMatrix,panelGraph,fast_HODLR_LeafSize,usrTree);
       
     }else{
-        //panelHODLR = HODLR_Matrix(frontalMatrix_Sp,fast_HODLR_LeafSize);
       panelHODLR = HODLR_Matrix(panelMatrix,fast_HODLR_LeafSize);
     
     }
