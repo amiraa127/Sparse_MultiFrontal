@@ -23,6 +23,7 @@ class Sparse_Solver_Test: public CppUnit::TestCase
 {
   /*----------------Creating a Test Suite----------------------*/
   CPPUNIT_TEST_SUITE(Sparse_Solver_Test);
+  
   CPPUNIT_TEST(LU_Solver_Test_Small);
   CPPUNIT_TEST(implicit_Solver_Test_Small);
   CPPUNIT_TEST(LU_Solver_Test);
@@ -33,7 +34,7 @@ class Sparse_Solver_Test: public CppUnit::TestCase
   CPPUNIT_TEST(extractFromLR_Test);
   CPPUNIT_TEST(extractFromChild_Test);
   CPPUNIT_TEST(extendAdd_DenseToHODLR_Array_Test);
-
+  
 
   //CPPUNIT_TEST(extendAdd_DenseToHODLR_Test);
   //CPPUNIT_TEST(extend_HODLRtoHODLR_Test);
@@ -378,7 +379,7 @@ int main(int argc, char* argv[]){
   
   CppUnit::TextUi::TestRunner runner;
   runner.addTest(Sparse_Solver_Test::suite());
-  runner.run();
+  //runner.run();
 
   
   std::cout<<"Reading sparse matrix...."<<std::endl;

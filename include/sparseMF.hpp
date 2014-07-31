@@ -92,7 +92,8 @@ private:
   Eigen::MatrixXd createPanelMatrix(eliminationTree::node* root);
   Eigen::SparseMatrix<double> createPanelMatrix_Sp(eliminationTree::node* root);
   Eigen::SparseMatrix<double> createPanelGraph(eliminationTree::node* root);
-
+  void createPanelAndGraphMatrix(eliminationTree::node* root, Eigen::SparseMatrix<double> & panelMatrix, Eigen::SparseMatrix<double> & panelGraph);
+                 
 
   void LU_FactorizeMatrix();
   void implicit_FactorizeMatrix();

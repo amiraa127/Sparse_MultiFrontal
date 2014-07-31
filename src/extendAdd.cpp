@@ -221,14 +221,7 @@ void extend(HODLR_Tree::node* resultRoot,HODLR_Tree::node* HODLR_Root,std::vecto
 	leafMatrix(rowIdx,colIdx) = (HODLR_Root->leafMatrix)(i,j);
       } 
     }
-    /*
-    HODLR_Root->min_i         = min_i;
-    HODLR_Root->min_j         = min_j;
-    HODLR_Root->max_i         = max_i;
-    HODLR_Root->max_j         = max_j;
-    HODLR_Root->leafMatrix    = leafMatrix;
-    */
-    
+      
     resultRoot->min_i         = min_i;
     resultRoot->min_j         = min_j;
     resultRoot->max_i         = max_i;
@@ -442,12 +435,10 @@ void storeParentContribution(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_
 
     HODLR_Root->topOffDiagRank = numPointsTop;
     HODLR_Root->topOffDiagU    = U1_TopOffDiag;
-    //HODLR_Root->topOffDiagK     = Eigen::MatrixXd::Identity(numPointsTop,numPointsTop);
     HODLR_Root->topOffDiagV    = V1_TopOffDiag;
     
     HODLR_Root->bottOffDiagRank = numPointsBott;
     HODLR_Root->bottOffDiagU    = U1_BottOffDiag;
-    //HODLR_Root->bottOffDiagK    = Eigen::MatrixXd::Identity(numPointsBott,numPointsBott);
     HODLR_Root->bottOffDiagV    = V1_BottOffDiag;
 
     storeParentContribution(parentHODLR,HODLR_Root->left,mode);
@@ -469,22 +460,11 @@ void calcPseudoInvInTree(HODLR_Tree::node* HODLR_Root,double tol){
   Eigen::MatrixXd tempU,tempV;
   Eigen::MatrixXd U,K,V;
   tempU = HODLR_Root->topOffDiagU;
-  tempV = HODLR_Root->topOffDiagV;
-  //HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->topOffDiagU,HODLR_Root->topOffDiagV,HODLR_Root->topOffDiagK,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
-  //HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,U,V,K,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
-  //HODLR_Root->topOffDiagU    = U * K;
-  //HODLR_Root->topOffDiagV    = V;
-  
+  tempV = HODLR_Root->topOffDiagV; 
   HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->topOffDiagU,HODLR_Root->topOffDiagV,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
-
 
   tempU = HODLR_Root->bottOffDiagU;
   tempV = HODLR_Root->bottOffDiagV;
-  //HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->bottOffDiagU,HODLR_Root->bottOffDiagV,HODLR_Root->bottOffDiagK,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU");
-  //HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,U,V,K,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU");
-  //HODLR_Root->bottOffDiagU = U * K;
-  //HODLR_Root->bottOffDiagV = V;
-
   HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->bottOffDiagU,HODLR_Root->bottOffDiagV,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU");
  
   calcPseudoInvInTree(HODLR_Root->left,tol);
@@ -515,12 +495,6 @@ void extendAddinTree(const int parentSize,HODLR_Tree::node* HODLR_Root,std::vect
     int numCols_TopOffDiag  = HODLR_Root->max_j - HODLR_Root->splitIndex_j;
     int numCols_BottOffDiag = HODLR_Root->splitIndex_j - HODLR_Root->min_j + 1;
     
-    //Eigen::MatrixXd U1_TopOffDiag,U1_BottOffDiag;
-    //Eigen::MatrixXd V1_TopOffDiag,V1_BottOffDiag;  
-    //Eigen::MatrixXd U2_TopOffDiag,U2_BottOffDiag;
-    //Eigen::MatrixXd V2_TopOffDiag,V2_BottOffDiag;
-    //Eigen::MatrixXd U_TopOffDiag,K_TopOffDiag,V_TopOffDiag;
-    // Eigen::MatrixXd U_BottOffDiag,K_BottOffDiag,V_BottOffDiag;
     std::vector<int> topColIdxVec  = HODLR_Root->topOffDiagColIdx;
     std::vector<int> topRowIdxVec  = HODLR_Root->topOffDiagRowIdx;
     std::vector<int> bottColIdxVec = HODLR_Root->bottOffDiagColIdx;
@@ -530,10 +504,6 @@ void extendAddinTree(const int parentSize,HODLR_Tree::node* HODLR_Root,std::vect
     int numPointsBott = std::max(bottColIdxVec.size(),bottRowIdxVec.size());
     numPointsTop    = std::max(numPointsTop,1);
     numPointsBott   = std::max(numPointsBott,1);
-    //U1_TopOffDiag   = Eigen::MatrixXd::Zero(numRows_TopOffDiag,numPointsTop);
-    //V1_TopOffDiag   = Eigen::MatrixXd::Zero(numCols_TopOffDiag,numPointsTop);
-    //U1_BottOffDiag  = Eigen::MatrixXd::Zero(numRows_BottOffDiag,numPointsBott);
-    //V1_BottOffDiag  = Eigen::MatrixXd::Zero(numCols_BottOffDiag,numPointsBott);  
     int min_i,min_j;
     
     for (int i = 0; i < (int)D_Array.size();i++){
@@ -714,31 +684,16 @@ void extendAddinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,T &
     extractFromChild(parentSize,min_i,min_j,numRows_BottOffDiag,numCols_BottOffDiag,D,bottRowIdxVec,updateIdxVec,"Rows",V2_BottOffDiag);
 
     // Crete U,K and V
-    Eigen::MatrixXd tempU,tempV,U,V,K;
-    /*
+    Eigen::MatrixXd tempU,tempV;
+   
     tempU = U1_TopOffDiag + U2_TopOffDiag;
-    tempV = V1_TopOffDiag + V2_TopOffDiag;
-    HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->topOffDiagU,HODLR_Root->topOffDiagV,HODLR_Root->topOffDiagK,topRowIdxVec,tol,"fullPivLU");
-
-    tempU = U1_BottOffDiag + U2_BottOffDiag;
-    tempV = V1_BottOffDiag + V2_BottOffDiag;
-    HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->bottOffDiagU,HODLR_Root->bottOffDiagV,HODLR_Root->bottOffDiagK,bottRowIdxVec,tol,"fullPivLU");
-    */
-    tempU = U1_TopOffDiag + U2_TopOffDiag;
-    tempV = V1_TopOffDiag + V2_TopOffDiag;
-    //HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,U,V,K,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
-    //HODLR_Root->topOffDiagU    = U * K;
-    //HODLR_Root->topOffDiagV    = V;
-    
+    tempV = V1_TopOffDiag + V2_TopOffDiag;   
     HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->topOffDiagU,HODLR_Root->topOffDiagV,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
    
 
     tempU = U1_BottOffDiag + U2_BottOffDiag;
     tempV = V1_BottOffDiag + V2_BottOffDiag;
-    //HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,U,V,K,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU");
-    //HODLR_Root->bottOffDiagU = U * K;
-    //HODLR_Root->bottOffDiagV = V;
-    
+  
     HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->bottOffDiagU,HODLR_Root->bottOffDiagV,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU");
   
 
@@ -756,17 +711,13 @@ void extendAddinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,T &
     Eigen::MatrixXd addedMatrix_Bott = parentHODLR.block(min_i_Bott,min_j_Bott,numRows_BottOffDiag,numCols_BottOffDiag) + extendD.block(min_i_Bott,min_j_Bott,numRows_BottOffDiag,numCols_BottOffDiag);
     fullPivACA_LowRankApprox(addedMatrix_Top ,U_TopOffDiag ,V_TopOffDiag ,0,0,addedMatrix_Top.rows(),addedMatrix_Top.cols(),tol,topRank); 
     fullPivACA_LowRankApprox(addedMatrix_Bott,U_BottOffDiag,V_BottOffDiag,0,0,addedMatrix_Bott.rows(),addedMatrix_Bott.cols(),tol,bottRank);
-    //K_TopOffDiag  = Eigen::MatrixXd::Identity(topRank,topRank);
-    //K_BottOffDiag = Eigen::MatrixXd::Identity(bottRank,bottRank);
     
     HODLR_Root->topOffDiagRank = U_TopOffDiag.cols();
     HODLR_Root->topOffDiagU    = U_TopOffDiag;
-    //HODLR_Root->topOffDiagK    = K_TopOffDiag;
     HODLR_Root->topOffDiagV    = V_TopOffDiag;
     
     HODLR_Root->bottOffDiagRank = U_BottOffDiag.cols();
     HODLR_Root->bottOffDiagU    = U_BottOffDiag;
-    //HODLR_Root->bottOffDiagK    = K_BottOffDiag;
     HODLR_Root->bottOffDiagV    = V_BottOffDiag;
     
     extendAddinTree(parentHODLR,HODLR_Root->left ,extendD,D,updateIdxVec,tol,mode);
@@ -806,9 +757,6 @@ void extendAddLRinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,E
     V2_TopOffDiag  = (extendV).block(HODLR_Root->splitIndex_j + 1,0,numCols_TopOffDiag,extendV.cols());
     V2_BottOffDiag = (extendV).block(HODLR_Root->min_j,0,numCols_BottOffDiag,extendV.cols());
     // Update current LR
-    Eigen::MatrixXd result_U,result_V,result_K;
-    //HODLR_Root->topOffDiagRank  = add_LR(HODLR_Root->topOffDiagU,HODLR_Root->topOffDiagK,HODLR_Root->topOffDiagV,HODLR_Root->topOffDiagU * HODLR_Root->topOffDiagK,HODLR_Root->topOffDiagV,U2_TopOffDiag,V2_TopOffDiag,tol,mode);
-    //HODLR_Root->bottOffDiagRank = add_LR(HODLR_Root->bottOffDiagU,HODLR_Root->bottOffDiagK,HODLR_Root->bottOffDiagV,HODLR_Root->bottOffDiagU * HODLR_Root->bottOffDiagK,HODLR_Root->bottOffDiagV,U2_BottOffDiag,V2_BottOffDiag,tol,mode);
     
     HODLR_Root->topOffDiagRank  = add_LR(HODLR_Root->topOffDiagU,HODLR_Root->topOffDiagV,HODLR_Root->topOffDiagU,HODLR_Root->topOffDiagV,U2_TopOffDiag,V2_TopOffDiag,tol,mode);
     HODLR_Root->bottOffDiagRank = add_LR(HODLR_Root->bottOffDiagU,HODLR_Root->bottOffDiagV,HODLR_Root->bottOffDiagU,HODLR_Root->bottOffDiagV,U2_BottOffDiag,V2_BottOffDiag,tol,mode);
@@ -866,32 +814,17 @@ void extendAddLRinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,E
     V2_BottOffDiag = extractFromLR(extendU,extendV,min_i,min_j,numRows_BottOffDiag,numCols_BottOffDiag,bottRowIdxVec,"Rows",numPointsBott);
    
     // Crete U,K and V
-    Eigen::MatrixXd tempU,tempV,tempK,U,V,K;
-    /* 
-    tempU = U1_TopOffDiag + U2_TopOffDiag;
-    tempV = V1_TopOffDiag + V2_TopOffDiag;
-    HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->topOffDiagU,HODLR_Root->topOffDiagV,HODLR_Root->topOffDiagK,topRowIdxVec,tol,"fullPivLU");
-
-    tempU = U1_BottOffDiag + U2_BottOffDiag;
-    tempV = V1_BottOffDiag + V2_BottOffDiag;
-    HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->bottOffDiagU,HODLR_Root->bottOffDiagV,HODLR_Root->bottOffDiagK,bottRowIdxVec,tol,"fullPivLU");
-    */
+    Eigen::MatrixXd tempU,tempV;
     
     tempU = U1_TopOffDiag + U2_TopOffDiag;
     tempV = V1_TopOffDiag + V2_TopOffDiag;
-    //HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,U,V,K,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
-    //HODLR_Root->topOffDiagU    = U * K;
-    // HODLR_Root->topOffDiagV    = V;
     
     HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->topOffDiagU,HODLR_Root->topOffDiagV,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
    
 
     tempU = U1_BottOffDiag + U2_BottOffDiag;
     tempV = V1_BottOffDiag + V2_BottOffDiag;
-    //HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,U,V,K,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU");
-    //HODLR_Root->bottOffDiagU = U * K;
-    //HODLR_Root->bottOffDiagV = V;
-    
+   
     HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->bottOffDiagU,HODLR_Root->bottOffDiagV,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU");
    
     extendAddLRinTree(parentHODLR,HODLR_Root->left ,extendU,extendV,updateIdxVec,tol,mode);
