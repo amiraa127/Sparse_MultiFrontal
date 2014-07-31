@@ -214,7 +214,6 @@ void sparseMF::symbolic_Factorize(){
 void sparseMF::symbolic_Factorize(eliminationTree::node* root){
   int minIdx = root->min_Col;
   int maxIdx = root->max_Col;
-  int blkSize = Sp_MatrixSize - minIdx;
   int nodeSize = root->numCols;
   int endNodeIdx = minIdx + nodeSize - 1;
   std::set<int> idxSet;
@@ -281,24 +280,24 @@ void sparseMF::createPanelAndGraphMatrix(eliminationTree::node* root, Eigen::Spa
   int nodeSize  = root->numCols;
   panelGraph  = Eigen::SparseMatrix<double> (panelSize,panelSize);
   panelMatrix = Eigen::SparseMatrix<double> (panelSize,panelSize);
+  std::set<int> idxSet(root->panelIdxVector.begin(), root->panelIdxVector.end());
   std::vector<Eigen::Triplet<double,int> > tripletVec_Matrix,tripletVec_Graph;
   int minIdx = root->panelIdxVector[0];
   int maxIdx = root->panelIdxVector[panelSize - 1];
   int blkSize = maxIdx - minIdx + 1;
   int nodeIdx = root->panelIdxVector[nodeSize - 1];
-  Eigen::SparseMatrix<double> subBlk = reorderedMatrix.block(minIdx,minIdx,blkSize,blkSize);
   std::map<int,int> idxMap;
   for(int i = 0; i < panelSize; i++)
     idxMap[root->panelIdxVector[i]] = i; 
-
+  
   for (int k = minIdx; k <= maxIdx; ++k)
     for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it){
       int rowIdx = it.row();
       int colIdx = it.col();
       if (rowIdx > maxIdx || colIdx > maxIdx)
 	break;
-      bool rowFind = std::binary_search (root->panelIdxVector.begin(), root->panelIdxVector.end(),rowIdx);
-      bool colFind = std::binary_search (root->panelIdxVector.begin(), root->panelIdxVector.end(),colIdx);
+      bool rowFind = idxSet.count(rowIdx);
+      bool colFind = idxSet.count(colIdx);
       
       if (rowFind && colFind){
 	Eigen::Triplet<double,int> currEntry(idxMap[rowIdx],idxMap[colIdx],it.value());
