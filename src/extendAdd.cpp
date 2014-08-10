@@ -49,7 +49,6 @@ void extendAddUpdate(HODLR_Matrix & parentHODLR, std::vector<Eigen::MatrixXd*> D
     std::cout<<"Error! Unknown operation mode!"<<std::endl;
     exit(EXIT_FAILURE);
   }
-  
 }
 
 
@@ -264,22 +263,7 @@ void extend(HODLR_Tree::node* resultRoot,HODLR_Tree::node* HODLR_Root,std::vecto
   for (int i = 0; i < (HODLR_Root->bottOffDiagV).rows(); i++){
     int rowIdx = extendIdxVec[i + HODLR_Root->min_j] - min_j;
     bottOffDiagV.row(rowIdx) = (HODLR_Root->bottOffDiagV).row(i);
-  } 
-  /*
-  HODLR_Root->min_i         = min_i;
-  HODLR_Root->min_j         = min_j;
-  HODLR_Root->max_i         = max_i;
-  HODLR_Root->max_j         = max_j;
-  HODLR_Root->splitIndex_i  = splitIndex_i;
-  HODLR_Root->splitIndex_j  = splitIndex_j;
-  HODLR_Root->topOffDiagU   = topOffDiagU;
-  HODLR_Root->topOffDiagV   = topOffDiagV;
-  HODLR_Root->bottOffDiagU  = bottOffDiagU;
-  HODLR_Root->bottOffDiagV  = bottOffDiagV;
-  extend( HODLR_Root->left ,extendIdxVec,parentSize);
-  extend( HODLR_Root->right,extendIdxVec,parentSize);
-  */
-  
+  }   
   resultRoot->min_i         = min_i;
   resultRoot->min_j         = min_j;
   resultRoot->max_i         = max_i;
@@ -293,7 +277,6 @@ void extend(HODLR_Tree::node* resultRoot,HODLR_Tree::node* HODLR_Root,std::vecto
   extend( resultRoot->left,HODLR_Root->left ,extendIdxVec,parentSize);
   extend( resultRoot->right,HODLR_Root->right,extendIdxVec,parentSize);
  
-  
 }
 
 
@@ -426,7 +409,7 @@ void storeParentContribution(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_
     
     extractFromMatrixBlk(parentHODLR,min_i,min_j,numRows_TopOffDiag,numCols_TopOffDiag,topColIdxVec,"Cols",U1_TopOffDiag);
     extractFromMatrixBlk(parentHODLR,min_i,min_j,numRows_TopOffDiag,numCols_TopOffDiag,topRowIdxVec,"Rows",V1_TopOffDiag);
-    
+   
     min_i = HODLR_Root->splitIndex_i + 1;                                                                                                                                                           
     min_j = HODLR_Root->min_j;
         
@@ -567,11 +550,13 @@ void extendAddLRinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,s
     std::vector<int> topRowIdxVec  = HODLR_Root->topOffDiagRowIdx;
     std::vector<int> bottColIdxVec = HODLR_Root->bottOffDiagColIdx;
     std::vector<int> bottRowIdxVec = HODLR_Root->bottOffDiagRowIdx;
+    /*
     std::vector<int> topColBlk,topRowBlk,bottColBlk,bottRowBlk;
     topColBlk  = extractBlocks(topColIdxVec );
     topRowBlk  = extractBlocks(topRowIdxVec );
     bottColBlk = extractBlocks(bottColIdxVec);
     bottRowBlk = extractBlocks(bottRowIdxVec);
+    */
 
     int numPointsTop  = std::max(topColIdxVec.size() ,topRowIdxVec.size());
     int numPointsBott = std::max(bottColIdxVec.size(),bottRowIdxVec.size());
@@ -779,12 +764,13 @@ void extendAddLRinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,E
     std::vector<int> topRowIdxVec  = HODLR_Root->topOffDiagRowIdx;
     std::vector<int> bottColIdxVec = HODLR_Root->bottOffDiagColIdx;
     std::vector<int> bottRowIdxVec = HODLR_Root->bottOffDiagRowIdx;
+    /*
     std::vector<int> topColBlk,topRowBlk,bottColBlk,bottRowBlk;
     topColBlk  = extractBlocks(topColIdxVec );
     topRowBlk  = extractBlocks(topRowIdxVec );
     bottColBlk = extractBlocks(bottColIdxVec);
     bottRowBlk = extractBlocks(bottRowIdxVec);
-
+    */
     int numPointsTop  = std::max(topColIdxVec.size() ,topRowIdxVec.size());
     int numPointsBott = std::max(bottColIdxVec.size(),bottRowIdxVec.size());
     numPointsTop    = std::max(numPointsTop,1);

@@ -43,7 +43,7 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   Sp_MatrixSize = numRows;
   LU_Permutation = Eigen::VectorXd::LinSpaced(Eigen::Sequential,Sp_MatrixSize,0,Sp_MatrixSize - 1);
   fast_MatrixSizeThresh = 2000;
-  fast_HODLR_LeafSize = 100;
+  fast_HODLR_LeafSize = 30;
   fast_LR_Tol = 1e-1;
   fast_MinPivot = 0;
   inputSpMatrix.prune(1e-40);  
@@ -284,7 +284,6 @@ void sparseMF::createPanelAndGraphMatrix(eliminationTree::node* root, Eigen::Spa
   std::vector<Eigen::Triplet<double,int> > tripletVec_Matrix,tripletVec_Graph;
   int minIdx = root->panelIdxVector[0];
   int maxIdx = root->panelIdxVector[panelSize - 1];
-  int blkSize = maxIdx - minIdx + 1;
   int nodeIdx = root->panelIdxVector[nodeSize - 1];
   std::map<int,int> idxMap;
   for(int i = 0; i < panelSize; i++)
@@ -450,7 +449,7 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
     }
 
     panelHODLR.set_LRTolerance(fast_LR_Tol);
-    panelHODLR.storeLRinTree();
+    //panelHODLR.storeLRinTree();
     double startTime = clock();
     //fast_NodeExtendAddUpdate(root,panelHODLR,root->panelIdxVector);
     fast_NodeExtendAddUpdate_Array(root,panelHODLR,root->panelIdxVector);

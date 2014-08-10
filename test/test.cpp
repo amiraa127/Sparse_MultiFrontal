@@ -28,13 +28,13 @@ class Sparse_Solver_Test: public CppUnit::TestCase
   CPPUNIT_TEST(implicit_Solver_Test_Small);
   CPPUNIT_TEST(LU_Solver_Test);
   CPPUNIT_TEST(implicit_Solver_Test);
-  
+  /*
   CPPUNIT_TEST(extendAdd_LowRankToHODLR_LUQR_Test);
   CPPUNIT_TEST(extractFromMatrixBlk_Test);
   CPPUNIT_TEST(extractFromLR_Test);
   CPPUNIT_TEST(extractFromChild_Test);
   CPPUNIT_TEST(extendAdd_DenseToHODLR_Array_Test);
-  
+  */
 
   //CPPUNIT_TEST(extendAdd_DenseToHODLR_Test);
   //CPPUNIT_TEST(extend_HODLRtoHODLR_Test);
@@ -362,7 +362,7 @@ public:
   void implicit_Solver_Test(){
     std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
     std::cout<<"Testing implicit solver on a 100k matrix...."<<std::endl;
-    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.100k");
+    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.500k");
     Eigen::VectorXd exactSoln_Sp = Eigen::MatrixXd::Random(inputSpMatrix.rows(),1);
     Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
     sparseMF solver(inputSpMatrix);
@@ -379,11 +379,11 @@ int main(int argc, char* argv[]){
   
   CppUnit::TextUi::TestRunner runner;
   runner.addTest(Sparse_Solver_Test::suite());
-  //runner.run();
+  runner.run();
 
   
   std::cout<<"Reading sparse matrix...."<<std::endl;
-  Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.400k");
+  Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.500k");
   std::cout<<"Sparse matrix read successfully."<<std::endl; 
  
   std::cout<<"Solving..."<<std::endl;
