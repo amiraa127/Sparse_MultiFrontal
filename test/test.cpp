@@ -24,10 +24,11 @@ class Sparse_Solver_Test: public CppUnit::TestCase
   /*----------------Creating a Test Suite----------------------*/
   CPPUNIT_TEST_SUITE(Sparse_Solver_Test);
   
-  CPPUNIT_TEST(LU_Solver_Test_Small);
-  CPPUNIT_TEST(implicit_Solver_Test_Small);
-  CPPUNIT_TEST(LU_Solver_Test);
-  CPPUNIT_TEST(implicit_Solver_Test);
+  //CPPUNIT_TEST(LU_Solver_Test_Small);
+  //CPPUNIT_TEST(implicit_Solver_Test_Small);
+  //CPPUNIT_TEST(LU_Solver_Test);
+  //CPPUNIT_TEST(implicit_Solver_Test);
+  CPPUNIT_TEST(fastIterative_Solver_Test);
   /*
   CPPUNIT_TEST(extendAdd_LowRankToHODLR_LUQR_Test);
   CPPUNIT_TEST(extractFromMatrixBlk_Test);
@@ -362,7 +363,7 @@ public:
   void implicit_Solver_Test(){
     std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
     std::cout<<"Testing implicit solver on a 100k matrix...."<<std::endl;
-    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.500k");
+    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.100k");
     Eigen::VectorXd exactSoln_Sp = Eigen::MatrixXd::Random(inputSpMatrix.rows(),1);
     Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
     sparseMF solver(inputSpMatrix);
@@ -372,6 +373,22 @@ public:
     std::cout<<error<<std::endl;
     CPPUNIT_ASSERT(error < 1e-14);
   }
+  
+  void fastIterative_Solver_Test(){
+    std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
+    std::cout<<"Testing fast iterative solver on a 100k matrix...."<<std::endl;
+    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.100k");
+    Eigen::VectorXd exactSoln_Sp = Eigen::VectorXd::LinSpaced(Eigen::Sequential,inputSpMatrix.rows(),-2,2); 
+    Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
+    sparseMF solver(inputSpMatrix);
+    solver.printResultInfo = true;
+    //Eigen::MatrixXd soln_Sp = solver.fast_Solve(RHS_Sp);
+    Eigen::MatrixXd soln_Sp = solver.iterative_Solve(RHS_Sp,100,1e-10,1e-1);
+    double error = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
+    std::cout<<error<<std::endl;
+    CPPUNIT_ASSERT(error < 1e-10);
+  }
+
 };
 
 
@@ -381,23 +398,6 @@ int main(int argc, char* argv[]){
   runner.addTest(Sparse_Solver_Test::suite());
   runner.run();
 
-  
-  std::cout<<"Reading sparse matrix...."<<std::endl;
-  Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.500k");
-  std::cout<<"Sparse matrix read successfully."<<std::endl; 
- 
-  std::cout<<"Solving..."<<std::endl;
-  Eigen::VectorXd exactSoln_Sp = Eigen::VectorXd::LinSpaced(Eigen::Sequential,inputSpMatrix.rows(),-2,2); 
-  Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
- 
-  sparseMF solver(inputSpMatrix);
-  solver.printResultInfo = true;
-  //Eigen::MatrixXd soln_Sp = solver.fast_Solve(RHS_Sp);
-  Eigen::MatrixXd soln_Sp = solver.iterative_Solve(RHS_Sp,100,1e-10,1e-1);
-  
-  
-  double error_Sp = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
-  std::cout<<error_Sp<<std::endl;
   
 
   /* // Eigen Conventional Solve

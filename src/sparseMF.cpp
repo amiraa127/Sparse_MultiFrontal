@@ -47,7 +47,7 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   fast_LR_Tol = 1e-1;
   fast_MinPivot = 0;
   inputSpMatrix.prune(1e-40);  
-  originalMatrix = inputSpMatrix;
+  //originalMatrix = inputSpMatrix;
   double startTime = clock();
   reorderMatrix(inputSpMatrix);
   double endTime = clock();
@@ -441,10 +441,10 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
       usrTree.rootNode->LR_Method           = "PS_Sparse";
       usrTree.rootNode->left                = NULL;
       usrTree.rootNode->right               = NULL;
-      panelHODLR = HODLR_Matrix(panelMatrix,panelGraph,fast_HODLR_LeafSize,usrTree);
+      panelHODLR = HODLR_Matrix(panelMatrix,panelGraph,fast_HODLR_LeafSize,usrTree,"identifyBoundary");
       
     }else{
-      panelHODLR = HODLR_Matrix(panelMatrix,fast_HODLR_LeafSize);
+      panelHODLR = HODLR_Matrix(panelMatrix,fast_HODLR_LeafSize,"identifyBoundary");
     
     }
 
@@ -458,14 +458,15 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
     std::cout<<"extendAdd done"<<std::endl;
     fast_ExtendAddTime += (endTime - startTime)/CLOCKS_PER_SEC;
     if (root->currLevel != 0){
-      root->fast_NodeMatrix_HODLR = panelHODLR.topDiag();
+      //root->fast_NodeMatrix_HODLR = panelHODLR.topDiag();
+      //root->D_HODLR               = panelHODLR.bottDiag();
       Eigen::MatrixXd UB    = panelHODLR.returnTopOffDiagU();
       Eigen::MatrixXd VB    = panelHODLR.returnTopOffDiagV();
       Eigen::MatrixXd UC    = panelHODLR.returnBottOffDiagU();
       Eigen::MatrixXd VC    = panelHODLR.returnBottOffDiagV();
+      panelHODLR.splitAtTop(root->fast_NodeMatrix_HODLR,root->D_HODLR);
       root->updateU         = -UC;
       root->updateV         = (VC.transpose() * root->fast_NodeMatrix_HODLR.recLU_Solve(UB) * VB.transpose()).transpose();
-      root->D_HODLR         = panelHODLR.bottDiag();
       root->nodeToUpdate_U  = UB;
       root->nodeToUpdate_V  = VB;
       root->updateToNode_U  = UC;
@@ -670,7 +671,14 @@ void sparseMF::fast_NodeExtendAddUpdate_Array(eliminationTree::node* root,HODLR_
   }
 
   extendAddUpdate(panelHODLR,D_Array,D_HODLR_Array,U_Array,V_Array,updateIdxVec_Array_D,updateIdxVec_Array_D_HODLR,fast_LR_Tol,"PS_Boundary");
-
+  for (int i = 0; i < (int)D_Array.size(); i++)
+    D_Array[i]->resize(0,0);
+  for (int i = 0; i < (int)D_HODLR_Array.size(); i++){
+    U_Array[i]->resize(0,0);
+    V_Array[i]->resize(0,0);
+    D_HODLR_Array[i]->destroyAllData();
+  }
+  
 }
 
 
@@ -1103,7 +1111,8 @@ Eigen::MatrixXd sparseMF::fast_NodeSolve(eliminationTree::node* root,const Eigen
 
 
 Eigen::MatrixXd sparseMF::oneStep_Iterate(const Eigen::MatrixXd & prevStep_result, const Eigen::MatrixXd & initSolveGuess, Eigen::MatrixXd & prevStep_Product){
-  prevStep_Product = originalMatrix * prevStep_result;
+  //prevStep_Product = originalMatrix * prevStep_result;
+  prevStep_Product = permuteRows(reorderedMatrix * permuteRows(prevStep_result,permVector,false),permVector,true);				 
   Eigen::MatrixXd update = prevStep_result - fast_Solve(prevStep_Product);
   return initSolveGuess + update;  
 }

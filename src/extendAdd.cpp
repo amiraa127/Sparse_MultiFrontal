@@ -42,8 +42,16 @@ void extendAddUpdate(HODLR_Matrix & parentHODLR, std::vector<Eigen::MatrixXd*> D
 	*extendV_Array[i] = extend(updateIdxVec_Array_D_HODLR[i],parentSize,*V_Array[i],0,0,V_Array[i]->rows(),V_Array[i]->cols(),"Rows");
       }
       extendAddLRinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendU_Array,extendV_Array,tol,mode); 
+      for (int i = 0; i < (int)U_Array.size();i++){
+	delete extendU_Array[i];
+	delete extendV_Array[i];
+      }
+
+
     }
     calcPseudoInvInTree(parentHODLR.get_TreeRootNode(),tol);
+
+
     
   }else{    
     std::cout<<"Error! Unknown operation mode!"<<std::endl;
