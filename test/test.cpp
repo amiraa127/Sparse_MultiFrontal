@@ -27,7 +27,7 @@ class Sparse_Solver_Test: public CppUnit::TestCase
   //CPPUNIT_TEST(LU_Solver_Test_Small);
   //CPPUNIT_TEST(implicit_Solver_Test_Small);
   //CPPUNIT_TEST(LU_Solver_Test);
-  //CPPUNIT_TEST(implicit_Solver_Test);
+  CPPUNIT_TEST(implicit_Solver_Test);
   CPPUNIT_TEST(fastIterative_Solver_Test);
   /*
   CPPUNIT_TEST(extendAdd_LowRankToHODLR_LUQR_Test);

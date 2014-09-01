@@ -396,41 +396,31 @@ void storeParentContribution(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_
     int numCols_TopOffDiag  = HODLR_Root->max_j - HODLR_Root->splitIndex_j;
     int numCols_BottOffDiag = HODLR_Root->splitIndex_j - HODLR_Root->min_j + 1;
     
-    std::vector<int> topColIdxVec  = HODLR_Root->topOffDiagColIdx;
-    std::vector<int> topRowIdxVec  = HODLR_Root->topOffDiagRowIdx;
-    std::vector<int> bottColIdxVec = HODLR_Root->bottOffDiagColIdx;
-    std::vector<int> bottRowIdxVec = HODLR_Root->bottOffDiagRowIdx;
+    int numPointsTop  = std::max(HODLR_Root->topOffDiagColIdx.size() ,HODLR_Root->topOffDiagRowIdx.size());
+    int numPointsBott = std::max(HODLR_Root->bottOffDiagColIdx.size(),HODLR_Root->bottOffDiagRowIdx.size());
     
-    int numPointsTop  = std::max(topColIdxVec.size() ,topRowIdxVec.size());
-    int numPointsBott = std::max(bottColIdxVec.size(),bottRowIdxVec.size());
     numPointsTop      = std::max(numPointsTop,1);
     numPointsBott     = std::max(numPointsBott,1);
-    Eigen::MatrixXd U1_TopOffDiag   = Eigen::MatrixXd::Zero(numRows_TopOffDiag,numPointsTop);
-    Eigen::MatrixXd V1_TopOffDiag   = Eigen::MatrixXd::Zero(numCols_TopOffDiag,numPointsTop);
-    Eigen::MatrixXd U1_BottOffDiag  = Eigen::MatrixXd::Zero(numRows_BottOffDiag,numPointsBott);
-    Eigen::MatrixXd V1_BottOffDiag  = Eigen::MatrixXd::Zero(numCols_BottOffDiag,numPointsBott);
     
+    HODLR_Root->topOffDiagU     = Eigen::MatrixXd::Zero(numRows_TopOffDiag,numPointsTop);
+    HODLR_Root->topOffDiagV     = Eigen::MatrixXd::Zero(numCols_TopOffDiag,numPointsTop);
+    HODLR_Root->bottOffDiagU    = Eigen::MatrixXd::Zero(numRows_BottOffDiag,numPointsBott);
+    HODLR_Root->bottOffDiagV    = Eigen::MatrixXd::Zero(numCols_BottOffDiag,numPointsBott);
+
+    HODLR_Root->topOffDiagRank  = numPointsTop;
+    HODLR_Root->bottOffDiagRank = numPointsBott;
     
     int min_i = HODLR_Root->min_i;
     int min_j = HODLR_Root->splitIndex_j + 1;
-    
-    
-    extractFromMatrixBlk(parentHODLR,min_i,min_j,numRows_TopOffDiag,numCols_TopOffDiag,topColIdxVec,"Cols",U1_TopOffDiag);
-    extractFromMatrixBlk(parentHODLR,min_i,min_j,numRows_TopOffDiag,numCols_TopOffDiag,topRowIdxVec,"Rows",V1_TopOffDiag);
+     
+    extractFromMatrixBlk(parentHODLR,min_i,min_j,numRows_TopOffDiag,numCols_TopOffDiag,HODLR_Root->topOffDiagColIdx,"Cols",HODLR_Root->topOffDiagU);
+    extractFromMatrixBlk(parentHODLR,min_i,min_j,numRows_TopOffDiag,numCols_TopOffDiag,HODLR_Root->topOffDiagRowIdx,"Rows",HODLR_Root->topOffDiagV);
    
     min_i = HODLR_Root->splitIndex_i + 1;                                                                                                                                                           
     min_j = HODLR_Root->min_j;
-        
-    extractFromMatrixBlk(parentHODLR,min_i,min_j,numRows_BottOffDiag,numCols_BottOffDiag,bottColIdxVec,"Cols",U1_BottOffDiag);
-    extractFromMatrixBlk(parentHODLR,min_i,min_j,numRows_BottOffDiag,numCols_BottOffDiag,bottRowIdxVec,"Rows",V1_BottOffDiag);
-
-    HODLR_Root->topOffDiagRank = numPointsTop;
-    HODLR_Root->topOffDiagU    = U1_TopOffDiag;
-    HODLR_Root->topOffDiagV    = V1_TopOffDiag;
-    
-    HODLR_Root->bottOffDiagRank = numPointsBott;
-    HODLR_Root->bottOffDiagU    = U1_BottOffDiag;
-    HODLR_Root->bottOffDiagV    = V1_BottOffDiag;
+                   
+    extractFromMatrixBlk(parentHODLR,min_i,min_j,numRows_BottOffDiag,numCols_BottOffDiag,HODLR_Root->bottOffDiagColIdx,"Cols",HODLR_Root->bottOffDiagU);
+    extractFromMatrixBlk(parentHODLR,min_i,min_j,numRows_BottOffDiag,numCols_BottOffDiag,HODLR_Root->bottOffDiagRowIdx,"Rows",HODLR_Root->bottOffDiagV);
 
     storeParentContribution(parentHODLR,HODLR_Root->left,mode);
     storeParentContribution(parentHODLR,HODLR_Root->right,mode);
@@ -486,13 +476,8 @@ void extendAddinTree(const int parentSize,HODLR_Tree::node* HODLR_Root,std::vect
     int numCols_TopOffDiag  = HODLR_Root->max_j - HODLR_Root->splitIndex_j;
     int numCols_BottOffDiag = HODLR_Root->splitIndex_j - HODLR_Root->min_j + 1;
     
-    std::vector<int> topColIdxVec  = HODLR_Root->topOffDiagColIdx;
-    std::vector<int> topRowIdxVec  = HODLR_Root->topOffDiagRowIdx;
-    std::vector<int> bottColIdxVec = HODLR_Root->bottOffDiagColIdx;
-    std::vector<int> bottRowIdxVec = HODLR_Root->bottOffDiagRowIdx;
-    
-    int numPointsTop  = std::max(topColIdxVec.size() ,topRowIdxVec.size());
-    int numPointsBott = std::max(bottColIdxVec.size(),bottRowIdxVec.size());
+    int numPointsTop  = std::max(HODLR_Root->topOffDiagColIdx.size() ,HODLR_Root->topOffDiagRowIdx.size());
+    int numPointsBott = std::max(HODLR_Root->bottOffDiagColIdx.size(),HODLR_Root->bottOffDiagRowIdx.size());
     numPointsTop    = std::max(numPointsTop,1);
     numPointsBott   = std::max(numPointsBott,1);
     int min_i,min_j;
@@ -507,14 +492,14 @@ void extendAddinTree(const int parentSize,HODLR_Tree::node* HODLR_Root,std::vect
       min_i = HODLR_Root->min_i;
       min_j = HODLR_Root->splitIndex_j + 1;
       
-      extractFromChild(parentSize,min_i,min_j,numRows_TopOffDiag,numCols_TopOffDiag,*D_Array[i],topColIdxVec,updateIdxVec_Array[i],"Cols",U2_TopOffDiag);
-      extractFromChild(parentSize,min_i,min_j,numRows_TopOffDiag,numCols_TopOffDiag,*D_Array[i],topRowIdxVec,updateIdxVec_Array[i],"Rows",V2_TopOffDiag);
+      extractFromChild(parentSize,min_i,min_j,numRows_TopOffDiag,numCols_TopOffDiag,*D_Array[i],HODLR_Root->topOffDiagColIdx,updateIdxVec_Array[i],"Cols",U2_TopOffDiag);
+      extractFromChild(parentSize,min_i,min_j,numRows_TopOffDiag,numCols_TopOffDiag,*D_Array[i],HODLR_Root->topOffDiagRowIdx,updateIdxVec_Array[i],"Rows",V2_TopOffDiag);
       
       min_i = HODLR_Root->splitIndex_i + 1;                                                                                                                                                           
       min_j = HODLR_Root->min_j;
     
-      extractFromChild(parentSize,min_i,min_j,numRows_BottOffDiag,numCols_BottOffDiag,*D_Array[i],bottColIdxVec,updateIdxVec_Array[i],"Cols",U2_BottOffDiag);
-      extractFromChild(parentSize,min_i,min_j,numRows_BottOffDiag,numCols_BottOffDiag,*D_Array[i],bottRowIdxVec,updateIdxVec_Array[i],"Rows",V2_BottOffDiag);
+      extractFromChild(parentSize,min_i,min_j,numRows_BottOffDiag,numCols_BottOffDiag,*D_Array[i],HODLR_Root->bottOffDiagColIdx,updateIdxVec_Array[i],"Cols",U2_BottOffDiag);
+      extractFromChild(parentSize,min_i,min_j,numRows_BottOffDiag,numCols_BottOffDiag,*D_Array[i],HODLR_Root->bottOffDiagRowIdx,updateIdxVec_Array[i],"Rows",V2_BottOffDiag);
       
       HODLR_Root->topOffDiagU  += U2_TopOffDiag;
       HODLR_Root->topOffDiagV  += V2_TopOffDiag;
@@ -546,52 +531,24 @@ void extendAddLRinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,s
   int numCols_TopOffDiag  = HODLR_Root->max_j - HODLR_Root->splitIndex_j;
   int numCols_BottOffDiag = HODLR_Root->splitIndex_j - HODLR_Root->min_j + 1;
   if (mode == "PS_Boundary"){
-    
-    Eigen::MatrixXd U1_TopOffDiag,U1_BottOffDiag;
-    Eigen::MatrixXd V1_TopOffDiag,V1_BottOffDiag;  
-    Eigen::MatrixXd U2_TopOffDiag,U2_BottOffDiag;
-    Eigen::MatrixXd V2_TopOffDiag,V2_BottOffDiag;
-    Eigen::MatrixXd U_TopOffDiag,K_TopOffDiag,V_TopOffDiag;
-    Eigen::MatrixXd U_BottOffDiag,K_BottOffDiag,V_BottOffDiag;
    
-    std::vector<int> topColIdxVec  = HODLR_Root->topOffDiagColIdx;
-    std::vector<int> topRowIdxVec  = HODLR_Root->topOffDiagRowIdx;
-    std::vector<int> bottColIdxVec = HODLR_Root->bottOffDiagColIdx;
-    std::vector<int> bottRowIdxVec = HODLR_Root->bottOffDiagRowIdx;
-    /*
-    std::vector<int> topColBlk,topRowBlk,bottColBlk,bottRowBlk;
-    topColBlk  = extractBlocks(topColIdxVec );
-    topRowBlk  = extractBlocks(topRowIdxVec );
-    bottColBlk = extractBlocks(bottColIdxVec);
-    bottRowBlk = extractBlocks(bottRowIdxVec);
-    */
-
-    int numPointsTop  = std::max(topColIdxVec.size() ,topRowIdxVec.size());
-    int numPointsBott = std::max(bottColIdxVec.size(),bottRowIdxVec.size());
+    int numPointsTop  = std::max(HODLR_Root->topOffDiagColIdx.size() ,HODLR_Root->topOffDiagRowIdx.size());
+    int numPointsBott = std::max(HODLR_Root->bottOffDiagColIdx.size(),HODLR_Root->bottOffDiagRowIdx.size());
     numPointsTop    = std::max(numPointsTop,1);
     numPointsBott   = std::max(numPointsBott,1);
-    U1_TopOffDiag   = Eigen::MatrixXd::Zero(numRows_TopOffDiag,numPointsTop);
-    V1_TopOffDiag   = Eigen::MatrixXd::Zero(numCols_TopOffDiag,numPointsTop);
-    U1_BottOffDiag  = Eigen::MatrixXd::Zero(numRows_BottOffDiag,numPointsBott);
-    V1_BottOffDiag  = Eigen::MatrixXd::Zero(numCols_BottOffDiag,numPointsBott);
-
     int min_i,min_j;
    
     for (int i = 0; i < (int)extendV_Array.size();i++){
       min_i = HODLR_Root->min_i;
       min_j = HODLR_Root->splitIndex_j + 1;
-      U2_TopOffDiag = extractFromLR(*extendU_Array[i],*extendV_Array[i],min_i,min_j,numRows_TopOffDiag,numCols_TopOffDiag,topColIdxVec,"Cols",numPointsTop);      
-      V2_TopOffDiag = extractFromLR(*extendU_Array[i],*extendV_Array[i],min_i,min_j,numRows_TopOffDiag,numCols_TopOffDiag,topRowIdxVec,"Rows",numPointsTop);
-    
+      HODLR_Root->topOffDiagU += extractFromLR(*extendU_Array[i],*extendV_Array[i],min_i,min_j,numRows_TopOffDiag,numCols_TopOffDiag,HODLR_Root->topOffDiagColIdx,"Cols",numPointsTop);      
+      HODLR_Root->topOffDiagV += extractFromLR(*extendU_Array[i],*extendV_Array[i],min_i,min_j,numRows_TopOffDiag,numCols_TopOffDiag,HODLR_Root->topOffDiagRowIdx,"Rows",numPointsTop);
+      
       min_i = HODLR_Root->splitIndex_i + 1;                                                                                                                                                           
       min_j = HODLR_Root->min_j;
-      U2_BottOffDiag = extractFromLR(*extendU_Array[i],*extendV_Array[i],min_i,min_j,numRows_BottOffDiag,numCols_BottOffDiag,bottColIdxVec,"Cols",numPointsBott);
-      V2_BottOffDiag = extractFromLR(*extendU_Array[i],*extendV_Array[i],min_i,min_j,numRows_BottOffDiag,numCols_BottOffDiag,bottRowIdxVec,"Rows",numPointsBott);
+      HODLR_Root->bottOffDiagU += extractFromLR(*extendU_Array[i],*extendV_Array[i],min_i,min_j,numRows_BottOffDiag,numCols_BottOffDiag,HODLR_Root->bottOffDiagColIdx,"Cols",numPointsBott);
+      HODLR_Root->bottOffDiagV += extractFromLR(*extendU_Array[i],*extendV_Array[i],min_i,min_j,numRows_BottOffDiag,numCols_BottOffDiag,HODLR_Root->bottOffDiagRowIdx,"Rows",numPointsBott);
       
-      HODLR_Root->topOffDiagU  += U2_TopOffDiag;
-      HODLR_Root->topOffDiagV  += V2_TopOffDiag;
-      HODLR_Root->bottOffDiagU += U2_BottOffDiag;
-      HODLR_Root->bottOffDiagV += V2_BottOffDiag; 
     }
     extendAddLRinTree(parentHODLR,HODLR_Root->left ,extendU_Array,extendV_Array,tol,mode);
     extendAddLRinTree(parentHODLR,HODLR_Root->right,extendU_Array,extendV_Array,tol,mode);

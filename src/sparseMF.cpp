@@ -43,7 +43,7 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   Sp_MatrixSize = numRows;
   LU_Permutation = Eigen::VectorXd::LinSpaced(Eigen::Sequential,Sp_MatrixSize,0,Sp_MatrixSize - 1);
   fast_MatrixSizeThresh = 2000;
-  fast_HODLR_LeafSize = 30;
+  fast_HODLR_LeafSize = 100;
   fast_LR_Tol = 1e-1;
   fast_MinPivot = 0;
   inputSpMatrix.prune(1e-40);  
@@ -429,7 +429,6 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
   if (root->criterion == true){
     Eigen::SparseMatrix<double> panelMatrix,panelGraph;
     createPanelAndGraphMatrix(root,panelMatrix,panelGraph);
-    //Eigen::SparseMatrix<double> frontalMatrix_Sp = createPanelMatrix_Sp(root);
     root->D_UpdateDense = false;
     HODLR_Matrix panelHODLR;
     if (root->currLevel != 0){  
@@ -438,14 +437,12 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
       usrTree.rootNode->splitIndex          = nodeSize - 1;
       usrTree.rootNode->topOffDiag_minRank  = -1;
       usrTree.rootNode->bottOffDiag_minRank = -1;
-      usrTree.rootNode->LR_Method           = "PS_Sparse";
+      usrTree.rootNode->LR_Method           = "identifyBoundary";
       usrTree.rootNode->left                = NULL;
       usrTree.rootNode->right               = NULL;
-      panelHODLR = HODLR_Matrix(panelMatrix,panelGraph,fast_HODLR_LeafSize,usrTree,"identifyBoundary");
-      
+      panelHODLR = HODLR_Matrix(panelMatrix,panelGraph,fast_HODLR_LeafSize,usrTree,"identifyBoundary");   
     }else{
       panelHODLR = HODLR_Matrix(panelMatrix,fast_HODLR_LeafSize,"identifyBoundary");
-    
     }
 
     panelHODLR.set_LRTolerance(fast_LR_Tol);
@@ -453,24 +450,22 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
     double startTime = clock();
     //fast_NodeExtendAddUpdate(root,panelHODLR,root->panelIdxVector);
     fast_NodeExtendAddUpdate_Array(root,panelHODLR,root->panelIdxVector);
-    
     double endTime = clock();
     std::cout<<"extendAdd done"<<std::endl;
     fast_ExtendAddTime += (endTime - startTime)/CLOCKS_PER_SEC;
-    if (root->currLevel != 0){
-      //root->fast_NodeMatrix_HODLR = panelHODLR.topDiag();
-      //root->D_HODLR               = panelHODLR.bottDiag();
+    if (root->currLevel != 0){  
       Eigen::MatrixXd UB    = panelHODLR.returnTopOffDiagU();
       Eigen::MatrixXd VB    = panelHODLR.returnTopOffDiagV();
       Eigen::MatrixXd UC    = panelHODLR.returnBottOffDiagU();
       Eigen::MatrixXd VC    = panelHODLR.returnBottOffDiagV();
       panelHODLR.splitAtTop(root->fast_NodeMatrix_HODLR,root->D_HODLR);
-      root->updateU         = -UC;
-      root->updateV         = (VC.transpose() * root->fast_NodeMatrix_HODLR.recLU_Solve(UB) * VB.transpose()).transpose();
+      root->updateU         = UC;
+      root->updateV         = (-VC.transpose() * root->fast_NodeMatrix_HODLR.recLU_Solve(UB) * VB.transpose()).transpose();
       root->nodeToUpdate_U  = UB;
       root->nodeToUpdate_V  = VB;
       root->updateToNode_U  = UC;
       root->updateToNode_V  = VC;
+     
       root->nodeToUpdate_LR = true;
       root->updateToNode_LR = true;
       
@@ -508,16 +503,16 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
 
 
 void sparseMF::fast_CreateUpdateMatrixForNode(eliminationTree::node* root,const Eigen::MatrixXd & nodeUpdateSoln,const Eigen::MatrixXd & bottomRightMatrix){
-  Eigen::MatrixXd updateMatrix;
+  //Eigen::MatrixXd updateMatrix;
   if ((root->updateToNode_LR == false) && (root->nodeToUpdate_LR == false)){
-    updateMatrix = bottomRightMatrix - (root->updateToNode_U) * nodeUpdateSoln;
+    root->updateMatrix = bottomRightMatrix - (root->updateToNode_U) * nodeUpdateSoln;
   }else if ((root->updateToNode_LR == true) && (root->nodeToUpdate_LR == true)){
-    updateMatrix = bottomRightMatrix - (root->updateToNode_U * root->updateToNode_V.transpose() * nodeUpdateSoln * root->nodeToUpdate_V.transpose());
+    root->updateMatrix = bottomRightMatrix - (root->updateToNode_U * root->updateToNode_V.transpose() * nodeUpdateSoln * root->nodeToUpdate_V.transpose());
   }else{
     std::cout<<"Error! Wrong combination of booleans."<<std::endl;
     exit(EXIT_FAILURE);
   }
-  root->updateMatrix = updateMatrix;
+  //root->updateMatrix = updateMatrix;
   return;
 }
 
@@ -588,24 +583,18 @@ void sparseMF::nodeExtendAddUpdate(eliminationTree::node* root,Eigen::MatrixXd &
   std::vector<eliminationTree::node*> nodeChildren = root->children;
   int numChildren = nodeChildren.size();
   for (int i = 0; i < numChildren; i++){
-   
     eliminationTree::node* childNode = nodeChildren[i];
-    Eigen::MatrixXd childUpdateMatrix = childNode->updateMatrix;
-    std::vector<int> childUpdateIdxVector = childNode->updateIdxVector;
-    int updateMatrixSize = childUpdateMatrix.rows();
-     
+    int updateMatrixSize = childNode->updateIdxVector.size();
     // Find update matrix extend add indices
     std::vector<int> childUpdateExtendVec = extendIdxVec(childNode->updateIdxVector,parentIdxVec);
-    
     // Go over all rows and columns in the update matrix
     for (int j = 0; j < updateMatrixSize; j++){
       for (int k = 0; k < updateMatrixSize; k++){
 	int rowIdx = childUpdateExtendVec[j];
 	int colIdx = childUpdateExtendVec[k];
-	nodeFrontalMatrix(rowIdx,colIdx) += childUpdateMatrix(j,k);	
+	nodeFrontalMatrix(rowIdx,colIdx) += childNode->updateMatrix(j,k);	
       }
-    }
-    
+    } 
     // Free Children Memory
     (childNode->updateMatrix).resize(0,0);
   }
@@ -640,7 +629,7 @@ void sparseMF::fast_NodeExtendAddUpdate(eliminationTree::node* root,HODLR_Matrix
 
 void sparseMF::fast_NodeExtendAddUpdate_Array(eliminationTree::node* root,HODLR_Matrix & panelHODLR,std::vector<int> & parentIdxVec){
   if (root->isLeaf == true){
-    panelHODLR.set_FreeMatrixMemory(true);
+    //panelHODLR.set_FreeMatrixMemory(true);
     //panelHODLR.storeLRinTree();
     return;
   }  
@@ -831,7 +820,7 @@ Eigen::MatrixXd sparseMF::LU_Solve(const Eigen::MatrixXd & inputRHS){
     std::cout<<"LU Assembly Time                      = "<<LU_AssemblyTime<<" seconds"<<std::endl;
     std::cout<<"Solve Time                            = "<<LU_SolveTime<<" seconds"<<std::endl;
     std::cout<<"Total Solve Time                      = "<<LU_TotalTime<<" seconds"<<std::endl;
-    std::cout<<"Residula l2 Relative Error            = "<<((reorderedMatrix * U_Soln) - permutedRHS).norm()/permutedRHS.norm()<<std::endl;
+    std::cout<<"Residual l2 Relative Error            = "<<((reorderedMatrix * U_Soln) - permutedRHS).norm()/permutedRHS.norm()<<std::endl;
   }
   return result;
 }
@@ -874,7 +863,7 @@ Eigen::MatrixXd sparseMF::implicit_Solve(const Eigen::MatrixXd & inputRHS){
     std::cout<<"     Symbolic Factorization Time      = "<<symbolic_FactorizationTime<<" seconds"<<std::endl;
     std::cout<<"Solve Time                            = "<<implicit_SolveTime<<" seconds"<<std::endl;
     std::cout<<"Total Solve Time                      = "<<implicit_TotalTime<<" seconds"<<std::endl;
-    std::cout<<"Residula l2 Relative Error            = "<<((reorderedMatrix * finalSoln) - permutedRHS).norm()/permutedRHS.norm()<<std::endl;
+    std::cout<<"Residual l2 Relative Error            = "<<((reorderedMatrix * finalSoln) - permutedRHS).norm()/permutedRHS.norm()<<std::endl;
   }
   return result;
 }
@@ -917,7 +906,7 @@ Eigen::MatrixXd sparseMF::fast_Solve(const Eigen::MatrixXd & inputRHS){
     std::cout<<"     Symbolic Factorization Time      = "<<symbolic_FactorizationTime<<" seconds"<<std::endl;
     std::cout<<"Solve Time                            = "<<fast_SolveTime<<" seconds"<<std::endl;
     std::cout<<"Total Solve Time                      = "<<fast_TotalTime<<" seconds"<<std::endl;
-    std::cout<<"Residula l2 Relative Error            = "<<((reorderedMatrix * finalSoln) - permutedRHS).norm()/permutedRHS.norm()<<std::endl;
+    std::cout<<"Residual l2 Relative Error            = "<<((reorderedMatrix * finalSoln) - permutedRHS).norm()/permutedRHS.norm()<<std::endl;
   }
   return result;
 
@@ -975,7 +964,7 @@ void sparseMF::fast_UpwardPass_Update(eliminationTree::node* root,Eigen::MatrixX
   for (int i = root->min_Col; i<= root->max_Col; i++)
     nodeIdxVec.push_back(i);
   Eigen::MatrixXd update_RHS = getRowBlkMatrix(modifiedRHS,root->updateIdxVector);
-  Eigen::MatrixXd node_RHS = getRowBlkMatrix(modifiedRHS,nodeIdxVec);
+  Eigen::MatrixXd node_RHS   = getRowBlkMatrix(modifiedRHS,nodeIdxVec);
   
   // Update RHS
   Eigen::MatrixXd RHS_UpdateSoln = fast_NodeSolve(root,node_RHS);
@@ -1167,7 +1156,7 @@ Eigen::MatrixXd sparseMF::iterative_Solve(const Eigen::MatrixXd & input_RHS, con
     std::cout<<"     Symbolic Factorization Time      = "<<symbolic_FactorizationTime<<" seconds"<<std::endl;
     std::cout<<"Num Iterations                        = "<<num_Iter<<std::endl;
     std::cout<<"Total Solve Time                      = "<<totalIter_SolveTime<<" seconds"<<std::endl;
-    std::cout<<"Residula l2 Relative Error            = "<<tolerance<<std::endl;
+    std::cout<<"Residual l2 Relative Error            = "<<tolerance<<std::endl;
   }
   return currStep_Soln;
 
