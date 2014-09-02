@@ -234,14 +234,21 @@ void sparseMF::symbolic_Factorize(eliminationTree::node* root){
   updateNodeIdxWithChildrenFillins(root,idxSet);
     
   // Create Index Map                                                                   
-  std::vector<int> panelIdxVector(idxSet.begin(),idxSet.end());
-  std::sort(panelIdxVector.begin(),panelIdxVector.end());
+  //std::vector<int> panelIdxVector(idxSet.begin(),idxSet.end());
+  //std::sort(panelIdxVector.begin(),panelIdxVector.end());
+  //assert(panelIdxVector[0] == minIdx);
+  //assert(panelIdxVector[nodeSize - 1] == maxIdx);
+  //std::vector<int> updateIdxVector(panelIdxVector.begin() + nodeSize,panelIdxVector.end());
+  
+  //root->updateIdxVector = updateIdxVector;
+  //root->panelIdxVector  = panelIdxVector;
+
+                                                                    
+  root->panelIdxVector = std::vector<int>(idxSet.begin(),idxSet.end());
+  std::sort(root->panelIdxVector.begin(),root->panelIdxVector.end());
   assert(panelIdxVector[0] == minIdx);
   assert(panelIdxVector[nodeSize - 1] == maxIdx);
-  std::vector<int> updateIdxVector(panelIdxVector.begin() + nodeSize,panelIdxVector.end());
-  
-  root->updateIdxVector = updateIdxVector;
-  root->panelIdxVector  = panelIdxVector;
+  root->updateIdxVector = std::vector<int>(root->panelIdxVector.begin() + nodeSize,root->panelIdxVector.end());
 
 }
 
@@ -426,6 +433,16 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
   root->frontSize = frontalMatrixSize;
   root->criterion = (frontalMatrixSize >= fast_MatrixSizeThresh);
   //root->criterion = (root->currLevel == 0);
+  std::vector<eliminationTree::node*> nodeChildren = root->children;
+  int numChildren = nodeChildren.size();
+  bool childHODLR = false;
+  for (int i = 0; i < numChildren; i++){
+    eliminationTree::node* childNode = nodeChildren[i];
+    if (childNode->D_UpdateDense == false){
+      root->criterion = true;
+      break;
+    }
+  }
   if (root->criterion == true){
     Eigen::SparseMatrix<double> panelMatrix,panelGraph;
     createPanelAndGraphMatrix(root,panelMatrix,panelGraph);
@@ -479,29 +496,33 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
     nodeExtendAddUpdate(root,frontalMatrix,root->panelIdxVector);
     double endTime = clock();
     fast_ExtendAddTime += (endTime - startTime)/CLOCKS_PER_SEC;
-    Eigen::MatrixXd updateSoln,updateMatrix;
-    Eigen::MatrixXd nodeToUpdate_U;
-    Eigen::MatrixXd updateToNode_U;
+    //Eigen::MatrixXd updateSoln,updateMatrix;
+    //Eigen::MatrixXd nodeToUpdate_U;
+    //Eigen::MatrixXd updateToNode_U;
     
     // Create update matrices
-    Eigen::MatrixXd nodeMatrix   = frontalMatrix.topLeftCorner(nodeSize,nodeSize);
-    Eigen::MatrixXd nodeToUpdate = frontalMatrix.topRightCorner(nodeSize,updateMatrixSize);
-    Eigen::MatrixXd updateToNode = frontalMatrix.bottomLeftCorner(updateMatrixSize,nodeSize);
+    Eigen::MatrixXd nodeMatrix = frontalMatrix.topLeftCorner(nodeSize,nodeSize);
     root->nodeMatrix_LU = Eigen::PartialPivLU<Eigen::MatrixXd>(nodeMatrix);
     if (root->currLevel != 0){
+      Eigen::MatrixXd nodeToUpdate = frontalMatrix.topRightCorner(nodeSize,updateMatrixSize);
+      Eigen::MatrixXd updateToNode = frontalMatrix.bottomLeftCorner(updateMatrixSize,nodeSize);
       updateSoln = (root->nodeMatrix_LU).solve(nodeToUpdate);
       root->nodeToUpdate_LR = false;
       root->updateToNode_LR = false;
-      nodeToUpdate_U = nodeToUpdate;
-      updateToNode_U = updateToNode;
-      root->nodeToUpdate_U  = nodeToUpdate_U;
-      root->updateToNode_U  = updateToNode_U;
-      fast_CreateUpdateMatrixForNode(root,updateSoln,frontalMatrix.bottomRightCorner(updateMatrixSize,updateMatrixSize));
+      //nodeToUpdate_U = nodeToUpdate;
+      //updateToNode_U = updateToNode;
+      //root->nodeToUpdate_U  = nodeToUpdate_U;
+      //root->updateToNode_U  = updateToNode_U;
+      //fast_CreateUpdateMatrixForNode(root,updateSoln,frontalMatrix.bottomRightCorner(updateMatrixSize,updateMatrixSize));
+      root->nodeToUpdate_U  = nodeToUpdate;
+      root->updateToNode_U  = updateToNode;
+      root->updateMatrix = frontalMatrix.bottomRightCorner(updateMatrixSize,updateMatrixSize) - (root->updateToNode_U) * updateSoln;
+      assert(root->updateMatrix.rows() == root->updateIdxVector.size());
     }
   }
 };
 
-
+/*
 void sparseMF::fast_CreateUpdateMatrixForNode(eliminationTree::node* root,const Eigen::MatrixXd & nodeUpdateSoln,const Eigen::MatrixXd & bottomRightMatrix){
   //Eigen::MatrixXd updateMatrix;
   if ((root->updateToNode_LR == false) && (root->nodeToUpdate_LR == false)){
@@ -515,7 +536,7 @@ void sparseMF::fast_CreateUpdateMatrixForNode(eliminationTree::node* root,const 
   //root->updateMatrix = updateMatrix;
   return;
 }
-
+*/
 
 void sparseMF::updateNodeIdxWithChildrenFillins(eliminationTree::node* root,std::set<int> & idxSet){
   if (root->isLeaf == true)
@@ -592,7 +613,7 @@ void sparseMF::nodeExtendAddUpdate(eliminationTree::node* root,Eigen::MatrixXd &
       for (int k = 0; k < updateMatrixSize; k++){
 	int rowIdx = childUpdateExtendVec[j];
 	int colIdx = childUpdateExtendVec[k];
-	nodeFrontalMatrix(rowIdx,colIdx) += childNode->updateMatrix(j,k);	
+	nodeFrontalMatrix(rowIdx,colIdx) += childNode->updateMatrix(j,k);
       }
     } 
     // Free Children Memory
