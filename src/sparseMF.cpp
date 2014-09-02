@@ -246,8 +246,8 @@ void sparseMF::symbolic_Factorize(eliminationTree::node* root){
                                                                     
   root->panelIdxVector = std::vector<int>(idxSet.begin(),idxSet.end());
   std::sort(root->panelIdxVector.begin(),root->panelIdxVector.end());
-  assert(panelIdxVector[0] == minIdx);
-  assert(panelIdxVector[nodeSize - 1] == maxIdx);
+  assert(root->panelIdxVector[0] == minIdx);
+  assert(root->panelIdxVector[nodeSize - 1] == maxIdx);
   root->updateIdxVector = std::vector<int>(root->panelIdxVector.begin() + nodeSize,root->panelIdxVector.end());
 
 }
@@ -506,7 +506,7 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
     if (root->currLevel != 0){
       Eigen::MatrixXd nodeToUpdate = frontalMatrix.topRightCorner(nodeSize,updateMatrixSize);
       Eigen::MatrixXd updateToNode = frontalMatrix.bottomLeftCorner(updateMatrixSize,nodeSize);
-      updateSoln = (root->nodeMatrix_LU).solve(nodeToUpdate);
+      Eigen::MatrixXd updateSoln   = (root->nodeMatrix_LU).solve(nodeToUpdate);
       root->nodeToUpdate_LR = false;
       root->updateToNode_LR = false;
       //nodeToUpdate_U = nodeToUpdate;
