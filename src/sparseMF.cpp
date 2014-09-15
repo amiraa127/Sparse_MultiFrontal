@@ -28,7 +28,10 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   LU_ExtendAddTime         = 0;
   LU_SymbolicFactorTime    = 0;
   LU_AssemblyTime          = 0;
-  
+
+  averageLargeFrontSize = 0;
+  numLargeFronts        = 0;
+
   symbolic_Factorized     = false;
   LU_Factorized           = false;
   implicit_Factorized     = false;
@@ -207,6 +210,8 @@ void sparseMF::symbolic_Factorize(){
     double endTime  = clock();
     symbolic_FactorizationTime = (endTime - startTime)/CLOCKS_PER_SEC;
     symbolic_Factorized = true;
+    if (printResultInfo == true)
+      averageLargeFrontSize = pow(averageLargeFrontSize * 1.0/numLargeFronts,1.0/3);
   }
 }
 
@@ -232,24 +237,15 @@ void sparseMF::symbolic_Factorize(eliminationTree::node* root){
     }
 
   updateNodeIdxWithChildrenFillins(root,idxSet);
-    
-  // Create Index Map                                                                   
-  //std::vector<int> panelIdxVector(idxSet.begin(),idxSet.end());
-  //std::sort(panelIdxVector.begin(),panelIdxVector.end());
-  //assert(panelIdxVector[0] == minIdx);
-  //assert(panelIdxVector[nodeSize - 1] == maxIdx);
-  //std::vector<int> updateIdxVector(panelIdxVector.begin() + nodeSize,panelIdxVector.end());
-  
-  //root->updateIdxVector = updateIdxVector;
-  //root->panelIdxVector  = panelIdxVector;
-
-                                                                    
   root->panelIdxVector = std::vector<int>(idxSet.begin(),idxSet.end());
   std::sort(root->panelIdxVector.begin(),root->panelIdxVector.end());
   assert(root->panelIdxVector[0] == minIdx);
   assert(root->panelIdxVector[nodeSize - 1] == maxIdx);
   root->updateIdxVector = std::vector<int>(root->panelIdxVector.begin() + nodeSize,root->panelIdxVector.end());
-
+  if ((idxSet.size() >= fast_MatrixSizeThresh) && (printResultInfo == true)){
+    averageLargeFrontSize += pow(idxSet.size(),3);
+    numLargeFronts++;
+  }
 }
 
 
@@ -386,26 +382,23 @@ void sparseMF::implicit_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::no
   Eigen::MatrixXd updateToNode_U,updateToNode_V;
 
   // Create update matrices
-  Eigen::MatrixXd nodeMatrix = frontalMatrix.topLeftCorner(nodeSize,nodeSize);
-  Eigen::MatrixXd nodeToUpdate = frontalMatrix.topRightCorner(nodeSize,updateMatrixSize);
-  Eigen::MatrixXd updateToNode = frontalMatrix.bottomLeftCorner(updateMatrixSize,nodeSize);
-
-  root->nodeMatrix_LU = Eigen::PartialPivLU<Eigen::MatrixXd>(nodeMatrix);
   if (root->currLevel != 0){
+    Eigen::MatrixXd nodeMatrix   = frontalMatrix.topLeftCorner(nodeSize,nodeSize);
+    Eigen::MatrixXd nodeToUpdate = frontalMatrix.topRightCorner(nodeSize,updateMatrixSize);
+    Eigen::MatrixXd updateToNode = frontalMatrix.bottomLeftCorner(updateMatrixSize,nodeSize);
+    root->nodeMatrix_LU = Eigen::PartialPivLU<Eigen::MatrixXd>(nodeMatrix);
     updateSoln = (root->nodeMatrix_LU).solve(nodeToUpdate);
-    nodeToUpdate_U = nodeToUpdate;
-    updateToNode_U = updateToNode;
+    root->nodeToUpdate_U = nodeToUpdate;
+    root->updateToNode_U = updateToNode;
+    root->updateMatrix   = frontalMatrix.bottomRightCorner(updateMatrixSize,updateMatrixSize) - (root->updateToNode_U) * updateSoln;
+  }else{
+    root->nodeMatrix_LU = Eigen::PartialPivLU<Eigen::MatrixXd>(frontalMatrix);
   }
   
-  //root->updateIdxVector = updateIdxVector;
-  root->nodeToUpdate_U = nodeToUpdate_U;
-  root->updateToNode_U = updateToNode_U;
-  root->updateMatrix =  frontalMatrix.bottomRightCorner(updateMatrixSize,updateMatrixSize) - (root->updateToNode_U) * updateSoln;
-   
   //Special Operations :DD
   /*
-  std::cout<<nodeSize<<std::endl;
-  if (nodeSize >= 2000){
+    std::cout<<nodeSize<<std::endl;
+    if (nodeSize >= 2000){
     std::stringstream ss,ss2;
     int minIdx = root->min_Col;
     ss << frontID; 
@@ -425,14 +418,11 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
   int nodeSize = root->numCols;
   int frontalMatrixSize = root->panelIdxVector.size();
   int updateMatrixSize  = frontalMatrixSize - nodeSize;
- 
-  //Eigen::MatrixXd frontalMatrix = createPanelMatrix(root);
 
   // Update frontal matrix using updates from children
   root->D_UpdateDense = true;
   root->frontSize = frontalMatrixSize;
   root->criterion = (frontalMatrixSize >= fast_MatrixSizeThresh);
-  //root->criterion = (root->currLevel == 0);
   std::vector<eliminationTree::node*> nodeChildren = root->children;
   int numChildren = nodeChildren.size();
   bool childHODLR = false;
@@ -496,47 +486,25 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
     nodeExtendAddUpdate(root,frontalMatrix,root->panelIdxVector);
     double endTime = clock();
     fast_ExtendAddTime += (endTime - startTime)/CLOCKS_PER_SEC;
-    //Eigen::MatrixXd updateSoln,updateMatrix;
-    //Eigen::MatrixXd nodeToUpdate_U;
-    //Eigen::MatrixXd updateToNode_U;
-    
+   
     // Create update matrices
-    Eigen::MatrixXd nodeMatrix = frontalMatrix.topLeftCorner(nodeSize,nodeSize);
-    root->nodeMatrix_LU = Eigen::PartialPivLU<Eigen::MatrixXd>(nodeMatrix);
-    if (root->currLevel != 0){
+    if (root->currLevel != 0){      
+      Eigen::MatrixXd nodeMatrix = frontalMatrix.topLeftCorner(nodeSize,nodeSize);
+      root->nodeMatrix_LU = Eigen::PartialPivLU<Eigen::MatrixXd>(nodeMatrix);
       Eigen::MatrixXd nodeToUpdate = frontalMatrix.topRightCorner(nodeSize,updateMatrixSize);
       Eigen::MatrixXd updateToNode = frontalMatrix.bottomLeftCorner(updateMatrixSize,nodeSize);
       Eigen::MatrixXd updateSoln   = (root->nodeMatrix_LU).solve(nodeToUpdate);
       root->nodeToUpdate_LR = false;
       root->updateToNode_LR = false;
-      //nodeToUpdate_U = nodeToUpdate;
-      //updateToNode_U = updateToNode;
-      //root->nodeToUpdate_U  = nodeToUpdate_U;
-      //root->updateToNode_U  = updateToNode_U;
-      //fast_CreateUpdateMatrixForNode(root,updateSoln,frontalMatrix.bottomRightCorner(updateMatrixSize,updateMatrixSize));
       root->nodeToUpdate_U  = nodeToUpdate;
       root->updateToNode_U  = updateToNode;
       root->updateMatrix = frontalMatrix.bottomRightCorner(updateMatrixSize,updateMatrixSize) - (root->updateToNode_U) * updateSoln;
       assert(root->updateMatrix.rows() == root->updateIdxVector.size());
+    }else{
+      root->nodeMatrix_LU = Eigen::PartialPivLU<Eigen::MatrixXd>(frontalMatrix);
     }
   }
 };
-
-/*
-void sparseMF::fast_CreateUpdateMatrixForNode(eliminationTree::node* root,const Eigen::MatrixXd & nodeUpdateSoln,const Eigen::MatrixXd & bottomRightMatrix){
-  //Eigen::MatrixXd updateMatrix;
-  if ((root->updateToNode_LR == false) && (root->nodeToUpdate_LR == false)){
-    root->updateMatrix = bottomRightMatrix - (root->updateToNode_U) * nodeUpdateSoln;
-  }else if ((root->updateToNode_LR == true) && (root->nodeToUpdate_LR == true)){
-    root->updateMatrix = bottomRightMatrix - (root->updateToNode_U * root->updateToNode_V.transpose() * nodeUpdateSoln * root->nodeToUpdate_V.transpose());
-  }else{
-    std::cout<<"Error! Wrong combination of booleans."<<std::endl;
-    exit(EXIT_FAILURE);
-  }
-  //root->updateMatrix = updateMatrix;
-  return;
-}
-*/
 
 void sparseMF::updateNodeIdxWithChildrenFillins(eliminationTree::node* root,std::set<int> & idxSet){
   if (root->isLeaf == true)
@@ -832,6 +800,8 @@ Eigen::MatrixXd sparseMF::LU_Solve(const Eigen::MatrixXd & inputRHS){
   if (printResultInfo == true){
     std::cout<<"**************************************************"<<std::endl;
     std::cout<<"Solver Type                           = "<<"LU"<<std::endl;
+    std::cout<<"Average Large Front Size              = "<<averageLargeFrontSize<<std::endl;
+    std::cout<<"Number of Large Fronts                = "<<numLargeFronts<<std::endl;
     std::cout<<"Matrix Reordering Time                = "<<matrixReorderingTime<<" seconds"<<std::endl;
     std::cout<<"     Matrix Graph Conversion Time     = "<<matrixGraphConversionTime<<" seconds"<<std::endl;
     std::cout<<"     SCOTCH Reordering Time           = "<<SCOTCH_ReorderingTime<<" seconds"<<std::endl;
@@ -875,6 +845,8 @@ Eigen::MatrixXd sparseMF::implicit_Solve(const Eigen::MatrixXd & inputRHS){
   if (printResultInfo == true){
     std::cout<<"**************************************************"<<std::endl;
     std::cout<<"Solver Type                           = "<<"Implicit"<<std::endl;
+    std::cout<<"Average Large Front Size              = "<<averageLargeFrontSize<<std::endl;
+    std::cout<<"Number of Large Fronts                = "<<numLargeFronts<<std::endl;
     std::cout<<"Low-Rank Tolerance                    = "<<fast_LR_Tol<<std::endl;
     std::cout<<"Matrix Reordering Time                = "<<matrixReorderingTime<<" seconds"<<std::endl;
     std::cout<<"     Matrix Graph Conversion Time     = "<<matrixGraphConversionTime<<" seconds"<<std::endl;
@@ -918,6 +890,8 @@ Eigen::MatrixXd sparseMF::fast_Solve(const Eigen::MatrixXd & inputRHS){
   if (printResultInfo == true){
     std::cout<<"**************************************************"<<std::endl;
     std::cout<<"Solver Type                           = "<<"Ultra Fast"<<std::endl;
+    std::cout<<"Average Large Front Size              = "<<averageLargeFrontSize<<std::endl;
+    std::cout<<"Number of Large Fronts                = "<<numLargeFronts<<std::endl;
     std::cout<<"Low-Rank Tolerance                    = "<<fast_LR_Tol<<std::endl;
     std::cout<<"Matrix Reordering Time                = "<<matrixReorderingTime<<" seconds"<<std::endl;
     std::cout<<"     Matrix Graph Conversion Time     = "<<matrixGraphConversionTime<<" seconds"<<std::endl;
@@ -1168,6 +1142,8 @@ Eigen::MatrixXd sparseMF::iterative_Solve(const Eigen::MatrixXd & input_RHS, con
   if (printResultInfo == true){
     std::cout<<"**************************************************"<<std::endl;
     std::cout<<"Solver Type                           = "<<"Iterative"<<std::endl;
+    std::cout<<"Average Large Front Size              = "<<averageLargeFrontSize<<std::endl;
+    std::cout<<"Number of Large Fronts                = "<<numLargeFronts<<std::endl;
     std::cout<<"Low-Rank Tolerance                    = "<<fast_LR_Tol<<std::endl;
     std::cout<<"Matrix Reordering Time                = "<<matrixReorderingTime<<" seconds"<<std::endl;
     std::cout<<"     Matrix Graph Conversion Time     = "<<matrixGraphConversionTime<<" seconds"<<std::endl;

@@ -41,6 +41,8 @@ private:
   std::vector<Eigen::Triplet<double,int> > U_TripletVec;
   int Sp_MatrixSize;
   int frontID;
+  double averageLargeFrontSize;
+  int numLargeFronts;
 
   int fast_MatrixSizeThresh;
   int fast_HODLR_LeafSize;
