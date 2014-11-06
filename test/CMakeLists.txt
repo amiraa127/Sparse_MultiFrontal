@@ -18,7 +18,7 @@ set_target_properties(libSCOTCHerr PROPERTIES IMPORTED_LOCATION /usr/local/lib/l
 
 # Add CPPUNIT
 add_library(libCPPUNIT STATIC IMPORTED)
-set_target_properties(libCPPUNIT PROPERTIES IMPORTED_LOCATION /opt/local/lib/libcppunit.a)
+set_target_properties(libCPPUNIT PROPERTIES IMPORTED_LOCATION /usr/local/lib/libcppunit.a)
 
 # Directories to look for libraries
 link_directories(${SparseMultiFrontal_BINARY_DIR}/src)

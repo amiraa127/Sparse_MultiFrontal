@@ -210,7 +210,7 @@ void sparseMF::symbolic_Factorize(){
     double endTime  = clock();
     symbolic_FactorizationTime = (endTime - startTime)/CLOCKS_PER_SEC;
     symbolic_Factorized = true;
-    if (printResultInfo == true)
+    if (numLargeFronts > 0)
       averageLargeFrontSize = pow(averageLargeFrontSize * 1.0/numLargeFronts,1.0/3);
   }
 }
@@ -242,7 +242,7 @@ void sparseMF::symbolic_Factorize(eliminationTree::node* root){
   assert(root->panelIdxVector[0] == minIdx);
   assert(root->panelIdxVector[nodeSize - 1] == maxIdx);
   root->updateIdxVector = std::vector<int>(root->panelIdxVector.begin() + nodeSize,root->panelIdxVector.end());
-  if ((idxSet.size() >= fast_MatrixSizeThresh) && (printResultInfo == true)){
+  if ((idxSet.size() >= fast_MatrixSizeThresh)){
     averageLargeFrontSize += pow(idxSet.size(),3);
     numLargeFronts++;
   }
@@ -465,7 +465,9 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
       Eigen::MatrixXd VB    = panelHODLR.returnTopOffDiagV();
       Eigen::MatrixXd UC    = panelHODLR.returnBottOffDiagU();
       Eigen::MatrixXd VC    = panelHODLR.returnBottOffDiagV();
-      panelHODLR.splitAtTop(root->fast_NodeMatrix_HODLR,root->D_HODLR);
+      //panelHODLR.splitAtTop(root->fast_NodeMatrix_HODLR,root->D_HODLR);
+      splitAtTop(panelHODLR,root->fast_NodeMatrix_HODLR,root->D_HODLR);
+    
       root->updateU         = UC;
       root->updateV         = (-VC.transpose() * root->fast_NodeMatrix_HODLR.recLU_Solve(UB) * VB.transpose()).transpose();
       root->nodeToUpdate_U  = UB;
@@ -795,7 +797,7 @@ Eigen::MatrixXd sparseMF::LU_Solve(const Eigen::MatrixXd & inputRHS){
   Eigen::MatrixXd result = permuteRows(U_Soln,permVector,true);
   endTime = clock();
 
-  LU_TotalTime = matrixReorderingTime + LU_FactorizationTime + LU_AssemblyTime + LU_SolveTime + permTime;
+  LU_TotalTime = matrixReorderingTime + LU_FactorizationTime + symbolic_FactorizationTime + LU_AssemblyTime + LU_SolveTime + permTime;
 
   if (printResultInfo == true){
     std::cout<<"**************************************************"<<std::endl;
@@ -807,7 +809,7 @@ Eigen::MatrixXd sparseMF::LU_Solve(const Eigen::MatrixXd & inputRHS){
     std::cout<<"     SCOTCH Reordering Time           = "<<SCOTCH_ReorderingTime<<" seconds"<<std::endl;
     std::cout<<"Factorization Time                    = "<<LU_FactorizationTime<<" seconds"<<std::endl;
     std::cout<<"     Extend Add Time                  = "<<LU_ExtendAddTime<<" seconds"<<std::endl;   
-    std::cout<<"     Symbolic Factorization Time      = "<<symbolic_FactorizationTime<<" seconds"<<std::endl;
+    std::cout<<"Symbolic Factorization Time           = "<<symbolic_FactorizationTime<<" seconds"<<std::endl;
     std::cout<<"LU Assembly Time                      = "<<LU_AssemblyTime<<" seconds"<<std::endl;
     std::cout<<"Solve Time                            = "<<LU_SolveTime<<" seconds"<<std::endl;
     std::cout<<"Total Solve Time                      = "<<LU_TotalTime<<" seconds"<<std::endl;
@@ -840,7 +842,7 @@ Eigen::MatrixXd sparseMF::implicit_Solve(const Eigen::MatrixXd & inputRHS){
   endTime = clock();
   permTime += (endTime - startTime)/CLOCKS_PER_SEC;
  
-  implicit_TotalTime = matrixReorderingTime + implicit_FactorizationTime + implicit_SolveTime + permTime; 
+  implicit_TotalTime = matrixReorderingTime + implicit_FactorizationTime + symbolic_FactorizationTime + implicit_SolveTime + permTime;
    
   if (printResultInfo == true){
     std::cout<<"**************************************************"<<std::endl;
@@ -853,7 +855,7 @@ Eigen::MatrixXd sparseMF::implicit_Solve(const Eigen::MatrixXd & inputRHS){
     std::cout<<"     SCOTCH Reordering Time           = "<<SCOTCH_ReorderingTime<<" seconds"<<std::endl;
     std::cout<<"Factorization Time                    = "<<implicit_FactorizationTime<<" seconds"<<std::endl;
     std::cout<<"     Extend Add Time                  = "<<implicit_ExtendAddTime<<" seconds"<<std::endl;   
-    std::cout<<"     Symbolic Factorization Time      = "<<symbolic_FactorizationTime<<" seconds"<<std::endl;
+    std::cout<<"Symbolic Factorization Time           = "<<symbolic_FactorizationTime<<" seconds"<<std::endl;
     std::cout<<"Solve Time                            = "<<implicit_SolveTime<<" seconds"<<std::endl;
     std::cout<<"Total Solve Time                      = "<<implicit_TotalTime<<" seconds"<<std::endl;
     std::cout<<"Residual l2 Relative Error            = "<<((reorderedMatrix * finalSoln) - permutedRHS).norm()/permutedRHS.norm()<<std::endl;
@@ -885,7 +887,7 @@ Eigen::MatrixXd sparseMF::fast_Solve(const Eigen::MatrixXd & inputRHS){
   endTime = clock();
   permTime += (endTime - startTime)/CLOCKS_PER_SEC;
  
-  fast_TotalTime = matrixReorderingTime + fast_FactorizationTime + fast_SolveTime + permTime; 
+  fast_TotalTime = matrixReorderingTime + fast_FactorizationTime + symbolic_FactorizationTime + fast_SolveTime + permTime;
    
   if (printResultInfo == true){
     std::cout<<"**************************************************"<<std::endl;
@@ -898,7 +900,7 @@ Eigen::MatrixXd sparseMF::fast_Solve(const Eigen::MatrixXd & inputRHS){
     std::cout<<"     SCOTCH Reordering Time           = "<<SCOTCH_ReorderingTime<<" seconds"<<std::endl;
     std::cout<<"Factorization Time                    = "<<fast_FactorizationTime<<" seconds"<<std::endl;
     std::cout<<"     Extend Add Time                  = "<<fast_ExtendAddTime<<" seconds"<<std::endl;   
-    std::cout<<"     Symbolic Factorization Time      = "<<symbolic_FactorizationTime<<" seconds"<<std::endl;
+    std::cout<<"Symbolic Factorization Time           = "<<symbolic_FactorizationTime<<" seconds"<<std::endl;
     std::cout<<"Solve Time                            = "<<fast_SolveTime<<" seconds"<<std::endl;
     std::cout<<"Total Solve Time                      = "<<fast_TotalTime<<" seconds"<<std::endl;
     std::cout<<"Residual l2 Relative Error            = "<<((reorderedMatrix * finalSoln) - permutedRHS).norm()/permutedRHS.norm()<<std::endl;
@@ -1150,7 +1152,7 @@ Eigen::MatrixXd sparseMF::iterative_Solve(const Eigen::MatrixXd & input_RHS, con
     std::cout<<"     SCOTCH Reordering Time           = "<<SCOTCH_ReorderingTime<<" seconds"<<std::endl;
     std::cout<<"Factorization Time                    = "<<fast_FactorizationTime<<" seconds"<<std::endl;
     std::cout<<"     Extend Add Time                  = "<<fast_ExtendAddTime<<" seconds"<<std::endl;   
-    std::cout<<"     Symbolic Factorization Time      = "<<symbolic_FactorizationTime<<" seconds"<<std::endl;
+    std::cout<<"Symbolic Factorization Time           = "<<symbolic_FactorizationTime<<" seconds"<<std::endl;
     std::cout<<"Num Iterations                        = "<<num_Iter<<std::endl;
     std::cout<<"Total Solve Time                      = "<<totalIter_SolveTime<<" seconds"<<std::endl;
     std::cout<<"Residual l2 Relative Error            = "<<tolerance<<std::endl;

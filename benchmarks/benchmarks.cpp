@@ -26,7 +26,7 @@ int main(int argc, char* argv[]){
   inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.500k");
   testSolveSp(inputSpMatrix, "implicit");
   inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat1.800k");
-  testSolveSp(inputSpMatrix, "implicit");*/
+  testSolveSp(inputSpMatrix, "implicit");
   std::cout<<"Benchmarking fast iterative implementation"<<std::endl;
   std::cout<<"++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
   inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.100k");
@@ -41,6 +41,7 @@ int main(int argc, char* argv[]){
   testSolveSp(inputSpMatrix, "fast_Iterative");
   inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat1.800k"); 
   testSolveSp(inputSpMatrix, "fast_Iterative");
+  */
   /*
   std::cout<<"_________________________________________"<<std::endl;
   std::cout<<"Benchmarking unStructured mesh matrices "<<std::endl;
@@ -60,6 +61,7 @@ int main(int argc, char* argv[]){
   inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/unStructured/cube/localmat1.900k");
   testSolveSp(inputSpMatrix, "implicit");
   */
+  /*
   std::cout<<"Benchmarking fast iterative implementation"<<std::endl;
   std::cout<<"++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
   inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/unStructured/cube/localmat1.100k");
@@ -67,7 +69,7 @@ int main(int argc, char* argv[]){
   inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/unStructured/cube/localmat0.200k");
   testSolveSp(inputSpMatrix, "fast_Iterative");
   inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/unStructured/cube/localmat4.300k");
-  testSolveSp(inputSpMatrix, "fast_Iterative");
+  testSolveSp(inputSpMatrix, "fast_Iterative");*/
   inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/unStructured/cube/localmat0.400k");
   testSolveSp(inputSpMatrix, "fast_Iterative");
   inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/unStructured/cube/localmat0.500k");
