@@ -465,7 +465,6 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
       Eigen::MatrixXd VB    = panelHODLR.returnTopOffDiagV();
       Eigen::MatrixXd UC    = panelHODLR.returnBottOffDiagU();
       Eigen::MatrixXd VC    = panelHODLR.returnBottOffDiagV();
-      //panelHODLR.splitAtTop(root->fast_NodeMatrix_HODLR,root->D_HODLR);
       splitAtTop(panelHODLR,root->fast_NodeMatrix_HODLR,root->D_HODLR);
     
       root->updateU         = UC;

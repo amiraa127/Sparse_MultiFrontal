@@ -17,7 +17,8 @@ HODLR_Matrix extend(std::vector<int> & extendIdxVec, int parentSize, HODLR_Matri
   assert(childHODLR.get_MatrixSize() == (int)extendIdxVec.size()); 
   childHODLR.storeLRinTree();
   HODLR_Matrix result = childHODLR;
-  extend(result.get_TreeRootNode(),childHODLR.get_TreeRootNode(),extendIdxVec,parentSize);
+  //extend(result.get_TreeRootNode(),childHODLR.get_TreeRootNode(),extendIdxVec,parentSize);
+  extend(result.indexTree.rootNode,childHODLR.indexTree.rootNode,extendIdxVec,parentSize);
   result.recalculateSize();
   result.freeMatrixData();
   return result;
@@ -27,12 +28,15 @@ void extendAddUpdate(HODLR_Matrix & parentHODLR, std::vector<Eigen::MatrixXd*> D
   parentHODLR.storeLRinTree();
   int parentSize = parentHODLR.get_MatrixSize();
   if (mode == "PS_Boundary"){
-    storeParentContribution(parentHODLR,parentHODLR.get_TreeRootNode(),mode);
+    //    storeParentContribution(parentHODLR,parentHODLR.get_TreeRootNode(),mode);
+    storeParentContribution(parentHODLR,parentHODLR.indexTree.rootNode,mode);
     parentHODLR.freeMatrixData();
     if (D_Array.size() > 0)
-      extendAddinTree(parentSize,parentHODLR.get_TreeRootNode(),D_Array,updateIdxVec_Array_D,tol,mode);
+      extendAddinTree(parentSize,parentHODLR.indexTree.rootNode,D_Array,updateIdxVec_Array_D,tol,mode);
+    //extendAddinTree(parentSize,parentHODLR.get_TreeRootNode(),D_Array,updateIdxVec_Array_D,tol,mode);
     if (D_HODLR_Array.size() > 0){
-      extendAddinTree(parentSize,parentHODLR.get_TreeRootNode(),D_HODLR_Array,updateIdxVec_Array_D_HODLR,tol,mode);
+      extendAddinTree(parentSize,parentHODLR.indexTree.rootNode,D_HODLR_Array,updateIdxVec_Array_D_HODLR,tol,mode);
+      //extendAddinTree(parentSize,parentHODLR.get_TreeRootNode(),D_HODLR_Array,updateIdxVec_Array_D_HODLR,tol,mode);
       // Extend Us and Vs
       std::vector<Eigen::MatrixXd *> extendU_Array(U_Array.size()),extendV_Array(V_Array.size());
       for (int i = 0; i < (int)U_Array.size();i++){
@@ -41,7 +45,8 @@ void extendAddUpdate(HODLR_Matrix & parentHODLR, std::vector<Eigen::MatrixXd*> D
 	*extendU_Array[i] = extend(updateIdxVec_Array_D_HODLR[i],parentSize,*U_Array[i],0,0,U_Array[i]->rows(),U_Array[i]->cols(),"Rows");
 	*extendV_Array[i] = extend(updateIdxVec_Array_D_HODLR[i],parentSize,*V_Array[i],0,0,V_Array[i]->rows(),V_Array[i]->cols(),"Rows");
       }
-      extendAddLRinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendU_Array,extendV_Array,tol,mode); 
+      //extendAddLRinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendU_Array,extendV_Array,tol,mode); 
+      extendAddLRinTree(parentHODLR,parentHODLR.indexTree.rootNode,extendU_Array,extendV_Array,tol,mode); 
       for (int i = 0; i < (int)U_Array.size();i++){
 	delete extendU_Array[i];
 	delete extendV_Array[i];
@@ -49,8 +54,9 @@ void extendAddUpdate(HODLR_Matrix & parentHODLR, std::vector<Eigen::MatrixXd*> D
 
 
     }
-    calcPseudoInvInTree(parentHODLR.get_TreeRootNode(),tol);
-
+    //calcPseudoInvInTree(parentHODLR.get_TreeRootNode(),tol);
+    calcPseudoInvInTree(parentHODLR.indexTree.rootNode,tol);
+    
 
     
   }else{    
@@ -67,10 +73,13 @@ void extendAddUpdate(HODLR_Matrix & parentHODLR,HODLR_Matrix & D_HODLR,std::vect
     int parentSize = parentHODLR.get_MatrixSize();
     HODLR_Matrix extendD_HODLR = extend(updateIdxVec,parentSize,D_HODLR);
     assert(extendD_HODLR.rows() == parentSize);
-    extendAddinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendD_HODLR,D_HODLR,updateIdxVec,tol,mode);
+    //    extendAddinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendD_HODLR,D_HODLR,updateIdxVec,tol,mode);
+    extendAddinTree(parentHODLR,parentHODLR.indexTree.rootNode,extendD_HODLR,D_HODLR,updateIdxVec,tol,mode);
   }else if (mode == "PS_Boundary"){
     HODLR_Matrix extendD_HODLR;
-    extendAddinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendD_HODLR,D_HODLR,updateIdxVec,tol,mode);
+    //extendAddinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendD_HODLR,D_HODLR,updateIdxVec,tol,mode);
+    extendAddinTree(parentHODLR,parentHODLR.indexTree.rootNode,extendD_HODLR,D_HODLR,updateIdxVec,tol,mode);
+  
   }else{
     std::cout<<"Error! Unknown operation mode!"<<std::endl;
     exit(EXIT_FAILURE);
@@ -86,10 +95,13 @@ void extendAddUpdate(HODLR_Matrix & parentHODLR,Eigen::MatrixXd & D,std::vector<
     int parentSize = parentHODLR.get_MatrixSize();
     Eigen::MatrixXd extendD = extend(updateIdxVec,parentSize,D,0,0,D.rows(),D.cols(),"RowsCols");
     assert(extendD.rows() == parentSize);
-    extendAddinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendD,D,updateIdxVec,tol,mode);
+    //extendAddinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendD,D,updateIdxVec,tol,mode);
+    extendAddinTree(parentHODLR,parentHODLR.indexTree.rootNode,extendD,D,updateIdxVec,tol,mode);
+    
   }else if (mode == "PS_Boundary"){
     Eigen::MatrixXd extendD;
-    extendAddinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendD,D,updateIdxVec,tol,mode);
+    //extendAddinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendD,D,updateIdxVec,tol,mode);
+    extendAddinTree(parentHODLR,parentHODLR.indexTree.rootNode,extendD,D,updateIdxVec,tol,mode);
   }else{
     std::cout<<"Error! Unknown operation mode!"<<std::endl;
     exit(EXIT_FAILURE);
@@ -102,7 +114,9 @@ void extendAddUpdate(HODLR_Matrix & parentHODLR,Eigen::MatrixXd & U,Eigen::Matri
   int parentSize = parentHODLR.get_MatrixSize();
   Eigen::MatrixXd extendU = extend(updateIdxVec,parentSize,U,0,0,U.rows(),U.cols(),"Rows");
   Eigen::MatrixXd extendV = extend(updateIdxVec,parentSize,V,0,0,V.rows(),V.cols(),"Rows");
-  extendAddLRinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendU,extendV,updateIdxVec,tol,mode);
+  //extendAddLRinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendU,extendV,updateIdxVec,tol,mode);
+  extendAddLRinTree(parentHODLR,parentHODLR.indexTree.rootNode,extendU,extendV,updateIdxVec,tol,mode);
+  
   parentHODLR.freeMatrixData();
 }
 
