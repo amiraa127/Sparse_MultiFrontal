@@ -31,7 +31,6 @@ public:
 
 private:
   Eigen::SparseMatrix<double> reorderedMatrix;
-  //Eigen::SparseMatrix<double> originalMatrix;  
   Eigen::SparseMatrix<double> L_Matrix;
   Eigen::SparseMatrix<double> U_Matrix;
   Eigen::VectorXd LU_Permutation;
@@ -48,7 +47,8 @@ private:
   int fast_HODLR_LeafSize;
   double fast_LR_Tol;
   double fast_MinPivot;
-  
+  int fast_BoundaryDepth;
+
   bool symbolic_Factorized;
   bool LU_Factorized;
   bool implicit_Factorized;
@@ -132,10 +132,6 @@ private:
   Eigen::MatrixXd fast_DownwardPass(const Eigen::MatrixXd & upwardPassRHS);
   void fast_DownwardPass(eliminationTree::node* root,const Eigen::MatrixXd & upwardPassRHS,Eigen::MatrixXd & finalSoln);
   
-
-
-  //void fast_CreateUpdateMatrixForNode(eliminationTree::node* root,const Eigen::MatrixXd & nodeUpdateSoln,const Eigen::MatrixXd & bottomRightMatrix);
-
   Eigen::MatrixXd fast_NodeToUpdateMultiply(eliminationTree::node* root,const Eigen::MatrixXd & RHS);
   Eigen::MatrixXd fast_UpdateToNodeMultiply(eliminationTree::node* root,const Eigen::MatrixXd & RHS);
 

@@ -1,7 +1,5 @@
 #include "extendAdd.hpp"
 
-
-
 void extend(HODLR_Tree::node* resultRoot,HODLR_Tree::node* HODLR_Root,std::vector<int> & extendIdxVec,int parentSize);
 void extendAddLRinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,Eigen::MatrixXd & extendU,Eigen::MatrixXd & extendV,std::vector<int> & updateIdxVec,double tol,std::string mode);
 template<typename T>
@@ -17,7 +15,6 @@ HODLR_Matrix extend(std::vector<int> & extendIdxVec, int parentSize, HODLR_Matri
   assert(childHODLR.get_MatrixSize() == (int)extendIdxVec.size()); 
   childHODLR.storeLRinTree();
   HODLR_Matrix result = childHODLR;
-  //extend(result.get_TreeRootNode(),childHODLR.get_TreeRootNode(),extendIdxVec,parentSize);
   extend(result.indexTree.rootNode,childHODLR.indexTree.rootNode,extendIdxVec,parentSize);
   result.recalculateSize();
   result.freeMatrixData();
@@ -28,15 +25,12 @@ void extendAddUpdate(HODLR_Matrix & parentHODLR, std::vector<Eigen::MatrixXd*> D
   parentHODLR.storeLRinTree();
   int parentSize = parentHODLR.get_MatrixSize();
   if (mode == "PS_Boundary"){
-    //    storeParentContribution(parentHODLR,parentHODLR.get_TreeRootNode(),mode);
     storeParentContribution(parentHODLR,parentHODLR.indexTree.rootNode,mode);
     parentHODLR.freeMatrixData();
     if (D_Array.size() > 0)
       extendAddinTree(parentSize,parentHODLR.indexTree.rootNode,D_Array,updateIdxVec_Array_D,tol,mode);
-    //extendAddinTree(parentSize,parentHODLR.get_TreeRootNode(),D_Array,updateIdxVec_Array_D,tol,mode);
     if (D_HODLR_Array.size() > 0){
       extendAddinTree(parentSize,parentHODLR.indexTree.rootNode,D_HODLR_Array,updateIdxVec_Array_D_HODLR,tol,mode);
-      //extendAddinTree(parentSize,parentHODLR.get_TreeRootNode(),D_HODLR_Array,updateIdxVec_Array_D_HODLR,tol,mode);
       // Extend Us and Vs
       std::vector<Eigen::MatrixXd *> extendU_Array(U_Array.size()),extendV_Array(V_Array.size());
       for (int i = 0; i < (int)U_Array.size();i++){
@@ -45,7 +39,6 @@ void extendAddUpdate(HODLR_Matrix & parentHODLR, std::vector<Eigen::MatrixXd*> D
 	*extendU_Array[i] = extend(updateIdxVec_Array_D_HODLR[i],parentSize,*U_Array[i],0,0,U_Array[i]->rows(),U_Array[i]->cols(),"Rows");
 	*extendV_Array[i] = extend(updateIdxVec_Array_D_HODLR[i],parentSize,*V_Array[i],0,0,V_Array[i]->rows(),V_Array[i]->cols(),"Rows");
       }
-      //extendAddLRinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendU_Array,extendV_Array,tol,mode); 
       extendAddLRinTree(parentHODLR,parentHODLR.indexTree.rootNode,extendU_Array,extendV_Array,tol,mode); 
       for (int i = 0; i < (int)U_Array.size();i++){
 	delete extendU_Array[i];
@@ -54,7 +47,6 @@ void extendAddUpdate(HODLR_Matrix & parentHODLR, std::vector<Eigen::MatrixXd*> D
 
 
     }
-    //calcPseudoInvInTree(parentHODLR.get_TreeRootNode(),tol);
     calcPseudoInvInTree(parentHODLR.indexTree.rootNode,tol);
     
 
@@ -73,13 +65,10 @@ void extendAddUpdate(HODLR_Matrix & parentHODLR,HODLR_Matrix & D_HODLR,std::vect
     int parentSize = parentHODLR.get_MatrixSize();
     HODLR_Matrix extendD_HODLR = extend(updateIdxVec,parentSize,D_HODLR);
     assert(extendD_HODLR.rows() == parentSize);
-    //    extendAddinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendD_HODLR,D_HODLR,updateIdxVec,tol,mode);
     extendAddinTree(parentHODLR,parentHODLR.indexTree.rootNode,extendD_HODLR,D_HODLR,updateIdxVec,tol,mode);
   }else if (mode == "PS_Boundary"){
     HODLR_Matrix extendD_HODLR;
-    //extendAddinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendD_HODLR,D_HODLR,updateIdxVec,tol,mode);
-    extendAddinTree(parentHODLR,parentHODLR.indexTree.rootNode,extendD_HODLR,D_HODLR,updateIdxVec,tol,mode);
-  
+    extendAddinTree(parentHODLR,parentHODLR.indexTree.rootNode,extendD_HODLR,D_HODLR,updateIdxVec,tol,mode);  
   }else{
     std::cout<<"Error! Unknown operation mode!"<<std::endl;
     exit(EXIT_FAILURE);
@@ -95,12 +84,10 @@ void extendAddUpdate(HODLR_Matrix & parentHODLR,Eigen::MatrixXd & D,std::vector<
     int parentSize = parentHODLR.get_MatrixSize();
     Eigen::MatrixXd extendD = extend(updateIdxVec,parentSize,D,0,0,D.rows(),D.cols(),"RowsCols");
     assert(extendD.rows() == parentSize);
-    //extendAddinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendD,D,updateIdxVec,tol,mode);
     extendAddinTree(parentHODLR,parentHODLR.indexTree.rootNode,extendD,D,updateIdxVec,tol,mode);
     
   }else if (mode == "PS_Boundary"){
     Eigen::MatrixXd extendD;
-    //extendAddinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendD,D,updateIdxVec,tol,mode);
     extendAddinTree(parentHODLR,parentHODLR.indexTree.rootNode,extendD,D,updateIdxVec,tol,mode);
   }else{
     std::cout<<"Error! Unknown operation mode!"<<std::endl;
@@ -114,7 +101,6 @@ void extendAddUpdate(HODLR_Matrix & parentHODLR,Eigen::MatrixXd & U,Eigen::Matri
   int parentSize = parentHODLR.get_MatrixSize();
   Eigen::MatrixXd extendU = extend(updateIdxVec,parentSize,U,0,0,U.rows(),U.cols(),"Rows");
   Eigen::MatrixXd extendV = extend(updateIdxVec,parentSize,V,0,0,V.rows(),V.cols(),"Rows");
-  //extendAddLRinTree(parentHODLR,parentHODLR.get_TreeRootNode(),extendU,extendV,updateIdxVec,tol,mode);
   extendAddLRinTree(parentHODLR,parentHODLR.indexTree.rootNode,extendU,extendV,updateIdxVec,tol,mode);
   
   parentHODLR.freeMatrixData();
@@ -173,13 +159,6 @@ Eigen::MatrixXd extend(std::vector<int> & extendIdxVec,int parentSize,Eigen::Mat
       int numBlkCols = extractBlk[i + 1] - extractBlk[i];
       result.block(0,extendIdxVec[extractBlk[i]],child_NumRows,numBlkCols) = child.block(0,extractBlk[i],child_NumRows,numBlkCols);  
     }
-  
-    
-  /*
-    for (int j = min_j; j <= max_j; j++){
-      int colIdx = extendIdxVec[j];
-      result.col(colIdx) = child.col(j);
-      }*/
   }else if (mode == "Rows"){
     std::vector<int> extractBlk = extractBlocks(std::vector<int>(extendIdxVec.begin() + min_i,extendIdxVec.begin() + max_i + 1));
     result = Eigen::MatrixXd::Zero(parentSize,child_NumCols);
@@ -188,11 +167,6 @@ Eigen::MatrixXd extend(std::vector<int> & extendIdxVec,int parentSize,Eigen::Mat
       result.block(extendIdxVec[extractBlk[i]],0,numBlkRows,child_NumCols) = child.block(extractBlk[i],0,numBlkRows,child_NumCols);
     }
 
-    
-    /*for (int i = min_i; i <= max_i; i++){
-      int rowIdx = extendIdxVec[i];
-      result.row(rowIdx) = child.row(i);
-      }*/
   }else{
     std::cout<<"Error! Unknown operation mode."<<std::endl;
     exit(EXIT_FAILURE);
@@ -446,7 +420,6 @@ void storeParentContribution(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_
   
 }
  
-
 void calcPseudoInvInTree(HODLR_Tree::node* HODLR_Root,double tol){
 
   if (HODLR_Root->isLeaf == true)
@@ -524,7 +497,6 @@ void extendAddinTree(const int parentSize,HODLR_Tree::node* HODLR_Root,std::vect
     extendAddinTree(parentSize,HODLR_Root->left, D_Array,updateIdxVec_Array,tol,mode);
     extendAddinTree(parentSize,HODLR_Root->right,D_Array,updateIdxVec_Array,tol,mode);
   }
-  
   
 }
 
@@ -654,14 +626,11 @@ void extendAddinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,T &
     tempV = V1_TopOffDiag + V2_TopOffDiag;   
     HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->topOffDiagU,HODLR_Root->topOffDiagV,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
    
-
     tempU = U1_BottOffDiag + U2_BottOffDiag;
     tempV = V1_BottOffDiag + V2_BottOffDiag;
   
     HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->bottOffDiagU,HODLR_Root->bottOffDiagV,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU");
   
-
-
     extendAddinTree(parentHODLR,HODLR_Root->left ,extendD,D,updateIdxVec,tol,mode);
     extendAddinTree(parentHODLR,HODLR_Root->right,extendD,D,updateIdxVec,tol,mode);
     
@@ -714,18 +683,20 @@ void extendAddLRinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,E
   
     Eigen::MatrixXd U2_TopOffDiag,U2_BottOffDiag;
     Eigen::MatrixXd V2_TopOffDiag,V2_BottOffDiag;
+
     // Create topDiag U2s
     U2_TopOffDiag  = (extendU).block(HODLR_Root->min_i,0,numRows_TopOffDiag,extendU.cols());
     U2_BottOffDiag = (extendU).block(HODLR_Root->splitIndex_i + 1,0,numRows_BottOffDiag,extendU.cols());
+
     // Create V2s
     V2_TopOffDiag  = (extendV).block(HODLR_Root->splitIndex_j + 1,0,numCols_TopOffDiag,extendV.cols());
     V2_BottOffDiag = (extendV).block(HODLR_Root->min_j,0,numCols_BottOffDiag,extendV.cols());
+
     // Update current LR
     
     HODLR_Root->topOffDiagRank  = add_LR(HODLR_Root->topOffDiagU,HODLR_Root->topOffDiagV,HODLR_Root->topOffDiagU,HODLR_Root->topOffDiagV,U2_TopOffDiag,V2_TopOffDiag,tol,mode);
     HODLR_Root->bottOffDiagRank = add_LR(HODLR_Root->bottOffDiagU,HODLR_Root->bottOffDiagV,HODLR_Root->bottOffDiagU,HODLR_Root->bottOffDiagV,U2_BottOffDiag,V2_BottOffDiag,tol,mode);
     
-
     // Do the same for children
     extendAddLRinTree(parentHODLR,HODLR_Root->left ,extendU,extendV,updateIdxVec,tol,mode);
     extendAddLRinTree(parentHODLR,HODLR_Root->right,extendU,extendV,updateIdxVec,tol,mode);
@@ -743,13 +714,7 @@ void extendAddLRinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,E
     std::vector<int> topRowIdxVec  = HODLR_Root->topOffDiagRowIdx;
     std::vector<int> bottColIdxVec = HODLR_Root->bottOffDiagColIdx;
     std::vector<int> bottRowIdxVec = HODLR_Root->bottOffDiagRowIdx;
-    /*
-    std::vector<int> topColBlk,topRowBlk,bottColBlk,bottRowBlk;
-    topColBlk  = extractBlocks(topColIdxVec );
-    topRowBlk  = extractBlocks(topRowIdxVec );
-    bottColBlk = extractBlocks(bottColIdxVec);
-    bottRowBlk = extractBlocks(bottRowIdxVec);
-    */
+  
     int numPointsTop  = std::max(topColIdxVec.size() ,topRowIdxVec.size());
     int numPointsBott = std::max(bottColIdxVec.size(),bottRowIdxVec.size());
     numPointsTop    = std::max(numPointsTop,1);
@@ -759,7 +724,6 @@ void extendAddLRinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,E
     U1_BottOffDiag  = Eigen::MatrixXd::Zero(numRows_BottOffDiag,numPointsBott);
     V1_BottOffDiag  = Eigen::MatrixXd::Zero(numCols_BottOffDiag,numPointsBott);
 
-    
     int min_i = HODLR_Root->min_i;
     int min_j = HODLR_Root->splitIndex_j + 1;
     
@@ -786,7 +750,6 @@ void extendAddLRinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,E
     
     HODLR_Root->topOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->topOffDiagU,HODLR_Root->topOffDiagV,HODLR_Root->topOffDiagRowIdx,tol,"fullPivLU");
    
-
     tempU = U1_BottOffDiag + U2_BottOffDiag;
     tempV = V1_BottOffDiag + V2_BottOffDiag;
    
