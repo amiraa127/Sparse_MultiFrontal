@@ -1,15 +1,20 @@
 #ifndef SPARSE_MF_HPP
 #define SPARSE_MF_HPP
 
-#include <string>                        
-#include "scotch.h"                      
+//Standard C++
+#include <algorithm>
 #include <fstream>                       
 #include <iostream>                      
+#include <set>      
+#include <string>                                              
+#include <vector> 
+
+//External Dependencies   
+#include "scotch.h"
 #include <Eigen/Sparse>                                                                            
 #include <Eigen/Dense>                         
-#include <vector> 
-#include <algorithm>
-#include <set>      
+
+//Custom Dependencies 
 #include "HODLR_Matrix.hpp" 
 #include "eliminationTree.hpp"
 #include "helperFunctions.hpp"

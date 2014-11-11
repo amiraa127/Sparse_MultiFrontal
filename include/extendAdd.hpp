@@ -1,19 +1,18 @@
 #ifndef EXTEND_ADD_HPP
 #define EXTEND_ADD_HPP
 
-#include <Eigen/Dense>
-#include "HODLR_Matrix.hpp"
-#include <string>
+//Standard C++   
 #include <iostream>
+#include <string>
+
+//External Dependencies   
+#include <Eigen/Dense>
+
+//Custom Dependencies
+#include "HODLR_Matrix.hpp"
 
 
-/* Function Eigen::MatrixXd extend(std::vector<int> & extendIdxVec,int parentSize,Eigen::MatrixXd & child,int min_i,int min_j,int numRows,int numCols,std::string mode);
- * This function performs the extend operation for a sublock of a dense matrix.
- * extendIdxVec : 
- *
- *
- *
- */
+
 Eigen::MatrixXd extend(std::vector<int> & extendIdxVec,int parentSize,Eigen::MatrixXd & child,int min_i,int min_j,int numRows,int numCols,std::string mode);
 HODLR_Matrix extend(std::vector<int> & extendIdxVec,int parentSize,HODLR_Matrix & childHODLR);
 void extendAddUpdate(HODLR_Matrix & parentHODLR, Eigen::MatrixXd & D,std::vector<int> & updateIdxVec,double tol,std::string mode);

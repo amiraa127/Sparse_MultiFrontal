@@ -38,25 +38,29 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   fast_Factorized         = false;
 
   testResults             = false;
-  
   printResultInfo         = false;
+  
   int numRows = inputSpMatrix.rows();
   int numCols = inputSpMatrix.cols();
+  
   assert (numCols == numRows);
+  
   Sp_MatrixSize = numRows;
   LU_Permutation = Eigen::VectorXd::LinSpaced(Eigen::Sequential,Sp_MatrixSize,0,Sp_MatrixSize - 1);
+  
   fast_MatrixSizeThresh = 2000;
   fast_HODLR_LeafSize = 200;
   fast_LR_Tol = 1e-1;
-  fast_BoundaryDepth = 2;
+  //debug code
+  //std::cout<<"init tol"<<fast_LR_Tol<<std::endl;
+  //
+  fast_BoundaryDepth = 10;
   fast_MinPivot = 0;
   inputSpMatrix.prune(1e-40);  
-  //originalMatrix = inputSpMatrix;
   double startTime = clock();
   reorderMatrix(inputSpMatrix);
   double endTime = clock();
   matrixReorderingTime = (endTime - startTime)/CLOCKS_PER_SEC;
-  
 }
 
 
@@ -224,6 +228,7 @@ void sparseMF::symbolic_Factorize(eliminationTree::node* root){
   int endNodeIdx = minIdx + nodeSize - 1;
   std::set<int> idxSet;
   std::map<int,int> idxMap;
+  
   // Find the set of connected indices                                       
   for (int k = minIdx; k < reorderedMatrix.outerSize(); ++k)
     for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it)     {
@@ -426,19 +431,24 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
   root->criterion = (frontalMatrixSize >= fast_MatrixSizeThresh);
   std::vector<eliminationTree::node*> nodeChildren = root->children;
   int numChildren = nodeChildren.size();
-  bool childHODLR = false;
+  
+  //debug code
+  //bool childHODLR = false;
+  //
+
   for (int i = 0; i < numChildren; i++){
     eliminationTree::node* childNode = nodeChildren[i];
     if (childNode->D_UpdateDense == false){
       root->criterion = true;
+      //childHODLR = true;
       break;
     }
   }
+  
   if (root->criterion == true){
     Eigen::SparseMatrix<double> panelMatrix,panelGraph;
     createPanelAndGraphMatrix(root,panelMatrix,panelGraph);
     root->D_UpdateDense = false;
-    //HODLR_Matrix panelHODLR;
     if (root->currLevel != 0){  
       user_IndexTree usrTree;
       usrTree.rootNode = new user_IndexTree::node;
@@ -450,10 +460,33 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
       usrTree.rootNode->right               = NULL;
       HODLR_Matrix panelHODLR = HODLR_Matrix(panelMatrix,panelGraph,fast_HODLR_LeafSize,usrTree,"identifyBoundary");   
       
+      //debug code
+      //Eigen::MatrixXd densePanel(panelMatrix);
+     
+      //if (childHODLR == false){
+      //std::cout<<"init"<<(densePanel - panelHODLR.block(0,0,panelMatrix.rows(),panelMatrix.cols())).norm()/densePanel.norm()<<std::endl;
+      //nodeExtendAddUpdate(root,densePanel,root->panelIdxVector);
+      //}
+      //std::cout<<"HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"<<fast_LR_Tol<<std::endl;
+      //
+
       panelHODLR.set_LRTolerance(fast_LR_Tol);
       panelHODLR.set_BoundaryDepth(fast_BoundaryDepth);
       double startTime = clock();
       fast_NodeExtendAddUpdate_Array(root,panelHODLR,root->panelIdxVector);
+      
+      //debug code
+      //if (childHODLR == false){
+      //	std::cout<<"diff = "<<fast_LR_Tol<<" "<<(densePanel - panelHODLR.block(0,0,panelMatrix.rows(),panelMatrix.cols())).norm()<<std::endl;
+	//std::cout<<"diff_leaf ="<<(densePanel - panelHODLR.block(0,0,panelMatrix.rows(),panelMatrix.cols())).block(0,0,100,100).norm()<<std::endl;
+	//std::cout<<"diff_row ="<<(densePanel - panelHODLR.block(0,0,panelMatrix.rows(),panelMatrix.cols())).row(0)<<std::endl;
+	//Eigen::MatrixXd diffMatrix = (densePanel - panelHODLR.block(0,0,panelMatrix.rows(),panelMatrix.cols()));
+	//for (int i = 0; i < panelMatrix.rows(); i++)
+	//  if (diffMatrix.row(i).norm() > 1e-5)
+	//    std::cout<<"ROW FAULT "<<" "<<i<<diffMatrix.row(i).norm() <<std::endl;
+      //}
+      //
+      
       double endTime = clock();
       std::cout<<"extendAdd done"<<std::endl;
       fast_ExtendAddTime += (endTime - startTime)/CLOCKS_PER_SEC;
@@ -462,7 +495,20 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
       Eigen::MatrixXd VB    = panelHODLR.returnTopOffDiagV();
       Eigen::MatrixXd UC    = panelHODLR.returnBottOffDiagU();
       Eigen::MatrixXd VC    = panelHODLR.returnBottOffDiagV();
+    
+
+      // debug code
+      //Eigen::MatrixXd x1 = panelHODLR.block(0,0,nodeSize,nodeSize);
+      //std::cout<<panelHODLR.rows()<<" "<<panelMatrix.rows()<<std::endl;
+      //
+
       splitAtTop(panelHODLR,root->fast_NodeMatrix_HODLR,root->D_HODLR);
+      
+      // debug code
+      //std::cout<<root->fast_NodeMatrix_HODLR.rows()<<" "<<nodeSize<<std::endl;
+      //Eigen::MatrixXd x2 = root->fast_NodeMatrix_HODLR.block(0,0,nodeSize,nodeSize); 
+      //std::cout<<"diff = "<<(x2-x1).norm()<<std::endl;
+      //
       
       root->updateU         = UC;
       root->updateV         = (-VC.transpose() * root->fast_NodeMatrix_HODLR.recLU_Solve(UB) * VB.transpose()).transpose();
@@ -484,44 +530,12 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
       double endTime = clock();
       std::cout<<"extendAdd done"<<std::endl;
       fast_ExtendAddTime += (endTime - startTime)/CLOCKS_PER_SEC;
-
-      //}
-
-
-
-    //}else{
-      //panelHODLR = HODLR_Matrix(panelMatrix,fast_HODLR_LeafSize,"identifyBoundary");
     }
-  /*
-    panelHODLR.set_LRTolerance(fast_LR_Tol);
-    panelHODLR.set_BoundaryDepth(fast_BoundaryDepth);
-    double startTime = clock();
-    fast_NodeExtendAddUpdate_Array(root,panelHODLR,root->panelIdxVector);
-    double endTime = clock();
-    std::cout<<"extendAdd done"<<std::endl;
-    fast_ExtendAddTime += (endTime - startTime)/CLOCKS_PER_SEC;
-    if (root->currLevel != 0){  
-      Eigen::MatrixXd UB    = panelHODLR.returnTopOffDiagU();
-      Eigen::MatrixXd VB    = panelHODLR.returnTopOffDiagV();
-      Eigen::MatrixXd UC    = panelHODLR.returnBottOffDiagU();
-      Eigen::MatrixXd VC    = panelHODLR.returnBottOffDiagV();
-      splitAtTop(panelHODLR,root->fast_NodeMatrix_HODLR,root->D_HODLR);
-    
-      root->updateU         = UC;
-      root->updateV         = (-VC.transpose() * root->fast_NodeMatrix_HODLR.recLU_Solve(UB) * VB.transpose()).transpose();
-      root->nodeToUpdate_U  = UB;
-      root->nodeToUpdate_V  = VB;
-      root->updateToNode_U  = UC;
-      root->updateToNode_V  = VC;
-     
-      root->nodeToUpdate_LR = true;
-      root->updateToNode_LR = true;
-      
-    }else{
-      root->fast_NodeMatrix_HODLR = panelHODLR;
-      }*/
     (root->fast_NodeMatrix_HODLR).recLU_Compute();
   }else{
+    //debug code
+    //std::cout<<"FFFFFFFFFFFFFFFFFFFFFFFFFFFF"<<fast_LR_Tol<<std::endl;
+    //
     Eigen::MatrixXd frontalMatrix = createPanelMatrix(root);
     double startTime = clock();
     nodeExtendAddUpdate(root,frontalMatrix,root->panelIdxVector);
@@ -626,6 +640,8 @@ void sparseMF::nodeExtendAddUpdate(eliminationTree::node* root,Eigen::MatrixXd &
       }
     } 
     // Free Children Memory
+    //debug code
+    //std::cout<<childNode->updateMatrix.norm()<<std::endl;
     (childNode->updateMatrix).resize(0,0);
   }
 }
@@ -688,10 +704,17 @@ void sparseMF::fast_NodeExtendAddUpdate_Array(eliminationTree::node* root,HODLR_
       updateIdxVec_Array_D_HODLR.push_back(childUpdateExtendVec);
     }
   }
-
+  //debug code
+  //fast_LR_Tol = 1e-10;
+  //std::cout<<"Tol in extendAdd_top"<<fast_LR_Tol<<std::endl;
+  //
   extendAddUpdate(panelHODLR,D_Array,D_HODLR_Array,U_Array,V_Array,updateIdxVec_Array_D,updateIdxVec_Array_D_HODLR,fast_LR_Tol,"PS_Boundary");
-  for (int i = 0; i < (int)D_Array.size(); i++)
+  for (int i = 0; i < (int)D_Array.size(); i++){
+    //debug code
+    //std::cout<<D_Array[i]->norm()<<std::endl;
+    //
     D_Array[i]->resize(0,0);
+  }
   for (int i = 0; i < (int)D_HODLR_Array.size(); i++){
     U_Array[i]->resize(0,0);
     V_Array[i]->resize(0,0);
@@ -704,11 +727,20 @@ void sparseMF::fast_NodeExtendAddUpdate_Array(eliminationTree::node* root,HODLR_
 std::vector<int> sparseMF::extendIdxVec(std::vector<int> & childIdxVec, std::vector<int> & parentIdxVec){
   int updateMatrixSize = childIdxVec.size();
   std::vector<int> extendIdxVec(updateMatrixSize);
+  /*
   for (int i = 0; i < updateMatrixSize; i++){
     std::vector<int>::iterator iter;
     iter = std::lower_bound(parentIdxVec.begin(),parentIdxVec.end(),childIdxVec[i]);
     int extendPos = iter - parentIdxVec.begin();
     extendIdxVec[i] = extendPos;
+    }*/
+  std::vector<int>::iterator currStart = parentIdxVec.begin();  
+  for (int i = 0; i < updateMatrixSize; i++){
+    std::vector<int>::iterator iter;
+    iter = std::lower_bound(currStart,parentIdxVec.end(),childIdxVec[i]);
+    int extendPos = iter - parentIdxVec.begin();
+    extendIdxVec[i] = extendPos;
+    currStart = iter;
   }
   return extendIdxVec;
 }
@@ -768,6 +800,9 @@ void sparseMF::implicit_FactorizeMatrix(){
 
 void sparseMF::fast_FactorizeMatrix(){
   symbolic_Factorize();
+  //debug code
+  //std::cout<<"SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS"<<fast_LR_Tol<<std::endl;
+  //
   if (fast_Factorized == false){
     double startTime = clock();
     for (int i = 1; i <=  matrixElmTreePtr->numLevels; i++){
