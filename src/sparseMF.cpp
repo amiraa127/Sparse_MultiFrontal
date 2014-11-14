@@ -51,7 +51,7 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   fast_MatrixSizeThresh = 2000;
   fast_HODLR_LeafSize = 200;
   fast_LR_Tol = 1e-1;
-  fast_BoundaryDepth = 10;
+  fast_BoundaryDepth = 5;
   fast_MinPivot = 0;
   inputSpMatrix.prune(1e-40);  
   double startTime = clock();
@@ -208,6 +208,7 @@ void sparseMF::symbolic_Factorize(){
 	eliminationTree::node* currNodePtr = currLevelNodesVec[j];
 	symbolic_Factorize(currNodePtr);
       }  
+      std::cout<<"Symbolic factorization done for level "<<currLevel<<std::endl;
     }
     double endTime  = clock();
     symbolic_FactorizationTime = (endTime - startTime)/CLOCKS_PER_SEC;
@@ -1157,6 +1158,8 @@ Eigen::MatrixXd sparseMF::iterative_Solve(const Eigen::MatrixXd & input_RHS, con
     std::cout<<"Average Large Front Size              = "<<averageLargeFrontSize<<std::endl;
     std::cout<<"Number of Large Fronts                = "<<numLargeFronts<<std::endl;
     std::cout<<"Low-Rank Tolerance                    = "<<fast_LR_Tol<<std::endl;
+    std::cout<<"Boundary Depth                        = "<<fast_BoundaryDepth<<std::endl;
+
     std::cout<<"Matrix Reordering Time                = "<<matrixReorderingTime<<" seconds"<<std::endl;
     std::cout<<"     Matrix Graph Conversion Time     = "<<matrixGraphConversionTime<<" seconds"<<std::endl;
     std::cout<<"     SCOTCH Reordering Time           = "<<SCOTCH_ReorderingTime<<" seconds"<<std::endl;

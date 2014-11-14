@@ -1,8 +1,7 @@
-
 # Directories to look for include files
 include_directories(${SparseMultiFrontal_SOURCE_DIR}/include)
-include_directories(/usr/local/include/)
-include_directories(/usr/local/include/eigen3/)
+include_directories(${EIGEN_INCLUDE_DIRS})
+include_directories(${SCOTCH_INCLUDE_DIRS})
 
 # Add HODLR library
 set(HODLR_Path /Users/Amir/Documents/Uni\ Works/PhD/Research/Solver\ Codes/Dense_HODLR)
