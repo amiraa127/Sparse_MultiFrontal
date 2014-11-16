@@ -387,7 +387,7 @@ public:
     sparseMF solver(inputSpMatrix);
     solver.printResultInfo = true;
     //Eigen::MatrixXd soln_Sp = solver.fast_Solve(RHS_Sp);
-    Eigen::MatrixXd soln_Sp = solver.iterative_Solve(RHS_Sp,100,1e-10,1e-5);
+    Eigen::MatrixXd soln_Sp = solver.iterative_Solve(RHS_Sp,100,1e-10,1e-1);
     double error = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
     std::cout<<error<<std::endl;
     CPPUNIT_ASSERT(error < 1e-10);

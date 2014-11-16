@@ -27,7 +27,7 @@ public:
   bool testResults;
   bool printResultInfo;
   sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix);
-  ~sparseMF();
+  virtual ~sparseMF();
 
   Eigen::MatrixXd LU_Solve(const Eigen::MatrixXd & inputRHS);
   Eigen::MatrixXd implicit_Solve(const Eigen::MatrixXd & inputRHS);

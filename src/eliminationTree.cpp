@@ -176,12 +176,15 @@ void eliminationTree::createTree(const std::vector<int> & rangVec,const std::vec
     }else{
       currNodePtr = blockPtrVec[i];
     }
+  
     currNodePtr->min_Col = rangVec[i];
     currNodePtr->max_Col = rangVec[i + 1] - 1;
     currNodePtr->numCols = rangVec[i + 1] - rangVec[i];  
     currNodePtr->isLeaf = false;
+  
     //Parent node
     int parentNodeIdx = treeVec[i];
+   
     node* parentNodePtr;
     if (createdNode[parentNodeIdx] == false){
       parentNodePtr = new node;
@@ -191,7 +194,7 @@ void eliminationTree::createTree(const std::vector<int> & rangVec,const std::vec
       parentNodePtr = blockPtrVec[parentNodeIdx];
     }
     (parentNodePtr->children).push_back(currNodePtr);
-   
+  
   }
   // Complete the rootNode. It should have been created by now!
   root = blockPtrVec[numBlocks - 1];

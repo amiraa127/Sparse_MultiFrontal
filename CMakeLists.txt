@@ -31,6 +31,7 @@ endif (SCOTCH_FOUND)
 add_subdirectory(src)
 add_subdirectory(test)
 add_subdirectory(benchmarks)
+add_subdirectory(IML_Sparse/test)
 
 file(COPY test/data DESTINATION ${SparseMultiFrontal_BINARY_DIR}/test)
 file(COPY benchmarks/data DESTINATION ${SparseMultiFrontal_BINARY_DIR}/benchmarks)
