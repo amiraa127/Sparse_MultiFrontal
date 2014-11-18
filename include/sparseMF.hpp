@@ -36,6 +36,7 @@ public:
 
 private:
   Eigen::SparseMatrix<double> reorderedMatrix;
+  Eigen::SparseMatrix<double> reorderedMatrix_T;
   Eigen::SparseMatrix<double> L_Matrix;
   Eigen::SparseMatrix<double> U_Matrix;
   Eigen::VectorXd LU_Permutation;

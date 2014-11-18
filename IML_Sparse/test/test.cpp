@@ -89,10 +89,11 @@ int main(){
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/UF/CEMW/tmt_sym/tmt_sym.mtx");         
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/UF/GHS_psdef/apache2/apache2.mtx");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/UF/McRae/ecology2/ecology2.mtx");    
-  inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/UF/Wissgott/parabolic_fem/parabolic_fem.mtx");    
+  //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/UF/Wissgott/parabolic_fem/parabolic_fem.mtx");    
+  inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/stiffness/unStructured/cylinderHead/2.3m/localmat0");    
 
  
-  testSolveSp(inputSpMatrix, "implicit");
+  //testSolveSp(inputSpMatrix, "implicit");
   //testSolveSp(inputSpMatrix, "fast_Iterative");
   Eigen_IML_Vector exactSoln_Sp = Eigen::VectorXd::LinSpaced(Eigen::Sequential,inputSpMatrix.rows(),-2,2);
   Eigen_IML_Vector RHS = inputSpMatrix * exactSoln_Sp;

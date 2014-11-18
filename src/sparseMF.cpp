@@ -168,8 +168,8 @@ void sparseMF::reorderMatrix(Eigen::SparseMatrix<double> & inputSpMatrix){
 
   // Permute rows and columns of the original sparse matrix and RHS                   
   permVector = std::vector<int>(permtab, permtab + numVertices);
-  reorderedMatrix =  permuteRowsCols(inputSpMatrix, permVector);
-  
+  reorderedMatrix   =  permuteRowsCols(inputSpMatrix, permVector);
+  reorderedMatrix_T =  reorderedMatrix.transpose();
   // Create elimination tree  
   int numBlocks = *cblknbr;
   std::cout<<numBlocks<<std::endl;
@@ -180,7 +180,7 @@ void sparseMF::reorderMatrix(Eigen::SparseMatrix<double> & inputSpMatrix){
   int* row_Ind = reorderedMatrix.innerIndexPtr();
  //matrixElmTreePtr = new eliminationTree(numVertices,numBlocks,rangVector,treeVector);     
   matrixElmTreePtr = new eliminationTree(col_Ptr,row_Ind,numVertices);
-
+  
   std::cout<<"Elimination tree created successfully."<<std::endl;
 
   // Free space     
@@ -225,11 +225,12 @@ void sparseMF::symbolic_Factorize(eliminationTree::node* root){
   int nodeSize = root->numCols;
   int endNodeIdx = minIdx + nodeSize - 1;
   std::set<int> idxSet;
-  std::map<int,int> idxMap;
+  //std::map<int,int> idxMap;
   
+  /*
   // Find the set of connected indices                                       
   for (int k = minIdx; k < reorderedMatrix.outerSize(); ++k)
-    for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it)     {
+   for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it)     {
       int rowIdx = it.row();
       int colIdx = it.col();
       if (rowIdx > endNodeIdx && colIdx > endNodeIdx)
@@ -239,6 +240,37 @@ void sparseMF::symbolic_Factorize(eliminationTree::node* root){
 	idxSet.insert(it.row());
       }
     }
+  */
+ 
+   
+  // Find the set of connected indices for cols        
+  for (int k = minIdx; k <= endNodeIdx; ++k)
+    for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it)     {
+      int rowIdx = it.row();
+      int colIdx = it.col();
+      //if (rowIdx > endNodeIdx && colIdx > endNodeIdx)
+      //break;
+      if (rowIdx >= minIdx && colIdx >=minIdx){
+	idxSet.insert(it.col());
+	idxSet.insert(it.row());
+      }
+    }
+  
+  
+  
+  // Find the set of connected indices for rows   
+  for (int k = minIdx; k <= endNodeIdx; ++k)
+   for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix_T,k); it; ++it)     {
+     int rowIdx = it.row();
+     int colIdx = it.col();
+     //if (rowIdx > endNodeIdx && colIdx > endNodeIdx)
+     //  break;
+     if (rowIdx >= minIdx && colIdx >=minIdx){
+       idxSet.insert(it.col());
+       idxSet.insert(it.row());
+     }
+   }
+  
 
   updateNodeIdxWithChildrenFillins(root,idxSet);
   root->panelIdxVector = std::vector<int>(idxSet.begin(),idxSet.end());
@@ -293,6 +325,7 @@ void sparseMF::createPanelAndGraphMatrix(eliminationTree::node* root, Eigen::Spa
   int maxIdx = root->panelIdxVector[panelSize - 1];
   int nodeIdx = root->panelIdxVector[nodeSize - 1];
   std::map<int,int> idxMap;
+  
   for(int i = 0; i < panelSize; i++)
     idxMap[root->panelIdxVector[i]] = i; 
   
@@ -312,6 +345,7 @@ void sparseMF::createPanelAndGraphMatrix(eliminationTree::node* root, Eigen::Spa
 	tripletVec_Graph.push_back(currEntry);
       }
     }
+
   panelMatrix.setFromTriplets(tripletVec_Matrix.begin(),tripletVec_Matrix.end());
   panelGraph.setFromTriplets(tripletVec_Graph.begin(),tripletVec_Graph.end());
 }
@@ -371,7 +405,7 @@ void sparseMF::implicit_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::no
 
   int frontalMatrixSize = root->panelIdxVector.size();
   int updateMatrixSize  = frontalMatrixSize - nodeSize;
-  std::map<int,int> idxMap;
+  //std::map<int,int> idxMap;
  
   Eigen::MatrixXd frontalMatrix = createPanelMatrix(root);
   
