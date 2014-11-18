@@ -225,53 +225,29 @@ void sparseMF::symbolic_Factorize(eliminationTree::node* root){
   int nodeSize = root->numCols;
   int endNodeIdx = minIdx + nodeSize - 1;
   std::set<int> idxSet;
-  //std::map<int,int> idxMap;
-  
-  /*
-  // Find the set of connected indices                                       
-  for (int k = minIdx; k < reorderedMatrix.outerSize(); ++k)
-   for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it)     {
-      int rowIdx = it.row();
-      int colIdx = it.col();
-      if (rowIdx > endNodeIdx && colIdx > endNodeIdx)
-	break;
-      if (rowIdx >= minIdx && colIdx >=minIdx){
-	idxSet.insert(it.col());
-	idxSet.insert(it.row());
-      }
-    }
-  */
  
-   
   // Find the set of connected indices for cols        
   for (int k = minIdx; k <= endNodeIdx; ++k)
     for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it)     {
       int rowIdx = it.row();
       int colIdx = it.col();
-      //if (rowIdx > endNodeIdx && colIdx > endNodeIdx)
-      //break;
       if (rowIdx >= minIdx && colIdx >=minIdx){
 	idxSet.insert(it.col());
 	idxSet.insert(it.row());
       }
     }
   
-  
-  
   // Find the set of connected indices for rows   
   for (int k = minIdx; k <= endNodeIdx; ++k)
-   for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix_T,k); it; ++it)     {
-     int rowIdx = it.row();
-     int colIdx = it.col();
-     //if (rowIdx > endNodeIdx && colIdx > endNodeIdx)
-     //  break;
-     if (rowIdx >= minIdx && colIdx >=minIdx){
-       idxSet.insert(it.col());
-       idxSet.insert(it.row());
-     }
-   }
+    for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix_T,k); it; ++it)     {
+      int rowIdx = it.row();
+      int colIdx = it.col();
+      if (rowIdx >= minIdx && colIdx >=minIdx){
+	idxSet.insert(it.col());
+	idxSet.insert(it.row());
+      }
+    }
   
-
   updateNodeIdxWithChildrenFillins(root,idxSet);
   root->panelIdxVector = std::vector<int>(idxSet.begin(),idxSet.end());
   std::sort(root->panelIdxVector.begin(),root->panelIdxVector.end());
@@ -296,7 +272,8 @@ Eigen::MatrixXd sparseMF::createPanelMatrix(eliminationTree::node* root){
     idxMap[root->panelIdxVector[i]] = i; 
   Eigen::MatrixXd panelMatrix = Eigen::MatrixXd::Zero(panelSize,panelSize);
   std::set<int> idxSet(root->panelIdxVector.begin(), root->panelIdxVector.end());
-           
+
+  /*
   for (int k = minIdx; k <= maxIdx; ++k)
     for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it){
       int rowIdx = it.row();
@@ -310,6 +287,38 @@ Eigen::MatrixXd sparseMF::createPanelMatrix(eliminationTree::node* root){
       if (rowFind && colFind)
 	panelMatrix(idxMap[rowIdx],idxMap[colIdx]) = it.value();
     }
+  */
+  
+  // loop cols
+  for (int k = minIdx; k <= endNodeIdx; ++k)
+    for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it){
+      int rowIdx = it.row();
+      int colIdx = it.col();
+      //if (rowIdx > maxIdx || colIdx > maxIdx)
+      //break;
+      //if (rowIdx > endNodeIdx && colIdx > endNodeIdx)
+      //	break;
+      bool rowFind = idxSet.count(rowIdx);
+      bool colFind = idxSet.count(colIdx);
+      if (rowFind && colFind)
+	panelMatrix(idxMap[rowIdx],idxMap[colIdx]) = it.value();
+    }
+ 
+
+  for (int k = minIdx; k <= endNodeIdx; ++k)
+    for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix_T,k); it; ++it){
+      int rowIdx = it.row();
+      int colIdx = it.col();
+      //if (rowIdx > maxIdx || colIdx > maxIdx)
+      //break;
+      //if (rowIdx > endNodeIdx && colIdx > endNodeIdx)
+      //break;
+      bool rowFind = idxSet.count(rowIdx);
+      bool colFind = idxSet.count(colIdx);
+      if (rowFind && colFind)
+	panelMatrix(idxMap[colIdx],idxMap[rowIdx]) = it.value();
+    }
+
   return panelMatrix;
   
 }
@@ -1165,6 +1174,7 @@ Eigen::MatrixXd sparseMF::iterative_Solve(const Eigen::MatrixXd & input_RHS, con
   Eigen::MatrixXd currStep_Product;
   int num_Iter         = 1;
   double tolerance     = 1;
+  double prevTolerance = 1;
   double iterSolveTime = fast_SolveTime;
   std::vector<int> iter_IterTimeVec,iter_IterAccuracyVec;
   while (tolerance > stop_tolerance){
@@ -1181,6 +1191,10 @@ Eigen::MatrixXd sparseMF::iterative_Solve(const Eigen::MatrixXd & input_RHS, con
     num_Iter ++;
     if (num_Iter > maxIterations)
       break;
+    if (tolerance > 10 * prevTolerance)
+      break;
+    prevTolerance = tolerance;
+
   }
   
   double endTime = clock();

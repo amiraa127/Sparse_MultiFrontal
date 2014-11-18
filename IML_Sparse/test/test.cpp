@@ -83,14 +83,14 @@ int main(){
   // Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("../benchmarks/data/stiffness/GenericHull/localmat0");                                                                         
 
   Eigen_IML_Matrix inputSpMatrix;
-  //inputSpMatrix = readMtxIntoSparseMatrix("../../benchmarks/data/input_FETI/TardecAres/localmat1");
+  inputSpMatrix = readMtxIntoSparseMatrix("../../benchmarks/data/input_FETI/TardecAres/localmat1");
   //inputSpMatrix = readMtxIntoSparseMatrix("../../benchmarks/data/UF/AMD/G3_circuit/G3_circuit.mtx");
   //inputSpMatrix = readMtxIntoSparseMatrix("../../benchmarks/data/UF/Botonakis/thermomech_dM/thermomech_dM.mtx");
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/UF/CEMW/tmt_sym/tmt_sym.mtx");         
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/UF/GHS_psdef/apache2/apache2.mtx");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/UF/McRae/ecology2/ecology2.mtx");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/UF/Wissgott/parabolic_fem/parabolic_fem.mtx");    
-  inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/stiffness/unStructured/cylinderHead/2.3m/localmat0");    
+  //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/stiffness/unStructured/cylinderHead/2.3m/localmat0");    
 
  
   //testSolveSp(inputSpMatrix, "implicit");
@@ -99,6 +99,7 @@ int main(){
   Eigen_IML_Vector RHS = inputSpMatrix * exactSoln_Sp;
   fastSparse_IML_Precond precond(inputSpMatrix);
   precond.printResultInfo = true;
+  Eigen_IML_Vector x1      = precond.implicit_Solve(RHS);
   Eigen_IML_Vector x0      = precond.solve(RHS);
   Eigen_IML_Vector soln_Sp = precond.iterative_Solve(RHS,100,1e-10,1e-1);
   precond.printResultInfo = false;
