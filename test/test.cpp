@@ -34,7 +34,7 @@ class Sparse_Solver_Test: public CppUnit::TestCase
   //CPPUNIT_TEST(extractFromMatrixBlk_Test);
   //CPPUNIT_TEST(extractFromLR_Test);
   //CPPUNIT_TEST(extractFromChild_Test);
-  CPPUNIT_TEST(extendAdd_DenseToHODLR_Array_Test);
+  //CPPUNIT_TEST(extendAdd_DenseToHODLR_Array_Test);
   
   /*
   CPPUNIT_TEST(extendAdd_DenseToHODLR_Test);
@@ -387,6 +387,8 @@ public:
     sparseMF solver(inputSpMatrix);
     solver.printResultInfo = true;
     //Eigen::MatrixXd soln_Sp = solver.fast_Solve(RHS_Sp);
+    Eigen::MatrixXd soln_Sp_implicit = solver.implicit_Solve(RHS_Sp);
+
     Eigen::MatrixXd soln_Sp = solver.iterative_Solve(RHS_Sp,100,1e-10,1e-1);
     double error = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
     std::cout<<error<<std::endl;

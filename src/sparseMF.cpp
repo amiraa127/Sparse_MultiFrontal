@@ -4,11 +4,11 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   frontID = 0;
   matrixElmTreePtr = NULL;
 
-  matrixReorderingTime      = 0;
-  SCOTCH_ReorderingTime     = 0;
-  matrixGraphConversionTime = 0;
+  matrixReorderingTime         = 0;
+  SCOTCH_ReorderingTime        = 0;
+  matrixGraphConversionTime    = 0;
 
-  symbolic_FactorizationTime  = 0;
+  symbolic_FactorizationTime   = 0;
 
   implicit_ExtendAddTime       = 0;
   implicit_FactorizationTime   = 0;
@@ -29,8 +29,8 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   LU_SymbolicFactorTime    = 0;
   LU_AssemblyTime          = 0;
 
-  averageLargeFrontSize = 0;
-  numLargeFronts        = 0;
+  averageLargeFrontSize    = 0;
+  numLargeFronts           = 0;
 
   symbolic_Factorized     = false;
   LU_Factorized           = false;
@@ -272,28 +272,24 @@ Eigen::MatrixXd sparseMF::createPanelMatrix(eliminationTree::node* root){
     idxMap[root->panelIdxVector[i]] = i; 
   Eigen::MatrixXd panelMatrix = Eigen::MatrixXd::Zero(panelSize,panelSize);
   std::set<int> idxSet(root->panelIdxVector.begin(), root->panelIdxVector.end());
-
-  
+   
   // loop cols
   for (int k = minIdx; k <= endNodeIdx; ++k)
     for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it){
       int rowIdx = it.row();
       int colIdx = it.col();
-      //bool rowFind = idxSet.count(rowIdx);
-      //bool colFind = idxSet.count(colIdx);
-      //if (rowFind && colFind)
       if (rowIdx >= minIdx)
 	panelMatrix(idxMap[rowIdx],idxMap[colIdx]) = it.value();
     }
- 
   
+  if (root->currLevel == 0)
+    return panelMatrix;
+  
+  //loop rows
   for (int k = minIdx; k <= endNodeIdx; ++k)
     for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix_T,k); it; ++it){
       int rowIdx = it.row();
       int colIdx = it.col();
-      //bool rowFind = idxSet.count(rowIdx);
-      //bool colFind = idxSet.count(colIdx);
-      //if (rowFind && colFind)
       if (rowIdx >= minIdx)
 	panelMatrix(idxMap[colIdx],idxMap[rowIdx]) = it.value();
     }
@@ -319,6 +315,21 @@ void sparseMF::createPanelAndGraphMatrix(eliminationTree::node* root, Eigen::Spa
   for(int i = 0; i < panelSize; i++)
     idxMap[root->panelIdxVector[i]] = i; 
   
+  if (root->currLevel == 0){
+    for (int k = minIdx; k <= maxIdx; ++k)
+      for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it){
+	int rowIdx   = it.row();
+	int colIdx   = it.col();
+	if (rowIdx >= minIdx){
+	  Eigen::Triplet<double,int> currEntry(idxMap[rowIdx],idxMap[colIdx],it.value());
+	  tripletVec_Matrix.push_back(currEntry);
+	}
+      }
+    panelMatrix.setFromTriplets(tripletVec_Matrix.begin(),tripletVec_Matrix.end());
+    return;
+  }
+  
+  /*
   for (int k = minIdx; k <= maxIdx; ++k)
     for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it){
       int rowIdx = it.row();
@@ -334,6 +345,67 @@ void sparseMF::createPanelAndGraphMatrix(eliminationTree::node* root, Eigen::Spa
 	tripletVec_Graph.push_back(currEntry);
       }
     }
+  */
+
+  //panel and graph matrix frontal col
+  for (int k = minIdx; k <= endNodeIdx; ++k)
+    for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it){
+      int rowIdx = it.row();
+      int colIdx = it.col();
+      //if (rowIdx > maxIdx || colIdx > maxIdx)
+      //break;
+      //bool rowFind = idxSet.count(rowIdx);
+      //bool colFind = idxSet.count(colIdx);
+      //if (rowIdx >= minIdx){
+      if (rowIdx >= minIdx){
+	Eigen::Triplet<double,int> currEntry(idxMap[rowIdx],idxMap[colIdx],it.value());
+	//if (rowIdx <= nodeIdx || colIdx <= nodeIdx)
+	tripletVec_Matrix.push_back(currEntry);
+	tripletVec_Graph.push_back(currEntry);
+      }
+    }
+  
+  
+  // panel and graph matrix row
+  for (int k = minIdx; k <= endNodeIdx; ++k)
+    for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix_T,k); it; ++it){
+      int rowIdx = it.row();
+      int colIdx = it.col();
+      //if (rowIdx > maxIdx || colIdx > maxIdx)
+      //	break;
+      //bool rowFind = idxSet.count(rowIdx);
+      //bool colFind = idxSet.count(colIdx);
+      //if (rowFind && colFind){
+      if (rowIdx > endNodeIdx){
+	Eigen::Triplet<double,int> currEntry(idxMap[colIdx],idxMap[rowIdx],it.value());
+	//if (rowIdx <= nodeIdx || colIdx <= nodeIdx)
+	tripletVec_Matrix.push_back(currEntry);
+	tripletVec_Graph.push_back(currEntry);
+      }
+    }
+  
+  
+  // graph matrix inside
+  //  for (int k = minIdx; k <= maxIdx; ++k)
+  for (int i = 0; i < (int)root->updateIdxVector.size();i++){
+    int k = root->updateIdxVector[i];
+    for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it){
+      int rowIdx = it.row();
+      int colIdx = it.col();
+      //if (rowIdx > maxIdx || colIdx > maxIdx)
+      //break;
+      bool rowFind = idxSet.count(rowIdx);
+      //bool colFind = idxSet.count(colIdx);
+      //if (rowFind && colFind){
+      if (rowFind){
+	Eigen::Triplet<double,int> currEntry(idxMap[rowIdx],idxMap[colIdx],it.value());
+	//if (rowIdx <= nodeIdx || colIdx <= nodeIdx)
+	// tripletVec_Matrix.push_back(currEntry);
+	tripletVec_Graph.push_back(currEntry);
+      }
+    }
+  }
+
   panelMatrix.setFromTriplets(tripletVec_Matrix.begin(),tripletVec_Matrix.end());
   panelGraph.setFromTriplets(tripletVec_Graph.begin(),tripletVec_Graph.end());
 }
@@ -371,7 +443,6 @@ void sparseMF::LU_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* ro
   //Eigen::MatrixXd nodeMatrix_P = nodeMatrix_LU.permutationP();
   Eigen::PermutationMatrix<Eigen::Dynamic,Eigen::Dynamic> nodeMatrix_P = nodeMatrix_LU.permutationP();
 
-
   Eigen::MatrixXd update_U = nodeMatrix_L.triangularView<Eigen::UnitLower>().solve(nodeToUpdate);
   Eigen::MatrixXd update_L = ((nodeMatrix_U.transpose()).triangularView<Eigen::Lower>().solve(updateToNode.transpose())).transpose();
 
@@ -380,9 +451,6 @@ void sparseMF::LU_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* ro
   // Assemble L and U factors 
   assembleUFactor(nodeMatrix_U,update_U,root->panelIdxVector);
   assembleLFactor(nodeMatrix_L,update_L,root->panelIdxVector);
-  
-  
-  
   
 };
 
