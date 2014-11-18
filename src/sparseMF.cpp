@@ -273,67 +273,48 @@ Eigen::MatrixXd sparseMF::createPanelMatrix(eliminationTree::node* root){
   Eigen::MatrixXd panelMatrix = Eigen::MatrixXd::Zero(panelSize,panelSize);
   std::set<int> idxSet(root->panelIdxVector.begin(), root->panelIdxVector.end());
 
-  /*
-  for (int k = minIdx; k <= maxIdx; ++k)
-    for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it){
-      int rowIdx = it.row();
-      int colIdx = it.col();
-      if (rowIdx > maxIdx || colIdx > maxIdx)
-	break;
-      if (rowIdx > endNodeIdx && colIdx > endNodeIdx)
-	break;
-      bool rowFind = idxSet.count(rowIdx);
-      bool colFind = idxSet.count(colIdx);
-      if (rowFind && colFind)
-	panelMatrix(idxMap[rowIdx],idxMap[colIdx]) = it.value();
-    }
-  */
   
   // loop cols
   for (int k = minIdx; k <= endNodeIdx; ++k)
     for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix,k); it; ++it){
       int rowIdx = it.row();
       int colIdx = it.col();
-      //if (rowIdx > maxIdx || colIdx > maxIdx)
-      //break;
-      //if (rowIdx > endNodeIdx && colIdx > endNodeIdx)
-      //	break;
-      bool rowFind = idxSet.count(rowIdx);
-      bool colFind = idxSet.count(colIdx);
-      if (rowFind && colFind)
+      //bool rowFind = idxSet.count(rowIdx);
+      //bool colFind = idxSet.count(colIdx);
+      //if (rowFind && colFind)
+      if (rowIdx >= minIdx)
 	panelMatrix(idxMap[rowIdx],idxMap[colIdx]) = it.value();
     }
  
-
+  
   for (int k = minIdx; k <= endNodeIdx; ++k)
     for (Eigen::SparseMatrix<double>::InnerIterator it(reorderedMatrix_T,k); it; ++it){
       int rowIdx = it.row();
       int colIdx = it.col();
-      //if (rowIdx > maxIdx || colIdx > maxIdx)
-      //break;
-      //if (rowIdx > endNodeIdx && colIdx > endNodeIdx)
-      //break;
-      bool rowFind = idxSet.count(rowIdx);
-      bool colFind = idxSet.count(colIdx);
-      if (rowFind && colFind)
+      //bool rowFind = idxSet.count(rowIdx);
+      //bool colFind = idxSet.count(colIdx);
+      //if (rowFind && colFind)
+      if (rowIdx >= minIdx)
 	panelMatrix(idxMap[colIdx],idxMap[rowIdx]) = it.value();
     }
-
+  
   return panelMatrix;
   
 }
 
 void sparseMF::createPanelAndGraphMatrix(eliminationTree::node* root, Eigen::SparseMatrix<double> & panelMatrix, Eigen::SparseMatrix<double> & panelGraph){
-  int panelSize = root->panelIdxVector.size();
-  int nodeSize  = root->numCols;
-  panelGraph  = Eigen::SparseMatrix<double> (panelSize,panelSize);
-  panelMatrix = Eigen::SparseMatrix<double> (panelSize,panelSize);
+  
+  int panelSize  = root->panelIdxVector.size();
+  int nodeSize   = root->numCols;
+  panelGraph     = Eigen::SparseMatrix<double> (panelSize,panelSize);
+  panelMatrix    = Eigen::SparseMatrix<double> (panelSize,panelSize);
+  int minIdx     = root->panelIdxVector[0];
+  int maxIdx     = root->panelIdxVector[panelSize - 1];
+  int nodeIdx    = root->panelIdxVector[nodeSize - 1];
+  int endNodeIdx = minIdx + nodeSize - 1;
+  std::map<int,int> idxMap;
   std::set<int> idxSet(root->panelIdxVector.begin(), root->panelIdxVector.end());
   std::vector<Eigen::Triplet<double,int> > tripletVec_Matrix,tripletVec_Graph;
-  int minIdx = root->panelIdxVector[0];
-  int maxIdx = root->panelIdxVector[panelSize - 1];
-  int nodeIdx = root->panelIdxVector[nodeSize - 1];
-  std::map<int,int> idxMap;
   
   for(int i = 0; i < panelSize; i++)
     idxMap[root->panelIdxVector[i]] = i; 
@@ -346,7 +327,6 @@ void sparseMF::createPanelAndGraphMatrix(eliminationTree::node* root, Eigen::Spa
 	break;
       bool rowFind = idxSet.count(rowIdx);
       bool colFind = idxSet.count(colIdx);
-      
       if (rowFind && colFind){
 	Eigen::Triplet<double,int> currEntry(idxMap[rowIdx],idxMap[colIdx],it.value());
 	if (rowIdx <= nodeIdx || colIdx <= nodeIdx)
@@ -354,7 +334,6 @@ void sparseMF::createPanelAndGraphMatrix(eliminationTree::node* root, Eigen::Spa
 	tripletVec_Graph.push_back(currEntry);
       }
     }
-
   panelMatrix.setFromTriplets(tripletVec_Matrix.begin(),tripletVec_Matrix.end());
   panelGraph.setFromTriplets(tripletVec_Graph.begin(),tripletVec_Graph.end());
 }

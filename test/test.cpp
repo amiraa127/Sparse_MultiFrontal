@@ -24,10 +24,10 @@ class Sparse_Solver_Test: public CppUnit::TestCase
   /*----------------Creating a Test Suite----------------------*/
   CPPUNIT_TEST_SUITE(Sparse_Solver_Test);
   
-  //CPPUNIT_TEST(LU_Solver_Test_Small);
-  //CPPUNIT_TEST(implicit_Solver_Test_Small);
-  //CPPUNIT_TEST(LU_Solver_Test);
-  //CPPUNIT_TEST(implicit_Solver_Test);
+  CPPUNIT_TEST(LU_Solver_Test_Small);
+  CPPUNIT_TEST(implicit_Solver_Test_Small);
+  CPPUNIT_TEST(LU_Solver_Test);
+  CPPUNIT_TEST(implicit_Solver_Test);
   CPPUNIT_TEST(fastIterative_Solver_Test);
   
   //CPPUNIT_TEST(extendAdd_LowRankToHODLR_LUQR_Test);
@@ -378,8 +378,8 @@ public:
   void fastIterative_Solver_Test(){
     std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
     std::cout<<"Testing fast iterative solver on a 100k matrix...."<<std::endl;
-    //Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.300k");
-    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("../benchmarks/data/input_FETI/TardecAres/localmat1");
+    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.300k");
+    //Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("../benchmarks/data/input_FETI/TardecAres/localmat1");
     // Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("../benchmarks/data/stiffness/GenericHull/localmat0");
 
     Eigen::VectorXd exactSoln_Sp = Eigen::VectorXd::LinSpaced(Eigen::Sequential,inputSpMatrix.rows(),-2,2); 
