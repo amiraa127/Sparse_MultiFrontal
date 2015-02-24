@@ -11,10 +11,16 @@ add_definitions(${GCC_COVERAGE_COMPILE_FLAGS})
 # Find the dependencies.
 find_package (Eigen REQUIRED)
 find_package (CppUnit REQUIRED)
-set(SCOTCH_TEST_RUNS "FALSE")
+find_package (Pastix  REQUIRED)
+
+#set(SCOTCH_TEST_RUNS "FALSE")
 #set(SCOTCH_DEBUG "TRUE")
 
 find_package (SCOTCH REQUIRED)
+
+if (PASTIX_FOUND)
+   message ("-- Found Pastix version ${PASTIX_VERSION}: ${PASTIX_INCLUDE_DIRS}")
+endif (PASTIX_FOUND)
 
 if (EIGEN_FOUND)
     message ("-- Found Eigen version ${EIGEN_VERSION}: ${EIGEN_INCLUDE_DIRS}")
@@ -31,7 +37,7 @@ endif (SCOTCH_FOUND)
 add_subdirectory(src)
 add_subdirectory(test)
 add_subdirectory(benchmarks)
-add_subdirectory(IML_Sparse/test)
+add_subdirectory(IML/test)
 
-file(COPY test/data DESTINATION ${SparseMultiFrontal_BINARY_DIR}/test)
-file(COPY benchmarks/data DESTINATION ${SparseMultiFrontal_BINARY_DIR}/benchmarks)
+#file(COPY test/data DESTINATION ${SparseMultiFrontal_BINARY_DIR}/test)
+#file(COPY benchmarks/data DESTINATION ${SparseMultiFrontal_BINARY_DIR}/benchmarks)

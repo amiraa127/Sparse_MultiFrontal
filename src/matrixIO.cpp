@@ -122,7 +122,7 @@ Eigen::SparseMatrix<double> readMtxIntoSparseMatrix(const std::string inputFileN
       Eigen::Triplet<double,int> currTriplet(currRow-1,currCol-1,value);
       tripletVector.push_back(currTriplet);
       // push back adjoint value into the matrix
-      if (isSymmetric){
+      if (isSymmetric && currCol != currRow){
 	Eigen::Triplet<double,int> adjTriplet(currCol-1,currRow-1,value);
 	tripletVector.push_back(adjTriplet);
       }

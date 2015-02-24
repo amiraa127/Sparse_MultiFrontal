@@ -1,5 +1,24 @@
 #include "helperFunctions.hpp"
 
+Eigen::SparseMatrix<double> rowScaling(Eigen::SparseMatrix<double> &originalMatrix){
+  Eigen::SparseMatrix<double> transMatrix = originalMatrix.transpose();
+  Eigen::VectorXd diagElm(transMatrix.rows());
+  for (int k=0; k < transMatrix.outerSize(); ++k){
+    bool firstElm = true;
+    double maxElm = 0;
+    for (Eigen::SparseMatrix<double>::InnerIterator it(transMatrix,k); it; ++it){
+      if (firstElm){
+	maxElm = fabs(it.value());
+	firstElm = false;
+      }else if (fabs(it.value()) > maxElm){
+	maxElm = fabs(it.value());
+      } 
+    }
+    diagElm(k) = 1.0/maxElm;
+  }
+  return diagElm.asDiagonal() * originalMatrix;
+}
+
 Eigen::SparseMatrix<double> permuteRows(const Eigen::SparseMatrix<double> &originalMatrix, const std::vector<int> &permVector,bool transpose = false){
   int numVertices = originalMatrix.rows();
   Eigen::PermutationMatrix<Eigen::Dynamic,Eigen::Dynamic> permMatrix(numVertices);

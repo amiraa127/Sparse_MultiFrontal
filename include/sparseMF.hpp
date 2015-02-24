@@ -10,9 +10,15 @@
 #include <vector> 
 
 //External Dependencies   
-#include "scotch.h"
+//Eigen
 #include <Eigen/Sparse>                                                                            
 #include <Eigen/Dense>                         
+//IML
+#include "Eigen_IML_Vector.hpp"
+#include "gmres.h" 
+
+//SCOTCH
+#include "scotch.h"
 
 //Custom Dependencies 
 #include "HODLR_Matrix.hpp" 
@@ -20,6 +26,7 @@
 #include "helperFunctions.hpp"
 #include "HODLR_Matrix.hpp"
 #include "extendAdd.hpp"
+
 class sparseMF{
 
 public:
@@ -28,7 +35,7 @@ public:
   bool printResultInfo;
   sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix);
   virtual ~sparseMF();
-
+  Eigen_IML_Vector solve(const Eigen_IML_Vector & other);
   Eigen::MatrixXd LU_Solve(const Eigen::MatrixXd & inputRHS);
   Eigen::MatrixXd implicit_Solve(const Eigen::MatrixXd & inputRHS);
   Eigen::MatrixXd fast_Solve(const Eigen::MatrixXd & inputRHS);
@@ -51,10 +58,12 @@ private:
 
   int fast_MatrixSizeThresh;
   int fast_HODLR_LeafSize;
+  int fast_BoundaryDepth;
+  int fast_MaxRank;
   double fast_LR_Tol;
   double fast_MinPivot;
-  int fast_BoundaryDepth;
 
+  
   bool symbolic_Factorized;
   bool LU_Factorized;
   bool implicit_Factorized;
@@ -147,10 +156,9 @@ private:
   void setRowBlkMatrix(const Eigen::MatrixXd &srcMatrix, Eigen::MatrixXd &destMatrix, const std::vector<int> &destIndex);
   
   
-  
-
+  /*
   Eigen::MatrixXd oneStep_Iterate(const Eigen::MatrixXd & prevStep_result, const Eigen::MatrixXd & initSolveGuess, Eigen::MatrixXd & prevStep_Product);
-
+  */
 
 
   /******************************************Test************************************************/

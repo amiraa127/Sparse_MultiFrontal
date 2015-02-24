@@ -1,3 +1,6 @@
+#ifndef IML_GMRES
+#define IML_GMRES
+
 //*****************************************************************
 // Iterative template routine -- GMRES
 //
@@ -22,7 +25,6 @@
 
 
 #include <math.h> 
-
 
 template<class Real> 
 void GeneratePlaneRotation(Real &dx, Real &dy, Real &cs, Real &sn)
@@ -130,6 +132,7 @@ GMRES(const Operator &A, Vector &x, const Vector &b,
         delete [] v;
         return 0;
       }
+      std::cout<<j<<" "<<resid<<std::endl;
     }
     Update(x, m - 1, H, s, v);
     r = M.solve(b - A * x);
@@ -140,6 +143,7 @@ GMRES(const Operator &A, Vector &x, const Vector &b,
       delete [] v;
       return 0;
     }
+    std::cout<<j<<" "<<resid<<std::endl;
   }
   
   tol = resid;
@@ -147,3 +151,4 @@ GMRES(const Operator &A, Vector &x, const Vector &b,
   return 1;
 }
 
+#endif

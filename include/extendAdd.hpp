@@ -18,7 +18,7 @@ HODLR_Matrix extend(std::vector<int> & extendIdxVec,int parentSize,HODLR_Matrix 
 void extendAddUpdate(HODLR_Matrix & parentHODLR, Eigen::MatrixXd & D,std::vector<int> & updateIdxVec,double tol,std::string mode);
 void extendAddUpdate(HODLR_Matrix & parentHODLR, HODLR_Matrix & D_HODLR,std::vector<int> & updateIdxVec,double tol,std::string mode);
 void extendAddUpdate(HODLR_Matrix & parentHODLR, Eigen::MatrixXd & U,Eigen::MatrixXd & V,std::vector<int> & updateIdxVec,double tol,std::string mode);
-void extendAddUpdate(HODLR_Matrix & parentHODLR, std::vector<Eigen::MatrixXd*> D_Array,std::vector<HODLR_Matrix*> D_HODLR_Array,std::vector<Eigen::MatrixXd*> U_Array,std::vector<Eigen::MatrixXd*> V_Array,std::vector<std::vector<int> > & updateIdxVec_Array_D,std::vector<std::vector<int> > & updateIdxVec_Array_D_HODLR,double tol,std::string mode);
+void extendAddUpdate(HODLR_Matrix & parentHODLR, std::vector<Eigen::MatrixXd*> D_Array,std::vector<HODLR_Matrix*> D_HODLR_Array,std::vector<Eigen::MatrixXd*> U_Array,std::vector<Eigen::MatrixXd*> V_Array,std::vector<std::vector<int> > & updateIdxVec_Array_D,std::vector<std::vector<int> > & updateIdxVec_Array_D_HODLR,double tol,std::string mode,int maxRank = -1);
 
 
 template <typename T>

@@ -26,6 +26,8 @@ Eigen::MatrixXd permuteRows(const Eigen::MatrixXd &originalMatrix, const std::ve
 
 Eigen::SparseMatrix<double> permuteRowsCols(const Eigen::SparseMatrix<double> &originalMatrix, const std::vector<int> &permVector);
 
+Eigen::SparseMatrix<double> permuteRows(const Eigen::SparseMatrix<double> &originalMatrix, const std::vector<int> &permVector,bool transpose);
+
 void convertSparseMatrixIntoGraph(const Eigen::SparseMatrix<double> &inputMatrix,SCOTCH_Graph* graphPtr,const std::string fileName = "default");
 
 std::vector<int> convertBinPartArrayIntoPermVector(SCOTCH_Num* parttab,int arrSize);
@@ -38,6 +40,7 @@ Eigen::MatrixXd createOneLevelSchurCmpl(const Eigen::SparseMatrix<double> &input
 
 void testSolveSp(Eigen::SparseMatrix<double> & inputMatrix,std::string mode);
 
+Eigen::SparseMatrix<double> rowScaling(Eigen::SparseMatrix<double> &originalMatrix);
 
  
 #endif
