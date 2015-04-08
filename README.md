@@ -66,7 +66,7 @@ Developed by Amirhossein Aminfar
 This program is free software; you can redistribute it and/or modify it under the terms of MPL2 license. The Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ####Build
-This package is has the following dependencies:
+This package has the following dependencies:
 
 1. [Eigen] (http://eigen.tuxfamily.org/index.php?title=Main_Page) C++ library for all matrix manipulations.
 
