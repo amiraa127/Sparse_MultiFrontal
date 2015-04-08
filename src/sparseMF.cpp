@@ -991,11 +991,13 @@ Eigen::MatrixXd sparseMF::implicit_UpwardPass(const Eigen::MatrixXd &inputRHS){
   return modifiedRHS;
 }
 
-
+/*
 void sparseMF::implicit_UpwardPass_Update(eliminationTree::node* root,Eigen::MatrixXd &modifiedRHS){
-  std::vector<int> nodeIdxVec;
+  std::vector<int> nodeIdxVec(nodeSize);
   for (int i = root->min_Col; i<= root->max_Col; i++)
     nodeIdxVec.push_back(i);
+
+  
   Eigen::MatrixXd update_RHS = getRowBlkMatrix(modifiedRHS,root->updateIdxVector);
   Eigen::MatrixXd node_RHS = getRowBlkMatrix(modifiedRHS,nodeIdxVec);
   
@@ -1004,6 +1006,21 @@ void sparseMF::implicit_UpwardPass_Update(eliminationTree::node* root,Eigen::Mat
   
   Eigen::MatrixXd modifiedRHS_Blk = update_RHS - root->updateToNode_U * RHS_UpdateSoln;
   setRowBlkMatrix(modifiedRHS_Blk,modifiedRHS,(root->updateIdxVector));  
+}
+*/
+
+void sparseMF::implicit_UpwardPass_Update(eliminationTree::node* root,Eigen::MatrixXd &modifiedRHS){
+  int nodeSize = root->max_Col - root->min_Col + 1;
+  std::vector<int> nodeIdxVec = createSequentialVec(root->min_Col,root->max_Col-root->min_Col+1);  
+  Eigen::MatrixXd node_RHS = modifiedRHS.block(root->min_Col,0,nodeSize,modifiedRHS.cols());
+ 
+  // Update RHS
+  Eigen::MatrixXd RHS_UpdateSoln  = (root->nodeMatrix_LU).solve(node_RHS);
+  Eigen::MatrixXd multiply = root->updateToNode_U * RHS_UpdateSoln;
+  for (unsigned int i = 0; i < root->updateIdxVector.size(); i++){
+    int idx = root->updateIdxVector[i];
+    modifiedRHS.row(idx) -= multiply.row(i); 
+  }
   
 }
 
@@ -1022,11 +1039,12 @@ Eigen::MatrixXd sparseMF::fast_UpwardPass(const Eigen::MatrixXd &inputRHS){
   return modifiedRHS;
 }
 
-
+/*
 void sparseMF::fast_UpwardPass_Update(eliminationTree::node* root,Eigen::MatrixXd &modifiedRHS){
   std::vector<int> nodeIdxVec;
   for (int i = root->min_Col; i<= root->max_Col; i++)
     nodeIdxVec.push_back(i);
+  
   Eigen::MatrixXd update_RHS = getRowBlkMatrix(modifiedRHS,root->updateIdxVector);
   Eigen::MatrixXd node_RHS   = getRowBlkMatrix(modifiedRHS,nodeIdxVec);
   
@@ -1035,6 +1053,24 @@ void sparseMF::fast_UpwardPass_Update(eliminationTree::node* root,Eigen::MatrixX
   Eigen::MatrixXd modifiedRHS_Blk = update_RHS - fast_UpdateToNodeMultiply(root,RHS_UpdateSoln);
   setRowBlkMatrix(modifiedRHS_Blk,modifiedRHS,(root->updateIdxVector));  
 }
+*/
+
+void sparseMF::fast_UpwardPass_Update(eliminationTree::node* root,Eigen::MatrixXd &modifiedRHS){
+  int nodeSize = root->max_Col - root->min_Col + 1;
+  std::vector<int> nodeIdxVec = createSequentialVec(root->min_Col,root->max_Col-root->min_Col+1);
+  Eigen::MatrixXd node_RHS = modifiedRHS.block(root->min_Col,0,nodeSize,modifiedRHS.cols());
+  
+  // Update RHS
+  Eigen::MatrixXd RHS_UpdateSoln = fast_NodeSolve(root,node_RHS);
+  Eigen::MatrixXd fastMultiply = fast_UpdateToNodeMultiply(root,RHS_UpdateSoln);
+  for (unsigned int i = 0; i < root->updateIdxVector.size(); i++){
+    int idx = root->updateIdxVector[i];
+    modifiedRHS.row(idx) -= fastMultiply.row(i); 
+  }
+
+}
+
+
 
 
 Eigen::MatrixXd sparseMF::implicit_DownwardPass(const Eigen::MatrixXd & upwardPassRHS){

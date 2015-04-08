@@ -5,13 +5,23 @@ set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 # Enable test running via 'make test' command
 enable_testing()
 
+#HODLR Package
+set(HODLR_Path /Users/Amir/Documents/Uni\ Works/PhD/Research/Solver\ Codes/Dense_HODLR)
+
+#Compiler
 set(GCC_COVERAGE_COMPILE_FLAGS "-std=c++11 -O3 -Wall -Wextra")
 add_definitions(${GCC_COVERAGE_COMPILE_FLAGS})
+
+if (NOT PASTIX)
+   add_definitions(-DNOPASTIX)
+   #message("No PaStiX")
+else()
+   find_package (Pastix  REQUIRED)
+endif(NOT PASTIX)
 
 # Find the dependencies.
 find_package (Eigen REQUIRED)
 find_package (CppUnit REQUIRED)
-find_package (Pastix  REQUIRED)
 
 #set(SCOTCH_TEST_RUNS "FALSE")
 #set(SCOTCH_DEBUG "TRUE")
@@ -39,5 +49,3 @@ add_subdirectory(test)
 add_subdirectory(benchmarks)
 add_subdirectory(IML/test)
 
-#file(COPY test/data DESTINATION ${SparseMultiFrontal_BINARY_DIR}/test)
-#file(COPY benchmarks/data DESTINATION ${SparseMultiFrontal_BINARY_DIR}/benchmarks)

@@ -50,7 +50,7 @@ int main(){
   
   fastSparse_IML_Precond precond(inputSpMatrix);
   precond.printResultInfo = true;
-  //Eigen_IML_Vector x1      = precond.implicit_Solve(RHS);
+  Eigen_IML_Vector x1      = precond.implicit_Solve(RHS);
   Eigen_IML_Vector x0      = precond.solve(RHS);
   //Eigen_IML_Vector soln_Sp = precond.iterative_Solve(RHS,10,1e-10,1e-1);
   //Eigen_IML_Vector x0 = Eigen::MatrixXd::Zero(inputSpMatrix.rows(),1);

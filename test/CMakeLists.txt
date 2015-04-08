@@ -3,9 +3,6 @@ include_directories(${SparseMultiFrontal_SOURCE_DIR}/include)
 include_directories(${EIGEN_INCLUDE_DIRS})
 include_directories(${SCOTCH_INCLUDE_DIRS})
 include_directories(${PASTIX_INCLUDE_DIRS})
-
-# Add HODLR library
-set(HODLR_Path /Users/Amir/Documents/Uni\ Works/PhD/Research/Solver\ Codes/Dense_HODLR)
 include_directories(${HODLR_Path}/include/)
 
 # Directories to look for libraries
