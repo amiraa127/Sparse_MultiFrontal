@@ -68,8 +68,11 @@ This program is free software; you can redistribute it and/or modify it under th
 ####Build
 This package is has the following dependencies:
 1. [Eigen] (http://eigen.tuxfamily.org/index.php?title=Main_Page) C++ library for all matrix manipulations.
+
 2. [SOTCH] (http://www.labri.fr/perso/pelegrin/scotch/) for nested dissection and matrix reordering.
+
 3. [HODLR Package] (https://github.com/amiraa127/Dense_HODLR) for the fast multifrontal solver. After downloading the package, change the line `set(HODLR_Path /path/to/files/)` in `CMakeLists.txt` to the HODLR package directory.
+
 4. [CPP Unit] (http://sourceforge.net/projects/cppunit/) for unit testing.
 
 The easiest way to build the library is to use [CMake](http://www.cmake.org).
