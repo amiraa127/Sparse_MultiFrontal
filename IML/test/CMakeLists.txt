@@ -1,10 +1,12 @@
 # Directories to look for include files
+include_directories(${HODLR_Path}/include/)
+include_directories(${HODLR_Path}/IML/include/)
+include_directories(${CPPUNIT_INCLUDE_DIRS})
 include_directories(${SparseMultiFrontal_SOURCE_DIR}/include)
 include_directories(${SparseMultiFrontal_SOURCE_DIR}/IML/include)
 include_directories(${EIGEN_INCLUDE_DIRS})
 include_directories(${SCOTCH_INCLUDE_DIRS})
 include_directories(${PASTIX_INCLUDE_DIRS})
-include_directories(${HODLR_Path}/include/)
 
 # Directories to look for libraries
 link_directories(${SparseMultiFrontal_BINARY_DIR}/src)
