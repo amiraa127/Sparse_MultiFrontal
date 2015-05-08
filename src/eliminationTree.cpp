@@ -84,10 +84,23 @@ std::vector<int> eliminationTree::createParentVec(const int* colPtr,const int* r
       }
     } 
   }
+
+  // Correct for multiple roots
+  std::vector<int> rootIdx;
+  for (int i = 0; i < input_NumCols; i++)
+    if (parent[i] < 0)
+      rootIdx.push_back(i);
+  
+  for (int i = 0; i < (rootIdx.size()- 1); i++){
+    parent[rootIdx[i]] = rootIdx[rootIdx.size() - 1];
+  }
+  //
+  
   return parent;
 }
 
 std::vector<int> eliminationTree::createRangVec(const std::vector<int> & parentVec,const int input_NumCols){
+
  
   std::vector<int> childrenVec(input_NumCols,0);
   std::vector<int> rangVec;

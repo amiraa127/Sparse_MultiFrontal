@@ -172,6 +172,7 @@ void sparseMF::reorderMatrix(Eigen::SparseMatrix<double> & inputSpMatrix){
   permVector = std::vector<int>(permtab, permtab + numVertices);
   reorderedMatrix   =  permuteRowsCols(inputSpMatrix, permVector);
   reorderedMatrix_T =  reorderedMatrix.transpose();
+
   // Create elimination tree  
   int numBlocks = *cblknbr;
   std::cout<<numBlocks<<std::endl;
@@ -521,9 +522,12 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
       Eigen::MatrixXd VB    = panelHODLR.returnTopOffDiagV();
       Eigen::MatrixXd UC    = panelHODLR.returnBottOffDiagU();
       Eigen::MatrixXd VC    = panelHODLR.returnBottOffDiagV();
-    
+
+      root->fast_NodeMatrix_HODLR = HODLR_Matrix();
+      root->D_HODLR = HODLR_Matrix();
+      
       splitAtTop(panelHODLR,root->fast_NodeMatrix_HODLR,root->D_HODLR);
-        
+      
       root->updateU         = UC;
       root->updateV         = (-VC.transpose() * root->fast_NodeMatrix_HODLR.recLU_Solve(UB) * VB.transpose()).transpose();
       root->nodeToUpdate_U  = UB;
@@ -533,7 +537,7 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
       
       root->nodeToUpdate_LR = true;
       root->updateToNode_LR = true;
-      
+      std::cout<<"Here"<<std::endl;
     }else{
   
       root->fast_NodeMatrix_HODLR = HODLR_Matrix(panelMatrix,fast_HODLR_LeafSize,"identifyBoundary") ;
@@ -1216,7 +1220,10 @@ Eigen::MatrixXd sparseMF::iterative_Solve(const Eigen::MatrixXd & inputRHS, cons
   
   //assert(input_RHS.rows() == matrixSize);
   // double prev_LRTolerance = LR_Tolerance;
-  fast_LR_Tol = LR_Tolerance;
+  if (LR_Tolerance != fast_LR_Tol){
+    fast_Factorized = false;
+    fast_LR_Tol = LR_Tolerance;
+  }
   bool prev_printResultInfo = printResultInfo;
   printResultInfo = false;
   

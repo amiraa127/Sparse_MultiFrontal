@@ -18,28 +18,32 @@ int main(){
   //inputSpMatrix = readMtxIntoSparseMatrix("../../../benchmarks/data/input_FETI/TardecAres/localmat1");
  
   //loadMarket(inputSpMatrix,"../../../benchmarks/data/input_FETI/TardecAres/localmat1");
-  //inputSpMatrix = readMtxIntoSparseMatrix("../../benchmarks/data/UF/AMD/G3_circuit/G3_circuit.mtx");
-  //inputSpMatrix = readMtxIntoSparseMatrix("../../benchmarks/data/UF/Botonakis/thermomech_dM/thermomech_dM.mtx");
-  //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/UF/CEMW/tmt_sym/tmt_sym.mtx");         
-  //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/UF/GHS_psdef/apache2/apache2.mtx");    
-  //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/UF/McRae/ecology2/ecology2.mtx");    
-  //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/UF/Wissgott/parabolic_fem/parabolic_fem.mtx");    
-  //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/stiffness/unStructured/cylinderHead/2.3m/localmat0");    
-  //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/SMatrices/linearElasticity/ElasticityS32_660k");    
+  //inputSpMatrix = readMtxIntoSparseMatrix("../../../benchmarks/data/UF/AMD/G3_circuit/G3_circuit.mtx");
+  //inputSpMatrix = readMtxIntoSparseMatrix("../../../benchmarks/data/UF/Botonakis/thermomech_dM/thermomech_dM.mtx");
+  //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/UF/CEMW/tmt_sym/tmt_sym.mtx");         
+  inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/UF/GHS_psdef/apache2/apache2.mtx");    
+  //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/UF/McRae/ecology2/ecology2.mtx");    
+  //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/UF/Wissgott/parabolic_fem/parabolic_fem.mtx");    
+  //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/UF/HB/jpwh_991/jpwh_991.mtx");    
+
+
+  //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/stiffness/unStructured/cylinderHead/2.3m/localmat0");    
+  //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/SMatrices/linearElasticity/ElasticityS32_660k");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/SMatrices/Poisson/PoissonS64_1M");    
  
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/input_FETI/structured/localmat1.800k");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/UF/Janna/Cube_Coup_dt6/Cube_Coup_dt6.mtx");    
-  inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/input_FETI/structured/localmat0.100k");    
+  //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/input_FETI/structured/localmat0.100k");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/input_FETI/unStructured/cube/localmat0.500k");
 
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/stiffness/unStructured/beam/stiffness.300k");
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/stiffness/unStructured/cylinderHead/330k/localmat0");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/input_FETI/structured/localmat0.400k");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/input_FETI/unStructured/engine/localmat4");    
- 
-  
-  //inputSpMatrix = rowScaling(inputSpMatrix);
+
+  Eigen::SparseMatrix<double> inputSpMatrixT(inputSpMatrix.transpose());
+  inputSpMatrix = 0.5 * (inputSpMatrix + inputSpMatrixT);
+  inputSpMatrix = rowScaling(inputSpMatrix);
  
   //testSolveSp(inputSpMatrix, "implicit");
   //testSolveSp(inputSpMatrix, "fast_Iterative");
@@ -50,7 +54,7 @@ int main(){
   
   fastSparse_IML_Precond precond(inputSpMatrix);
   precond.printResultInfo = true;
-  Eigen_IML_Vector x1      = precond.implicit_Solve(RHS);
+  //Eigen_IML_Vector x1      = precond.implicit_Solve(RHS);
   Eigen_IML_Vector x0      = precond.solve(RHS);
   //Eigen_IML_Vector soln_Sp = precond.iterative_Solve(RHS,10,1e-10,1e-1);
   //Eigen_IML_Vector x0 = Eigen::MatrixXd::Zero(inputSpMatrix.rows(),1);
@@ -60,13 +64,13 @@ int main(){
   int result, maxit = 5000,restart = 32;
   Eigen::MatrixXd H =Eigen::MatrixXd::Zero(restart+1,restart);
   //result = GMRES(inputSpMatrix,x0,RHS,precond,H,restart,maxit,tol);
-  precond.printResultInfo = true;
-  Eigen::MatrixXd y = precond.iterative_Solve(RHS,maxit,1e-4,1e-1);
+  //precond.printResultInfo = true;
+  Eigen::MatrixXd y = precond.iterative_Solve(RHS,maxit,1e-4,1e-2);
   std::cout<<"GMRES flag = "<<result<<std::endl;
   std::cout<<"iterations performed "<<maxit<<std::endl;
   std::cout<<"tolerance achieved : "<<tol<<std::endl;
 
-  
+  /*
   diag_IML_Precond diagPrecond(inputSpMatrix);
   Eigen_IML_Vector x2 = diagPrecond.solve(RHS);
   H = Eigen::MatrixXd::Zero(restart+1,restart);
@@ -78,7 +82,7 @@ int main(){
   std::cout<<"GMRES flag = "<<result<<std::endl;
   std::cout<<"iterations performed "<<maxit<<std::endl;
   std::cout<<"tolerance achieved : "<<tol<<std::endl;
-  
+  */
 
 
 
