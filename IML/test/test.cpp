@@ -21,23 +21,23 @@ int main(){
   //inputSpMatrix = readMtxIntoSparseMatrix("../../../benchmarks/data/UF/AMD/G3_circuit/G3_circuit.mtx");
   //inputSpMatrix = readMtxIntoSparseMatrix("../../../benchmarks/data/UF/Botonakis/thermomech_dM/thermomech_dM.mtx");
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/UF/CEMW/tmt_sym/tmt_sym.mtx");         
-  inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/UF/GHS_psdef/apache2/apache2.mtx");    
+  //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/UF/GHS_psdef/apache2/apache2.mtx");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/UF/McRae/ecology2/ecology2.mtx");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/UF/Wissgott/parabolic_fem/parabolic_fem.mtx");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/UF/HB/jpwh_991/jpwh_991.mtx");    
-
+  //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/UF/Janna/Cube_Coup_dt6/Cube_Coup_dt6.mtx");    
+ 
 
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/stiffness/unStructured/cylinderHead/2.3m/localmat0");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/SMatrices/linearElasticity/ElasticityS32_660k");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/SMatrices/Poisson/PoissonS64_1M");    
  
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/input_FETI/structured/localmat1.800k");    
-  //inputSpMatrix   = readMtxIntoSparseMatrix("../../benchmarks/data/UF/Janna/Cube_Coup_dt6/Cube_Coup_dt6.mtx");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/input_FETI/structured/localmat0.100k");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/input_FETI/unStructured/cube/localmat0.500k");
 
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/stiffness/unStructured/beam/stiffness.300k");
-  //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/stiffness/unStructured/cylinderHead/330k/localmat0");    
+  inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/stiffness/unStructured/cylinderHead/330k/localmat0");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/input_FETI/structured/localmat0.400k");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/input_FETI/unStructured/engine/localmat4");    
 
@@ -55,10 +55,10 @@ int main(){
   fastSparse_IML_Precond precond(inputSpMatrix);
   precond.printResultInfo = true;
   //Eigen_IML_Vector x1      = precond.implicit_Solve(RHS);
-  Eigen_IML_Vector x0      = precond.solve(RHS);
+  //Eigen_IML_Vector x0      = precond.solve(RHS);
   //Eigen_IML_Vector soln_Sp = precond.iterative_Solve(RHS,10,1e-10,1e-1);
   //Eigen_IML_Vector x0 = Eigen::MatrixXd::Zero(inputSpMatrix.rows(),1);
-  precond.printResultInfo = false;
+  //precond.printResultInfo = false;
   std::cout<<"RHS norm = "<<RHS.norm()<<std::endl;
   double tol = 1e-4;
   int result, maxit = 5000,restart = 32;

@@ -257,7 +257,7 @@ void sparseMF::symbolic_Factorize(eliminationTree::node* root){
   assert(root->panelIdxVector[0] == minIdx);
   assert(root->panelIdxVector[nodeSize - 1] == maxIdx);
   root->updateIdxVector = std::vector<int>(root->panelIdxVector.begin() + nodeSize,root->panelIdxVector.end());
-  if ((idxSet.size() >= fast_MatrixSizeThresh)){
+  if (((int)idxSet.size() >= fast_MatrixSizeThresh)){
     averageLargeFrontSize += pow(idxSet.size(),3);
     numLargeFronts++;
   }
@@ -267,7 +267,6 @@ void sparseMF::symbolic_Factorize(eliminationTree::node* root){
 Eigen::MatrixXd sparseMF::createPanelMatrix(eliminationTree::node* root){
   int panelSize = root->panelIdxVector.size();
   int minIdx = root->panelIdxVector[0];
-  int maxIdx = root->panelIdxVector[panelSize - 1];
   int nodeSize = root->numCols;
   int endNodeIdx = minIdx + nodeSize - 1;
   std::map<int,int> idxMap;
@@ -309,7 +308,6 @@ void sparseMF::createPanelAndGraphMatrix(eliminationTree::node* root, Eigen::Spa
   panelMatrix    = Eigen::SparseMatrix<double> (panelSize,panelSize);
   int minIdx     = root->panelIdxVector[0];
   int maxIdx     = root->panelIdxVector[panelSize - 1];
-  int nodeIdx    = root->panelIdxVector[nodeSize - 1];
   int endNodeIdx = minIdx + nodeSize - 1;
   std::map<int,int> idxMap;
   std::set<int> idxSet(root->panelIdxVector.begin(), root->panelIdxVector.end());
@@ -537,7 +535,6 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
       
       root->nodeToUpdate_LR = true;
       root->updateToNode_LR = true;
-      std::cout<<"Here"<<std::endl;
     }else{
   
       root->fast_NodeMatrix_HODLR = HODLR_Matrix(panelMatrix,fast_HODLR_LeafSize,"identifyBoundary") ;
@@ -570,7 +567,7 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
       root->nodeToUpdate_U  = nodeToUpdate;
       root->updateToNode_U  = updateToNode;
       root->updateMatrix = frontalMatrix.bottomRightCorner(updateMatrixSize,updateMatrixSize) - (root->updateToNode_U) * updateSoln;
-      assert(root->updateMatrix.rows() == root->updateIdxVector.size());
+      assert((int)root->updateMatrix.rows() == (int)root->updateIdxVector.size());
     }else{
       root->nodeMatrix_LU = Eigen::PartialPivLU<Eigen::MatrixXd>(frontalMatrix);
     }
@@ -597,7 +594,7 @@ void sparseMF::updateNodeIdxWithChildrenFillins(eliminationTree::node* root,std:
 void sparseMF::assembleUFactor(const Eigen::MatrixXd & nodeMatrix_U, const Eigen::MatrixXd & update_U, const std::vector<int> & mappingVector){
   int nodeSize = nodeMatrix_U.cols();
   int updateSize = update_U.cols();
-  assert((nodeSize + updateSize) == mappingVector.size());
+  assert((int)(nodeSize + updateSize) == (int)mappingVector.size());
   
   // Insert nodeMatrix_U
   for (int i = 0; i < nodeSize; i++)
@@ -618,7 +615,7 @@ void sparseMF::assembleUFactor(const Eigen::MatrixXd & nodeMatrix_U, const Eigen
 void sparseMF::assembleLFactor(const Eigen::MatrixXd & nodeMatrix_L, const Eigen::MatrixXd & update_L, const std::vector<int> & mappingVector){
   int nodeSize = nodeMatrix_L.rows();
   int updateSize = update_L.rows();
-  assert((nodeSize + updateSize) == mappingVector.size());
+  assert((int)(nodeSize + updateSize) == (int)mappingVector.size());
   
   // Insert nodeMatrix_U
   for (int i = 0; i < nodeSize; i++)
@@ -995,23 +992,6 @@ Eigen::MatrixXd sparseMF::implicit_UpwardPass(const Eigen::MatrixXd &inputRHS){
   return modifiedRHS;
 }
 
-/*
-void sparseMF::implicit_UpwardPass_Update(eliminationTree::node* root,Eigen::MatrixXd &modifiedRHS){
-  std::vector<int> nodeIdxVec(nodeSize);
-  for (int i = root->min_Col; i<= root->max_Col; i++)
-    nodeIdxVec.push_back(i);
-
-  
-  Eigen::MatrixXd update_RHS = getRowBlkMatrix(modifiedRHS,root->updateIdxVector);
-  Eigen::MatrixXd node_RHS = getRowBlkMatrix(modifiedRHS,nodeIdxVec);
-  
-  // Update RHS
-  Eigen::MatrixXd RHS_UpdateSoln  = (root->nodeMatrix_LU).solve(node_RHS);
-  
-  Eigen::MatrixXd modifiedRHS_Blk = update_RHS - root->updateToNode_U * RHS_UpdateSoln;
-  setRowBlkMatrix(modifiedRHS_Blk,modifiedRHS,(root->updateIdxVector));  
-}
-*/
 
 void sparseMF::implicit_UpwardPass_Update(eliminationTree::node* root,Eigen::MatrixXd &modifiedRHS){
   int nodeSize = root->max_Col - root->min_Col + 1;
@@ -1043,22 +1023,6 @@ Eigen::MatrixXd sparseMF::fast_UpwardPass(const Eigen::MatrixXd &inputRHS){
   return modifiedRHS;
 }
 
-/*
-void sparseMF::fast_UpwardPass_Update(eliminationTree::node* root,Eigen::MatrixXd &modifiedRHS){
-  std::vector<int> nodeIdxVec;
-  for (int i = root->min_Col; i<= root->max_Col; i++)
-    nodeIdxVec.push_back(i);
-  
-  Eigen::MatrixXd update_RHS = getRowBlkMatrix(modifiedRHS,root->updateIdxVector);
-  Eigen::MatrixXd node_RHS   = getRowBlkMatrix(modifiedRHS,nodeIdxVec);
-  
-  // Update RHS
-  Eigen::MatrixXd RHS_UpdateSoln = fast_NodeSolve(root,node_RHS);
-  Eigen::MatrixXd modifiedRHS_Blk = update_RHS - fast_UpdateToNodeMultiply(root,RHS_UpdateSoln);
-  setRowBlkMatrix(modifiedRHS_Blk,modifiedRHS,(root->updateIdxVector));  
-}
-*/
-
 void sparseMF::fast_UpwardPass_Update(eliminationTree::node* root,Eigen::MatrixXd &modifiedRHS){
   int nodeSize = root->max_Col - root->min_Col + 1;
   std::vector<int> nodeIdxVec = createSequentialVec(root->min_Col,root->max_Col-root->min_Col+1);
@@ -1071,10 +1035,7 @@ void sparseMF::fast_UpwardPass_Update(eliminationTree::node* root,Eigen::MatrixX
     int idx = root->updateIdxVector[i];
     modifiedRHS.row(idx) -= fastMultiply.row(i); 
   }
-
 }
-
-
 
 
 Eigen::MatrixXd sparseMF::implicit_DownwardPass(const Eigen::MatrixXd & upwardPassRHS){
@@ -1202,16 +1163,8 @@ Eigen::MatrixXd sparseMF::fast_NodeSolve(eliminationTree::node* root,const Eigen
   return result;
 }
 
-/*
-Eigen::MatrixXd sparseMF::oneStep_Iterate(const Eigen::MatrixXd & prevStep_result, const Eigen::MatrixXd & initSolveGuess, Eigen::MatrixXd & prevStep_Product){
-  //prevStep_Product = originalMatrix * prevStep_result;
-  prevStep_Product = permuteRows(reorderedMatrix * permuteRows(prevStep_result,permVector,false),permVector,true);				 
-  Eigen::MatrixXd update = prevStep_result - fast_Solve(prevStep_Product);
-  return initSolveGuess + update;  
-}
-*/
 Eigen_IML_Vector sparseMF::solve(const Eigen_IML_Vector & other){
-  // Need some assetion erro checking here
+  // Need some assetion error checking here
   //assert(fast_Factorized == true);
   return fast_Solve(other);
 }
@@ -1227,7 +1180,6 @@ Eigen::MatrixXd sparseMF::iterative_Solve(const Eigen::MatrixXd & inputRHS, cons
   bool prev_printResultInfo = printResultInfo;
   printResultInfo = false;
   
-  //Eigen::MatrixXd permutedRHS = permuteRows(inputRHS,permVector,false);
   double startTime = clock();
   Eigen::MatrixXd init_Guess = fast_Solve(inputRHS);
   Eigen_IML_Vector x0(init_Guess);
@@ -1241,39 +1193,9 @@ Eigen::MatrixXd sparseMF::iterative_Solve(const Eigen::MatrixXd & inputRHS, cons
   
   GMRESResult = GMRES(origMatrix,x0,RHS,*this,H,restart,maxit,tol);
   int num_Iter = maxit;
-  /*
-  Eigen::MatrixXd currStep_Soln = init_Guess;
-  Eigen::MatrixXd nextStep_Soln;
-  Eigen::MatrixXd currStep_Product;
-  int num_Iter         = 1;
-  double tolerance     = 1;
-  double prevTolerance = 1;
-  double iterSolveTime = fast_SolveTime;
-  std::vector<int> iter_IterTimeVec,iter_IterAccuracyVec;
-  while (tolerance > stop_tolerance){
-    iter_IterTimeVec.push_back(iterSolveTime);
-    double iterStartTime = clock();
-    nextStep_Soln = oneStep_Iterate(currStep_Soln,init_Guess,currStep_Product);
-    //tolerance = (nextStep_Soln - currStep_Soln).norm()/currStep_Soln.norm();
-    tolerance = (currStep_Product - input_RHS).norm()/input_RHS.norm();
-    double iterEndTime = clock();
-    iterSolveTime = (iterEndTime - iterStartTime)/CLOCKS_PER_SEC;
-    iter_IterAccuracyVec.push_back(tolerance);
-    currStep_Soln = nextStep_Soln;      
-    std::cout<<num_Iter<<" "<<tolerance<<std::endl;
-    num_Iter ++;
-    if (num_Iter > maxIterations)
-      break;
-    if (tolerance > 10 * prevTolerance)
-      break;
-    prevTolerance = tolerance;
-
-  }
-  */
   
   double endTime = clock();
   int totalIter_SolveTime = (endTime-startTime)/CLOCKS_PER_SEC;
-  //Eigen::MatrixXd result = permuteRows(x0,permVector,true);
   Eigen::MatrixXd result = *(&x0);
   printResultInfo = prev_printResultInfo;   
 

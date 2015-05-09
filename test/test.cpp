@@ -350,7 +350,7 @@ public:
   void LU_Solver_Test(){
     std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
     std::cout<<"Testing full LU factorization on a 100k matrix...."<<std::endl;
-    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.100k");
+    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("../../benchmarks/data/input_FETI/structured/localmat0.100k");
     Eigen::VectorXd exactSoln_Sp = Eigen::MatrixXd::Random(inputSpMatrix.rows(),1);
     Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
     sparseMF solver(inputSpMatrix);
@@ -364,7 +364,7 @@ public:
   void implicit_Solver_Test(){
     std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
     std::cout<<"Testing implicit solver on a 100k matrix...."<<std::endl;
-    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.100k");
+    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("../../benchmarks/data/input_FETI/structured/localmat0.100k");
     Eigen::VectorXd exactSoln_Sp = Eigen::MatrixXd::Random(inputSpMatrix.rows(),1);
     Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
     sparseMF solver(inputSpMatrix);
@@ -378,7 +378,7 @@ public:
   void fastIterative_Solver_Test(){
     std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
     std::cout<<"Testing fast iterative solver on a 100k matrix...."<<std::endl;
-    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("data/input_FETI/structured/localmat0.300k");
+    Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("../../benchmarks/data/input_FETI/structured/localmat0.300k");
     //Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("../benchmarks/data/input_FETI/TardecAres/localmat1");
     // Eigen::SparseMatrix<double> inputSpMatrix = readMtxIntoSparseMatrix("../benchmarks/data/stiffness/GenericHull/localmat0");
 
