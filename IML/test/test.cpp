@@ -37,10 +37,13 @@ int main(){
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/input_FETI/unStructured/cube/localmat0.500k");
 
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/stiffness/unStructured/beam/stiffness.300k");
-  inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/stiffness/unStructured/cylinderHead/330k/localmat0");    
+  //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/stiffness/unStructured/cylinderHead/330k/localmat0");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/input_FETI/structured/localmat0.400k");    
   //inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/input_FETI/unStructured/engine/localmat4");    
 
+  inputSpMatrix   = readMtxIntoSparseMatrix("../../../benchmarks/data/Simon/matrix_rhs_pfc/matrix_pfc_3d_p4_ref9.mtx");    
+
+  
   Eigen::SparseMatrix<double> inputSpMatrixT(inputSpMatrix.transpose());
   inputSpMatrix = 0.5 * (inputSpMatrix + inputSpMatrixT);
   inputSpMatrix = rowScaling(inputSpMatrix);
@@ -65,7 +68,7 @@ int main(){
   Eigen::MatrixXd H =Eigen::MatrixXd::Zero(restart+1,restart);
   //result = GMRES(inputSpMatrix,x0,RHS,precond,H,restart,maxit,tol);
   //precond.printResultInfo = true;
-  Eigen::MatrixXd y = precond.iterative_Solve(RHS,maxit,1e-4,1e-2);
+  Eigen::MatrixXd y = precond.iterative_Solve(RHS,maxit,1e-6,1e-1);
   std::cout<<"GMRES flag = "<<result<<std::endl;
   std::cout<<"iterations performed "<<maxit<<std::endl;
   std::cout<<"tolerance achieved : "<<tol<<std::endl;

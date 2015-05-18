@@ -200,6 +200,14 @@ void sparseMF::reorderMatrix(Eigen::SparseMatrix<double> & inputSpMatrix){
  
 }
 
+void sparseMF::updateNumericalEntries(Eigen::SparseMatrix<double> newMatrix){
+  symbolic_Factorize();
+  reorderedMatrix   =  permuteRowsCols(newMatrix, permVector);
+  reorderedMatrix_T =  reorderedMatrix.transpose();
+  LU_Factorized = false;
+  implicit_Factorized = false;
+  fast_Factorized = false;
+}
 
 void sparseMF::symbolic_Factorize(){
   if (symbolic_Factorized == false){
@@ -479,16 +487,31 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
   // Update frontal matrix using updates from children
   root->D_UpdateDense = true;
   root->frontSize = frontalMatrixSize;
-  root->criterion = (frontalMatrixSize >= fast_MatrixSizeThresh);
+  root->criterion = (frontalMatrixSize >= fast_MatrixSizeThresh && nodeSize >= 5);
   std::vector<eliminationTree::node*> nodeChildren = root->children;
   int numChildren = nodeChildren.size();
 
+  /*
   for (int i = 0; i < numChildren; i++){
     eliminationTree::node* childNode = nodeChildren[i];
     if (childNode->D_UpdateDense == false){
       root->criterion = true;
       //childHODLR = true;
       break;
+    }
+  }
+  */
+
+  if (root->criterion == false){
+
+    for (int i = 0; i < numChildren; i++){
+      eliminationTree::node* childNode = nodeChildren[i];
+      if (childNode->D_UpdateDense == false){
+	childNode->updateMatrix = childNode->D_HODLR.block(0,0,childNode->D_HODLR.rows(),childNode->D_HODLR.cols()) + childNode->updateU * childNode->updateV.transpose();
+	childNode->D_HODLR.destroyAllData();
+	childNode->updateU.resize(0,0);
+	childNode->updateV.resize(0,0);
+      }
     }
   }
   
@@ -511,7 +534,6 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
       panelHODLR.set_BoundaryDepth(fast_BoundaryDepth);
       double startTime = clock();
       fast_NodeExtendAddUpdate_Array(root,panelHODLR,root->panelIdxVector);
-       
       double endTime = clock();
       std::cout<<"extendAdd done"<<std::endl;
       fast_ExtendAddTime += (endTime - startTime)/CLOCKS_PER_SEC;

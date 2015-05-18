@@ -41,6 +41,8 @@ public:
   Eigen::MatrixXd fast_Solve(const Eigen::MatrixXd & inputRHS);
   Eigen::MatrixXd iterative_Solve(const Eigen::MatrixXd & input_RHS, const int maxIterations, const double stop_tolerance,const double LR_Tolerance);
 
+  void updateNumericalEntries(Eigen::SparseMatrix<double> newMatrix);
+
 private:
   Eigen::SparseMatrix<double> reorderedMatrix;
   Eigen::SparseMatrix<double> reorderedMatrix_T;

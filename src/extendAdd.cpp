@@ -112,7 +112,7 @@ std::vector<int> extractBlocks(const std::vector<int> & inputVec){
       blkVec.push_back(blkIdx + 1);
     blkIdx++;
   }
-  if (blkVec[blkVec.size() - 1] != inputVec.size())
+  if (blkVec[blkVec.size() - 1] != (int)inputVec.size())
     blkVec.push_back(inputVec.size());
   return blkVec;
 }
@@ -429,7 +429,7 @@ void calcPseudoInvInTree(HODLR_Tree::node* HODLR_Root,double tol,int maxRank){
   tempU = HODLR_Root->bottOffDiagU;
   tempV = HODLR_Root->bottOffDiagV;
   HODLR_Root->bottOffDiagRank = PS_PseudoInverse(tempU,tempV,HODLR_Root->bottOffDiagU,HODLR_Root->bottOffDiagV,HODLR_Root->bottOffDiagRowIdx,tol,"fullPivLU",maxRank);
- 
+  
   calcPseudoInvInTree(HODLR_Root->left,tol,maxRank);
   calcPseudoInvInTree(HODLR_Root->right,tol,maxRank);
 
