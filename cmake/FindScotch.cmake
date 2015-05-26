@@ -1,74 +1,49 @@
-#-------------------------------------------------------------------------------
-#                ______             ______ ____          __  __
-#               |  ____|           |  ____/ __ \   /\   |  \/  |
-#               | |__ _ __ ___  ___| |__ | |  | | /  \  | \  / |
-#               |  __| '__/ _ \/ _ \  __|| |  | |/ /\ \ | |\/| |
-#               | |  | | |  __/  __/ |   | |__| / ____ \| |  | |
-#               |_|  |_|  \___|\___|_|    \____/_/    \_\_|  |_|
+# This module looks for SCOTCH (http://www.labri.fr/perso/pelegrin/scotch)
+# The following variables are provided:
 #
-#                   FreeFOAM: The Cross-Platform CFD Toolkit
-#
-# Copyright (C) 2008-2009 Michael Wild <themiwi@users.sf.net>
-#                         Gerber van der Graaf <gerber_graaf@users.sf.net>
-#-------------------------------------------------------------------------------
-# License
-#   This file is part of FreeFOAM.
-#
-#   FreeFOAM is free software; you can redistribute it and/or modify it
-#   under the terms of the GNU General Public License as published by the
-#   Free Software Foundation; either version 2 of the License, or (at your
-#   option) any later version.
-#
-#   FreeFOAM is distributed in the hope that it will be useful, but WITHOUT
-#   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-#   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-#   for more details.
-#
-#   You should have received a copy of the GNU General Public License
-#   along with FreeFOAM; if not, write to the Free Software Foundation,
-#   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-#-------------------------------------------------------------------------------
-
-# - Find SCOTCH
-#
-# This module looks for SCOTCH support and defines the following values
 #  SCOTCH_FOUND                 TRUE if SCOTCH has been found
+#  SCOTCH_VERSION               the version of the library (version.release.patchlevel)
 #  SCOTCH_INCLUDE_DIRS          the include path for SCOTCH
-#  SCOTCH_LIBRARY               the library to link against
-#  SCOTCH_scotcherr_LIBRARY     the error handling library to link against
-#  SCOTCH_scotcherrexit_LIBRARY the alternative error handling library to link against
+#  SCOTCH_scotch_LIBRARY        the main SCOTCH library
+#  SCOTCH_scotcherr_LIBRARY     the error handling library
+#  SCOTCH_scotcherrexit_LIBRARY the alternative error handling library
+#  SCOTCH_LIBRARIES             a list of all libraries provided by SCOTCH
 
-find_path( SCOTCH_INCLUDE_DIR scotch.h PATH_SUFFIXES scotch )
+find_path(SCOTCH_INCLUDE_DIR scotch.h 
+	  HINTS $ENV{SCOTCH_DIR}/include $ENV{SCOTCH_ROOT}/include $ENV{SCOTCH_INC})
 
-find_library( SCOTCH_LIBRARY
-  NAMES scotch
-  )
+if(SCOTCH_INCLUDE_DIR)
+  find_library(SCOTCH_scotch_LIBRARY NAMES scotch 
+	       HINTS ${SCOTCH_INCLUDE_DIR}/../lib $ENV{SCOTCH_LIB})
+  find_library(SCOTCH_scotcherr_LIBRARY NAMES scotcherr 
+	       HINTS ${SCOTCH_INCLUDE_DIR}/../lib $ENV{SCOTCH_LIB})
+  find_library(SCOTCH_scotcherrexit_LIBRARY NAMES scotcherrexit 
+	       HINTS ${SCOTCH_INCLUDE_DIR}/../lib $ENV{SCOTCH_LIB})
+  
+  # read version nr rom scotch.h file
+  file(STRINGS "${SCOTCH_INCLUDE_DIR}/scotch.h" scotch_version_line 
+       REGEX "#define SCOTCH_VERSION [0-9]+" LIMIT_COUNT 1)
+  file(STRINGS "${SCOTCH_INCLUDE_DIR}/scotch.h" scotch_release_line 
+       REGEX "#define SCOTCH_RELEASE [0-9]+" LIMIT_COUNT 1)
+  file(STRINGS "${SCOTCH_INCLUDE_DIR}/scotch.h" scotch_patchlevel_line 
+       REGEX "#define SCOTCH_PATCHLEVEL [0-9]+" LIMIT_COUNT 1)
+  if(scotch_version_line)
+    string(REGEX MATCH "[0-9]+" scotch_version ${scotch_version_line})
+    string(REGEX MATCH "[0-9]+" scotch_release ${scotch_release_line})
+    string(REGEX MATCH "[0-9]+" scotch_patchlevel ${scotch_patchlevel_line})
+    set(SCOTCH_VERSION "${scotch_version}.${scotch_release}.${scotch_patchlevel}")
+  endif(scotch_version_line)
 
-find_library( SCOTCH_scotcherr_LIBRARY
-  NAMES scotcherr
-  )
+  if(SCOTCH_scotch_LIBRARY)
+    set(SCOTCH_INCLUDE_DIRS ${SCOTCH_INCLUDE_DIR})
+    set(SCOTCH_LIBRARIES ${SCOTCH_scotch_LIBRARY} ${SCOTCH_scotcherr_LIBRARY} ${SCOTCH_scotcherrexit_LIBRARY})
+  endif(SCOTCH_scotch_LIBRARY)
 
-find_library( SCOTCH_scotcherrexit_LIBRARY
-  NAMES scotcherrexit
-  )
+endif(SCOTCH_INCLUDE_DIR)
 
-set( SCOTCH_INCLUDE_DIRS ${SCOTCH_INCLUDE_DIR} )
-set( SCOTCH_LIBRARIES ${SCOTCH_LIBRARY} ${SCOTCH_scotcherrexit_LIBRARY} )
-
-mark_as_advanced(
-  SCOTCH_INCLUDE_DIR
-  SCOTCH_LIBRARY
-  SCOTCH_scotcherr_LIBRARY
-  SCOTCH_scotcherrexit_LIBRARY
-  )
-
-include( FindPackageHandleStandardArgs )
-find_package_handle_standard_args( SCOTCH
-  DEFAULT_MSG
-  SCOTCH_INCLUDE_DIR
-  SCOTCH_LIBRARY
-  SCOTCH_scotcherr_LIBRARY
-  SCOTCH_scotcherrexit_LIBRARY
-  )
-
-# ------------------------- vim: set sw=2 sts=2 et: --------------- end-of-file
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(
+  SCOTCH
+  FOUND_VAR      SCOTCH_FOUND
+  REQUIRED_VARS  SCOTCH_INCLUDE_DIRS SCOTCH_scotch_LIBRARY SCOTCH_scotcherr_LIBRARY SCOTCH_scotcherrexit_LIBRARY
+  VERSION_VAR    SCOTCH_VERSION)

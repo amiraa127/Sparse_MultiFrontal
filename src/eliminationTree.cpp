@@ -55,12 +55,14 @@ void eliminationTree::build_eliminationTree(const int input_numCols,const int in
     nodeLevelVec.push_back(rootPtr);
   }
   // Sanity check
+#ifndef NDEBUG
   int sum = 0;
   for (int i = 0; i < numLevels; i++)
     sum += levelCols[i];
   assert(numCols == sum);
   int nodeLevelVecSize = nodeLevelVec.size();
   assert(nodeLevelVecSize == numLevels);
+#endif
 }
 
 
@@ -91,7 +93,7 @@ std::vector<int> eliminationTree::createParentVec(const int* colPtr,const int* r
     if (parent[i] < 0)
       rootIdx.push_back(i);
   
-  for (int i = 0; i < (rootIdx.size()- 1); i++){
+  for (size_t i = 0; i < (rootIdx.size()- 1); i++){
     parent[rootIdx[i]] = rootIdx[rootIdx.size() - 1];
   }
   //

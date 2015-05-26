@@ -3,6 +3,9 @@
 #include "Eigen/Sparse"
 #include "Eigen/Dense"
 #include "helperFunctions.hpp" 
+
+#include "testSolve.hpp"
+
 #include <iostream>
 
 

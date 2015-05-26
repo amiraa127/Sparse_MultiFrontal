@@ -7,11 +7,11 @@ void extendAddinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,T &
 void storeParentContribution(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,std::string mode);
 void calcPseudoInvInTree(HODLR_Tree::node* HODLR_Root,double tol,int maxRank = - 1);
 template<typename T>
-void extendAddinTree(const int parentSize,HODLR_Tree::node* HODLR_Root,std::vector<T*> D_Array,std::vector<std::vector<int> > & updateIdxVec_Array,double tol,std::string mode);
+void extendAddinTree(int parentSize,HODLR_Tree::node* HODLR_Root,std::vector<T*> D_Array,std::vector<std::vector<int> > & updateIdxVec_Array,double tol,std::string mode);
 void extendAddLRinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,std::vector<Eigen::MatrixXd*> extendU_Array,std::vector<Eigen::MatrixXd*> extendV_Array,double tol,std::string mode);
 
 
-HODLR_Matrix extend(std::vector<int> & extendIdxVec, int parentSize, HODLR_Matrix & childHODLR){
+HODLR_Matrix extend(std::vector<int>& extendIdxVec, int parentSize, HODLR_Matrix& childHODLR){
   assert(childHODLR.get_MatrixSize() == (int)extendIdxVec.size()); 
   childHODLR.storeLRinTree();
   HODLR_Matrix result = childHODLR;
@@ -21,7 +21,14 @@ HODLR_Matrix extend(std::vector<int> & extendIdxVec, int parentSize, HODLR_Matri
   return result;
 }
 
-void extendAddUpdate(HODLR_Matrix & parentHODLR, std::vector<Eigen::MatrixXd*> D_Array,std::vector<HODLR_Matrix*> D_HODLR_Array,std::vector<Eigen::MatrixXd*> U_Array,std::vector<Eigen::MatrixXd*> V_Array,std::vector<std::vector<int> > & updateIdxVec_Array_D,std::vector<std::vector<int> > & updateIdxVec_Array_D_HODLR,double tol,std::string mode,int maxRank){
+void extendAddUpdate(HODLR_Matrix& parentHODLR, 
+		     std::vector<Eigen::MatrixXd*> D_Array,
+		     std::vector<HODLR_Matrix*> D_HODLR_Array,
+		     std::vector<Eigen::MatrixXd*> U_Array,
+		     std::vector<Eigen::MatrixXd*> V_Array,
+		     std::vector<std::vector<int> >& updateIdxVec_Array_D,
+		     std::vector<std::vector<int> >& updateIdxVec_Array_D_HODLR,
+		     double tol, std::string mode, int maxRank){
   parentHODLR.storeLRinTree();
   int parentSize = parentHODLR.get_MatrixSize();
   if (mode == "PS_Boundary"){
@@ -53,7 +60,10 @@ void extendAddUpdate(HODLR_Matrix & parentHODLR, std::vector<Eigen::MatrixXd*> D
 }
 
 
-void extendAddUpdate(HODLR_Matrix & parentHODLR,HODLR_Matrix & D_HODLR,std::vector<int> & updateIdxVec,double tol,std::string mode){
+void extendAddUpdate(HODLR_Matrix& parentHODLR,
+		     HODLR_Matrix & D_HODLR,
+		     std::vector<int> & updateIdxVec,
+		     double tol,std::string mode){
   
   parentHODLR.storeLRinTree(); 
   if (mode == "Compress_LU"){ 
@@ -72,7 +82,10 @@ void extendAddUpdate(HODLR_Matrix & parentHODLR,HODLR_Matrix & D_HODLR,std::vect
 }
 
 
-void extendAddUpdate(HODLR_Matrix & parentHODLR,Eigen::MatrixXd & D,std::vector<int> & updateIdxVec,double tol,std::string mode){
+void extendAddUpdate(HODLR_Matrix & parentHODLR,
+		     Eigen::MatrixXd & D,
+		     std::vector<int> & updateIdxVec,
+		     double tol,std::string mode){
   
   parentHODLR.storeLRinTree(); 
   if (mode == "Compress_LU"){
@@ -91,7 +104,11 @@ void extendAddUpdate(HODLR_Matrix & parentHODLR,Eigen::MatrixXd & D,std::vector<
   parentHODLR.freeMatrixData();
 }
 
-void extendAddUpdate(HODLR_Matrix & parentHODLR,Eigen::MatrixXd & U,Eigen::MatrixXd & V,std::vector<int>& updateIdxVec,double tol,std::string mode){
+void extendAddUpdate(HODLR_Matrix & parentHODLR,
+		     Eigen::MatrixXd & U,
+		     Eigen::MatrixXd & V,
+		     std::vector<int>& updateIdxVec,
+		     double tol,std::string mode){
   parentHODLR.storeLRinTree();
   int parentSize = parentHODLR.get_MatrixSize();
   Eigen::MatrixXd extendU = extend(updateIdxVec,parentSize,U,0,0,U.rows(),U.cols(),"Rows");
@@ -118,7 +135,9 @@ std::vector<int> extractBlocks(const std::vector<int> & inputVec){
 }
 
 
-std::vector<int> createChildExractVec(std::vector<int> & parentRowColIdxVec, std::vector<int> updateIdxVec,int offset){
+std::vector<int> createChildExractVec(std::vector<int> & parentRowColIdxVec, 
+				      std::vector<int> updateIdxVec,
+				      int offset){
   std::vector<int> result;
   for (int i = 0; i < (int)parentRowColIdxVec.size(); i++)
     if (std::binary_search (updateIdxVec.begin(), updateIdxVec.end(), parentRowColIdxVec[i] + offset)){
@@ -129,7 +148,12 @@ std::vector<int> createChildExractVec(std::vector<int> & parentRowColIdxVec, std
 }
 
 
-Eigen::MatrixXd extend(std::vector<int> & extendIdxVec,int parentSize,Eigen::MatrixXd & child,int min_i,int min_j,int numRows,int numCols,std::string mode){
+Eigen::MatrixXd extend(std::vector<int> & extendIdxVec,
+		       int parentSize,
+		       Eigen::MatrixXd & child,
+		       int min_i,int min_j,
+		       int numRows,int numCols,
+		       std::string mode){
   Eigen::MatrixXd result;
   int max_i = min_i + numRows - 1;
   int max_j = min_j + numCols - 1;
@@ -169,7 +193,10 @@ Eigen::MatrixXd extend(std::vector<int> & extendIdxVec,int parentSize,Eigen::Mat
 }
 
 
-void extend(HODLR_Tree::node* resultRoot,HODLR_Tree::node* HODLR_Root,std::vector<int> & extendIdxVec,int parentSize){
+void extend(HODLR_Tree::node* resultRoot,
+	    HODLR_Tree::node* HODLR_Root,
+	    std::vector<int> & extendIdxVec,
+	    int parentSize){
   int min_i,min_j,max_i,max_j;
   int childSize = extendIdxVec.size();
   assert(HODLR_Root->max_i < childSize);
@@ -271,7 +298,12 @@ void extend(HODLR_Tree::node* resultRoot,HODLR_Tree::node* HODLR_Root,std::vecto
 
 
 template <typename T>
-void extractFromMatrixBlk(T & parentMatrix,const int min_i,const int min_j,const int numRows,const int numCols,std::vector<int> & parentRowColIdxVec,const std::string mode,Eigen::MatrixXd & parentExtract){
+void extractFromMatrixBlk(T & parentMatrix,
+			  int min_i,int min_j,
+			  int numRows,int numCols,
+			  std::vector<int> & parentRowColIdxVec,
+			  std::string mode,
+			  Eigen::MatrixXd & parentExtract){
   
   if ((parentRowColIdxVec.size() > 1)) {
     std::vector<int> parentRowColBlk  = extractBlocks(parentRowColIdxVec);
@@ -295,7 +327,14 @@ void extractFromMatrixBlk(T & parentMatrix,const int min_i,const int min_j,const
 
 
 template <typename T>
-void extractFromChild(const int parentSize,const int min_i,const int min_j,const int numRows,const int numCols,T & D,std::vector<int> & parentRowColIdxVec,std::vector<int> & updateIdxVec,const std::string mode,Eigen::MatrixXd & childExtract){
+void extractFromChild(int parentSize,
+		      int min_i,int min_j,
+		      int numRows,int numCols,
+		      T & D,
+		      std::vector<int> & parentRowColIdxVec,
+		      std::vector<int> & updateIdxVec,
+		      std::string mode,
+		      Eigen::MatrixXd & childExtract){
  
   // Extract child block
   if ((parentRowColIdxVec.size() > 1)){
@@ -350,7 +389,13 @@ void extractFromChild(const int parentSize,const int min_i,const int min_j,const
 }
 
 
-Eigen::MatrixXd extractFromLR(Eigen::MatrixXd & U,Eigen::MatrixXd & V,const int min_i,const int min_j, const int numRows,const int numCols,std::vector<int> & rowColIdxVec,const std::string mode,const int numPoints){
+Eigen::MatrixXd extractFromLR(Eigen::MatrixXd & U,
+			      Eigen::MatrixXd & V,
+			      int min_i,int min_j, 
+			      int numRows,int numCols,
+			      std::vector<int> & rowColIdxVec,
+			      std::string mode,
+			      int numPoints){
   
   if (mode == "Cols"){
     Eigen::MatrixXd extractV = Eigen::MatrixXd::Zero(V.cols(),numPoints);
@@ -366,7 +411,9 @@ Eigen::MatrixXd extractFromLR(Eigen::MatrixXd & U,Eigen::MatrixXd & V,const int 
   }
 } 
 
-void storeParentContribution(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,std::string mode){
+void storeParentContribution(HODLR_Matrix & parentHODLR,
+			     HODLR_Tree::node* HODLR_Root,
+			     std::string mode){
   
   if (mode == "PS_Boundary"){
     
@@ -415,7 +462,8 @@ void storeParentContribution(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_
   
 }
  
-void calcPseudoInvInTree(HODLR_Tree::node* HODLR_Root,double tol,int maxRank){
+void calcPseudoInvInTree(HODLR_Tree::node* HODLR_Root,
+			 double tol, int maxRank){
 
   if (HODLR_Root->isLeaf == true)
     return;
@@ -437,7 +485,11 @@ void calcPseudoInvInTree(HODLR_Tree::node* HODLR_Root,double tol,int maxRank){
 
 
 template<typename T>
-void extendAddinTree(const int parentSize,HODLR_Tree::node* HODLR_Root,std::vector<T*> D_Array,std::vector<std::vector<int> > & updateIdxVec_Array,double tol,std::string mode){
+void extendAddinTree(int parentSize,
+		     HODLR_Tree::node* HODLR_Root,
+		     std::vector<T*> D_Array,
+		     std::vector<std::vector<int> > & updateIdxVec_Array,
+		     double tol, std::string mode){
   if (mode == "PS_Boundary"){
     if (HODLR_Root->isLeaf == true){
       int numRows = HODLR_Root->max_i - HODLR_Root->min_i + 1;
@@ -496,7 +548,11 @@ void extendAddinTree(const int parentSize,HODLR_Tree::node* HODLR_Root,std::vect
 }
 
 
-void extendAddLRinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,std::vector<Eigen::MatrixXd*> extendU_Array,std::vector<Eigen::MatrixXd*> extendV_Array,double tol,std::string mode){
+void extendAddLRinTree(HODLR_Matrix & parentHODLR,
+		       HODLR_Tree::node* HODLR_Root,
+		       std::vector<Eigen::MatrixXd*> extendU_Array,
+		       std::vector<Eigen::MatrixXd*> extendV_Array,
+		       double tol, std::string mode){
   assert(extendV_Array.size() == extendU_Array.size());
    
   if (HODLR_Root->isLeaf == true){
@@ -542,7 +598,12 @@ void extendAddLRinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,s
 
 
 template<typename T>
-void extendAddinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,T & extendD,T & D, std::vector<int> & updateIdxVec,double tol,std::string mode){
+void extendAddinTree(HODLR_Matrix & parentHODLR,
+		     HODLR_Tree::node* HODLR_Root,
+		     T & extendD,
+		     T & D, 
+		     std::vector<int> & updateIdxVec,
+		     double tol, std::string mode){
 
   int parentSize = parentHODLR.get_MatrixSize();
   if (HODLR_Root->isLeaf == true){
@@ -659,7 +720,12 @@ void extendAddinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,T &
 }
 
 
-void extendAddLRinTree(HODLR_Matrix & parentHODLR,HODLR_Tree::node* HODLR_Root,Eigen::MatrixXd & extendU,Eigen::MatrixXd & extendV,std::vector<int> & updateIdxVec,double tol,std::string mode){
+void extendAddLRinTree(HODLR_Matrix & parentHODLR,
+		       HODLR_Tree::node* HODLR_Root,
+		       Eigen::MatrixXd & extendU,
+		       Eigen::MatrixXd & extendV,
+		       std::vector<int> & updateIdxVec,
+		       double tol, std::string mode){
    assert(extendV.cols() == extendU.cols());
    
   if (HODLR_Root->isLeaf == true){

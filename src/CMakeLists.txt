@@ -18,6 +18,10 @@ foreach ( ext IN ITEMS "cpp" "cxx" "cc" "c" )
 
 
 add_library(HODLRSolver ${HODLR_src_files})
+if (needed_cxx11_features)
+  target_compile_features(HODLRSolver PRIVATE ${needed_cxx11_features})
+endif ()
+
 
 file(GLOB_RECURSE HEADERS "${HODLR_Path}/include/*.h*")
 install(FILES ${HEADERS} DESTINATION include/)
@@ -36,6 +40,9 @@ foreach ( ext IN ITEMS "cpp" "cxx" "cc" "c" )
 
 # Create a library called sparseSolver which includes the source files defined
 add_library(sparseSolver ${src_files})
+if (needed_cxx11_features)
+  target_compile_features(sparseSolver PRIVATE ${needed_cxx11_features})
+endif ()
 
 file(GLOB_RECURSE HEADERS "${SparseMultiFrontal_SOURCE_DIR}/include/*.h*")
 install(FILES ${HEADERS} DESTINATION include/)

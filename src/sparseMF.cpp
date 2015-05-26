@@ -1,5 +1,9 @@
 #include "sparseMF.hpp"
 
+#include <algorithm>
+#include <fstream>                       
+#include <iostream>   
+
 sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){  
   frontID = 0;
   matrixElmTreePtr = NULL;
@@ -41,9 +45,10 @@ sparseMF::sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix){
   printResultInfo         = false;
   
   int numRows = inputSpMatrix.rows();
+#ifndef NDEBUG
   int numCols = inputSpMatrix.cols();
-  
   assert (numCols == numRows);
+#endif
   
   Sp_MatrixSize = numRows;
   LU_Permutation = Eigen::VectorXd::LinSpaced(Eigen::Sequential,Sp_MatrixSize,0,Sp_MatrixSize - 1);
@@ -232,7 +237,9 @@ void sparseMF::symbolic_Factorize(){
 
 void sparseMF::symbolic_Factorize(eliminationTree::node* root){
   int minIdx = root->min_Col;
+#ifndef NDEBUG
   int maxIdx = root->max_Col;
+#endif
   int nodeSize = root->numCols;
   int endNodeIdx = minIdx + nodeSize - 1;
   std::set<int> idxSet;
@@ -422,7 +429,7 @@ void sparseMF::LU_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* ro
   assembleUFactor(nodeMatrix_U,update_U,root->panelIdxVector);
   assembleLFactor(nodeMatrix_L,update_L,root->panelIdxVector);
   
-};
+}
 
 
 void sparseMF::implicit_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* root){
@@ -475,7 +482,7 @@ void sparseMF::implicit_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::no
   }
   */
   
-};
+}
 
 
 void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* root){
@@ -594,7 +601,7 @@ void sparseMF::fast_CreateFrontalAndUpdateMatrixFromNode(eliminationTree::node* 
       root->nodeMatrix_LU = Eigen::PartialPivLU<Eigen::MatrixXd>(frontalMatrix);
     }
   }
-};
+}
 
 void sparseMF::updateNodeIdxWithChildrenFillins(eliminationTree::node* root,std::set<int> & idxSet){
   if (root->isLeaf == true)
@@ -610,7 +617,7 @@ void sparseMF::updateNodeIdxWithChildrenFillins(eliminationTree::node* root,std:
     for (int j = 0; j < updateIdxVectorSize; j++)
       idxSet.insert(childUpdateIdxVector[j]);
   }
-};
+}
 
 
 void sparseMF::assembleUFactor(const Eigen::MatrixXd & nodeMatrix_U, const Eigen::MatrixXd & update_U, const std::vector<int> & mappingVector){
@@ -777,8 +784,10 @@ void sparseMF::LU_FactorizeMatrix(){
 	LU_CreateFrontalAndUpdateMatrixFromNode(currNodePtr);
       }  
     }
+#ifndef NDEBUG
     double permuteErr = (LU_Permutation -  Eigen::VectorXd::LinSpaced(Eigen::Sequential,Sp_MatrixSize,0,Sp_MatrixSize - 1)).norm();
     assert(permuteErr == 0);
+#endif
     double endTime = clock();
     LU_FactorizationTime = (endTime - startTime)/CLOCKS_PER_SEC;
     
@@ -806,8 +815,10 @@ void sparseMF::implicit_FactorizeMatrix(){
 	implicit_CreateFrontalAndUpdateMatrixFromNode(currNodePtr);
       }   
     }
+#ifndef NDEBUG
     double permuteErr = (LU_Permutation -  Eigen::VectorXd::LinSpaced(Eigen::Sequential,Sp_MatrixSize,0,Sp_MatrixSize - 1)).norm();
     assert(permuteErr == 0);
+#endif
     implicit_Factorized = true;
     double endTime = clock();
     implicit_FactorizationTime = (endTime - startTime)/CLOCKS_PER_SEC;
@@ -829,8 +840,10 @@ void sparseMF::fast_FactorizeMatrix(){
 	fast_CreateFrontalAndUpdateMatrixFromNode(currNodePtr);
       }   
     }
+#ifndef NDEBUG
     double permuteErr = (LU_Permutation -  Eigen::VectorXd::LinSpaced(Eigen::Sequential,Sp_MatrixSize,0,Sp_MatrixSize - 1)).norm();
     assert(permuteErr == 0);
+#endif
     fast_Factorized = true;
     double endTime = clock();
     fast_FactorizationTime = (endTime - startTime)/CLOCKS_PER_SEC;

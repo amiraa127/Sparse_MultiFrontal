@@ -2,7 +2,7 @@
 #include "Eigen_IML_Vector.hpp"
 #include "Eigen_IML_Matrix.hpp"
 #include "fastSparse_IML_Precond.hpp"
-#include "diag_IML_Precond.hpp"
+#include "diag_IML_Precond_sparse.hpp"
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <iostream>
@@ -74,7 +74,7 @@ int main(){
   std::cout<<"tolerance achieved : "<<tol<<std::endl;
 
   /*
-  diag_IML_Precond diagPrecond(inputSpMatrix);
+  diag_IML_Precond_sparse diagPrecond(inputSpMatrix);
   Eigen_IML_Vector x2 = diagPrecond.solve(RHS);
   H = Eigen::MatrixXd::Zero(restart+1,restart);
   maxit = 1000;

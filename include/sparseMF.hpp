@@ -1,10 +1,7 @@
-#ifndef SPARSE_MF_HPP
-#define SPARSE_MF_HPP
+#ifndef SMF_SPARSE_MF_HPP
+#define SMF_SPARSE_MF_HPP
 
-//Standard C++
-#include <algorithm>
-#include <fstream>                       
-#include <iostream>                      
+//Standard C++                   
 #include <set>      
 #include <string>                                              
 #include <vector> 
@@ -18,13 +15,12 @@
 #include "gmres.h" 
 
 //SCOTCH
-#include "scotch.h"
+#include <scotch.h>
 
 //Custom Dependencies 
 #include "HODLR_Matrix.hpp" 
 #include "eliminationTree.hpp"
-#include "helperFunctions.hpp"
-#include "HODLR_Matrix.hpp"
+#include "interfaceEigen.hpp"
 #include "extendAdd.hpp"
 
 class sparseMF{
