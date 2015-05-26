@@ -1,8 +1,6 @@
 #include "eliminationTree.hpp"
 
-#include <iostream>
-#include <cassert>
-
+#include "output.hpp"
 
 namespace smf
 {
@@ -203,7 +201,7 @@ namespace smf
   void eliminationTree::createTree(const std::vector<int> & rangVec,
 				   const std::vector<int> & treeVec)
   {
-    std::cout<<"creatingTree"<<std::endl;
+    msg_dbg("creatingTree");
     assert(treeVec.size() == numBlocks);
     assert(rangVec.size() == numBlocks + 1);
     std::vector<node*> blockPtrVec(numBlocks);
@@ -261,9 +259,9 @@ namespace smf
     std::vector<int> treeVec   = createTreeVec(parentVec,rangVec);
     build_eliminationTree(input_NumCols,treeVec.size(),rangVec,treeVec);
     for (unsigned int i = 0; i < treeVec.size(); i++)
-      std::cout<<rangVec[i]<<" "<<treeVec[i]<<std::endl;
-    std::cout<<rangVec[treeVec.size()]<<std::endl;
-    std::cout<<"done"<<std::endl;
+      msg(rangVec[i]," ",treeVec[i]);
+    msg(rangVec[treeVec.size()]);
+    msg("done");
 
   }
 

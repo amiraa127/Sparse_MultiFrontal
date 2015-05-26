@@ -1,9 +1,10 @@
 #include "interfaceEigen.hpp"
 
 #include <fstream>
-#include <iostream> 
 #include <algorithm>
 #include <set>
+
+#include "output.hpp"
 
 namespace smf
 {
@@ -47,26 +48,19 @@ namespace smf
     saveSparseMatrixIntoMtx(inputMatrix,matrixFileName);
     // Generate graph of sparse matrix
     std::string graphGenCommand = "gcv -im " + matrixFileName + " -os " + graphFileName;
-    if (system(graphGenCommand.c_str()) != 0){
-      std::cout<<"Error! Could not generate graph from sparse matrix."<<std::endl;
-      exit(EXIT_FAILURE);
-    }
+    
+    assert_msg(system(graphGenCommand.c_str()) == 0, 
+	      "Could not generate graph from sparse matrix.");
     
     // Initialize graph
-    if (SCOTCH_graphInit(graphPtr) != 0){
-      std::cout<<"Error! Could not initialize graph."<<std::endl;
-      exit(EXIT_FAILURE);
-    }
+    assert_msg(SCOTCH_graphInit(graphPtr) == 0, 
+	      "Could not initialize graph.");
     
     // Load graph from file
-    if ((filePtr = fopen(graphFileName.c_str(),"r")) == NULL){
-      std::cout<<"Error! Could not open file."<<std::endl;
-      exit(EXIT_FAILURE);
-    }
-    if (SCOTCH_graphLoad(graphPtr, filePtr,0,0) != 0){
-      std::cout<<"Error! Could not load graph."<<std::endl;
-      exit(EXIT_FAILURE);
-    }
+    assert_msg(filePtr = fopen(graphFileName.c_str(), "r"), 
+	      "Could not open file.");
+    assert_msg(SCOTCH_graphLoad(graphPtr, filePtr,0,0) == 0, 
+	      "Could not load graph.");
     fclose(filePtr);
   }
   
@@ -115,17 +109,13 @@ namespace smf
 
     // Initialize partitioning strategy
     SCOTCH_Strat* partStratPtr = SCOTCH_stratAlloc() ;
-    if(SCOTCH_stratInit(partStratPtr) != 0){
-      std::cout<<"Error! Could not initialize partitioning strategy."<<std::endl;
-      exit(EXIT_FAILURE);
-    }
+    assert_msg(SCOTCH_stratInit(partStratPtr) == 0, 
+	      "Could not initialize partitioning strategy.");
 
     // Partition graph
     SCOTCH_Num* parttab = (SCOTCH_Num*)calloc(matrixSize,sizeof(SCOTCH_Num));
-    if(SCOTCH_graphPart(&adjGraph,2,partStratPtr,parttab) !=0 ){
-      std::cout<<"Error! Partitioning Failed."<<std::endl;
-      exit(EXIT_FAILURE);
-    }
+    assert_msg(SCOTCH_graphPart(&adjGraph,2,partStratPtr,parttab) == 0, 
+	      "Partitioning Failed.");
 
     // Order the global inverse permutation array
     std::vector<SCOTCH_Num> partVec(parttab,parttab + matrixSize);
@@ -217,16 +207,12 @@ namespace smf
 
     // Initialize ordering strategy                                           
     SCOTCH_Strat* orderingStratPtr = SCOTCH_stratAlloc() ;
-    if(SCOTCH_stratInit(orderingStratPtr) != 0){
-      std::cout<<"Error! Could not initialize ordering strategy."<<std::endl;
-      exit(EXIT_FAILURE);
-    }
+    assert_msg(SCOTCH_stratInit(orderingStratPtr) == 0, 
+	      "Could not initialize ordering strategy.");
     
     SCOTCH_Num stratFlag = SCOTCH_STRATLEVELMIN | SCOTCH_STRATLEVELMAX ;
-    if(SCOTCH_stratGraphOrderBuild(orderingStratPtr,stratFlag,1,0.01) != 0){
-      std::cout<<"Error! Could not initialize ordering strategy string."<<std::endl;
-      exit(EXIT_FAILURE);
-    }
+    assert_msg(SCOTCH_stratGraphOrderBuild(orderingStratPtr,stratFlag,1,0.01) == 0,
+	      "Could not initialize ordering strategy string.");
 
     // Initialize variables                                                    
     SCOTCH_Num* permtab = (SCOTCH_Num*)calloc(numVertices,sizeof(SCOTCH_Num));
@@ -236,10 +222,8 @@ namespace smf
     SCOTCH_Num* cblknbr = (SCOTCH_Num*)calloc(1,sizeof(SCOTCH_Num));
     
     // Reorder graph                                                                      
-    if (SCOTCH_graphOrder(&adjGraph, orderingStratPtr, permtab, peritab, cblknbr, rangtab, treetab) != 0){
-      std::cout<<"Error! Graph ordering failed."<<std::endl;
-      exit(EXIT_FAILURE);
-    }
+    assert_msg(SCOTCH_graphOrder(&adjGraph, orderingStratPtr, permtab, peritab, cblknbr, rangtab, treetab) == 0,
+	      "Graph ordering failed.");
 
     // Find the range of columns corresponding to root supernode                          
     int rootSeparatorIndex = *cblknbr;
@@ -264,15 +248,11 @@ namespace smf
       
       Eigen::SimplicialLDLT<Eigen::SparseMatrix<double> > LDLTSolver;
       LDLTSolver.compute(leafMatrix);
-      if(LDLTSolver.info() != Eigen::Success){
-	std::cout<<"Error! Factorization failed."<<std::endl;
-	exit(EXIT_FAILURE);
-      }
+      assert_msg(LDLTSolver.info() == Eigen::Success,
+		"Factorization failed.");
       Eigen::SparseMatrix<double> solverSoln = LDLTSolver.solve(leafToRoot_T);
-      if(LDLTSolver.info() != Eigen::Success){
-	std::cout<<"Error! Solving failed."<<std::endl;
-	exit(EXIT_FAILURE);
-      }
+      assert_msg(LDLTSolver.info() == Eigen::Success,
+		"Solving failed.");
       Eigen::SparseMatrix<double> sparseSchur = rootSeparatorMatrix - leafToRoot * solverSoln;
       
       // Recursively Partition Schur Complement

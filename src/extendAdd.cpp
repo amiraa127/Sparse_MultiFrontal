@@ -1,4 +1,6 @@
 #include "extendAdd.hpp"
+#include "output.hpp"
+
 
 namespace smf
 {
@@ -62,9 +64,8 @@ namespace smf
 	}
       }
       calcPseudoInvInTree(parentHODLR.get_indexTree().rootNode,tol,maxRank);
-    }else{    
-      std::cout<<"Error! Unknown operation mode!"<<std::endl;
-      exit(EXIT_FAILURE);
+    } else {    
+      error_exit("Unknown operation mode!");
     }
   }
 
@@ -84,8 +85,7 @@ namespace smf
       HODLR_Matrix extendD_HODLR;
       extendAddinTree(parentHODLR,parentHODLR.get_indexTree().rootNode,extendD_HODLR,D_HODLR,updateIdxVec,tol,mode);  
     }else{
-      std::cout<<"Error! Unknown operation mode!"<<std::endl;
-      exit(EXIT_FAILURE);
+      error_exit("Unknown operation mode!");
     }
     parentHODLR.freeMatrixData();
   }
@@ -107,8 +107,7 @@ namespace smf
       Eigen::MatrixXd extendD;
       extendAddinTree(parentHODLR,parentHODLR.get_indexTree().rootNode,extendD,D,updateIdxVec,tol,mode);
     }else{
-      std::cout<<"Error! Unknown operation mode!"<<std::endl;
-      exit(EXIT_FAILURE);
+      error_exit("Unknown operation mode!");
     }
     parentHODLR.freeMatrixData();
   }
@@ -201,8 +200,7 @@ namespace smf
 	result.block(extendIdxVec[extractBlk[i]],0,numBlkRows,child_NumCols) = child.block(extractBlk[i],0,numBlkRows,child_NumCols);
       }
     }else{
-      std::cout<<"Error! Unknown operation mode."<<std::endl;
-      exit(EXIT_FAILURE);
+      error_exit("Unknown operation mode!");
     }
     return result;
   }
@@ -333,8 +331,7 @@ namespace smf
 	else if (mode == "Rows")
 	  parentExtract.block(0,currBlkStartIdx,numCols,blkSize) = parentMatrix.block(min_i + parentRowColIdxVec[currBlkStartIdx],min_j,blkSize,numCols).transpose();
 	else{
-	  std::cout<<"Error! Unknown Operation mode."<<std::endl;
-	  exit(EXIT_FAILURE);
+	  error_exit("Unknown operation mode!");
 	}
       }
     }
@@ -360,8 +357,7 @@ namespace smf
       else if (mode == "Rows")
 	offset = min_i;
       else{
-	std::cout<<"Error! Unknown Operation mode."<<std::endl;
-	exit(EXIT_FAILURE);
+	error_exit("Unknown operation mode!");
       }
 
       std::vector<int> childRowColIdxVec = createChildExractVec(parentRowColIdxVec,updateIdxVec,offset);
@@ -397,8 +393,7 @@ namespace smf
 	  Eigen::MatrixXd childExtractRows_RowExtend = extend(blkExtendVec,parentBlkSize,childExtractRows_ColExtend,0,0,childExtractRows_ColExtend.rows(),childExtractRows_ColExtend.cols(),"Rows");
 	  childExtract.block(0,localStartIdx,numCols,parentBlkSize) = childExtractRows_RowExtend.transpose();	
 	}else{
-	  std::cout<<"Error! Unknown Operation mode."<<std::endl;
-	  exit(EXIT_FAILURE);
+	  error_exit("Unknown operation mode!");
 	}      
       }
     }
@@ -422,8 +417,8 @@ namespace smf
       extractFromMatrixBlk(U,min_i,0,numRows,U.cols(),rowColIdxVec,"Rows",extractU);
       return V.block(min_j,0,numCols,V.cols()) * extractU;
     }else{
-      std::cout<<"Error! Unknown Operation mode."<<std::endl;
-      exit(EXIT_FAILURE);
+      error_exit("Unknown operation mode!");
+      return Eigen::MatrixXd::Zero(0,0);
     }
   } 
 
@@ -473,8 +468,7 @@ namespace smf
       storeParentContribution(parentHODLR,HODLR_Root->right,mode);
 
     }else{
-      std::cout<<"Error! Unkown operation mode."<<std::endl;
-      exit(EXIT_FAILURE);
+      error_exit("Unknown operation mode!");
     }
   }
   
@@ -608,8 +602,7 @@ namespace smf
       extendAddLRinTree(parentHODLR,HODLR_Root->right,extendU_Array,extendV_Array,tol,mode);
     
     }else{
-      std::cout<<"Error! Unkown operation mode."<<std::endl;
-      exit(EXIT_FAILURE);
+      error_exit("Unknown operation mode!");
     }
   }
 
@@ -730,8 +723,7 @@ namespace smf
       extendAddinTree(parentHODLR,HODLR_Root->right,extendD,D,updateIdxVec,tol,mode);
       
     }else{
-      std::cout<<"Error! Unkown operation mode."<<std::endl;
-      exit(EXIT_FAILURE);
+      error_exit("Unknown operation mode!");
     }
   }
 
@@ -837,8 +829,7 @@ namespace smf
       extendAddLRinTree(parentHODLR,HODLR_Root->right,extendU,extendV,updateIdxVec,tol,mode);
     
     }else{
-      std::cout<<"Error! Unkown operation mode."<<std::endl;
-      exit(EXIT_FAILURE);
+      error_exit("Unknown operation mode!");
     }
   }
 

@@ -26,6 +26,17 @@
 namespace smf
 {
   
+  struct sparseMF_options
+  {
+    int fast_MatrixSizeThresh;
+    int fast_HODLR_LeafSize;
+    int fast_BoundaryDepth;
+    int fast_MaxRank;
+    double fast_LR_Tol;
+    double fast_MinPivot;
+  };
+  
+  
   /// \brief Base class for sparse Multi-Frontal solvers
   class sparseMF{
 
@@ -34,8 +45,11 @@ namespace smf
     bool testResults;
     bool printResultInfo;
     
-    /// constructor
-    sparseMF(Eigen::SparseMatrix<double> & inputSpMatrix);
+    /// default constructor
+    sparseMF(Eigen::SparseMatrix<double>& inputSpMatrix);
+    
+    /// constructor taking a set of options as second argument
+    sparseMF(Eigen::SparseMatrix<double>& inputSpMatrix, const sparseMF_options& options);
     
     /// destructor
     virtual ~sparseMF();
@@ -69,44 +83,15 @@ namespace smf
     double averageLargeFrontSize;
     int numLargeFronts;
 
-    int fast_MatrixSizeThresh;
-    int fast_HODLR_LeafSize;
-    int fast_BoundaryDepth;
-    int fast_MaxRank;
-    double fast_LR_Tol;
-    double fast_MinPivot;
-
+    sparseMF_options options;
     
     bool symbolic_Factorized;
     bool LU_Factorized;
     bool implicit_Factorized;
     bool fast_Factorized;
-    
-    double matrixReorderingTime;
-    double SCOTCH_ReorderingTime;
-    double matrixGraphConversionTime;
 
-    double symbolic_FactorizationTime;
-
-    double implicit_FactorizationTime;
-    double implicit_SolveTime;
-    double implicit_TotalTime;
-    double implicit_ExtendAddTime;
-    double implicit_SymbolicFactorTime;
-
-    double fast_FactorizationTime;
-    double fast_SolveTime;
-    double fast_TotalTime;
-    double fast_ExtendAddTime;
-    double fast_SymbolicFactorTime;
-
-    double LU_FactorizationTime;
-    double LU_SolveTime;
-    double LU_TotalTime;
-    double LU_ExtendAddTime;
-    double LU_SymbolicFactorTime;
-    double LU_AssemblyTime;
-
+    // set initial values
+    void init(Eigen::SparseMatrix<double>& inputSpMatrix);
 
     /*************************************Reordering Related Functions*******************************/
     void reorderMatrix(Eigen::SparseMatrix<double> & inputSpMatrix);
