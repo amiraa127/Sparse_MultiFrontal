@@ -18,7 +18,7 @@ add_executable(IML_Test test.cpp)
 #add_executable(bench EigenVsBLAS.cpp)
 
 # test should link to solver libraries
-target_link_libraries(IML_Test sparseSolver HODLRSolver ${SCOTCH_LIBRARY} ${SCOTCH_scotcherr_LIBRARY} ${SCOTCH_scotcherrexit_LIBRARY} ${CPPUNIT_LIBRARIES} ${PASTIX_LIBRARIES})
+target_link_libraries(IML_Test sparseSolver HODLRSolver ${SCOTCH_LIBRARIES} ${CPPUNIT_LIBRARIES} ${PASTIX_LIBRARIES})
 
 #target_link_libraries(bench ${BLAS_LIBRARIES})
 

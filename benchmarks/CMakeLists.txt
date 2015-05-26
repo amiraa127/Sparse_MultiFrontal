@@ -3,6 +3,8 @@ include_directories(${SparseMultiFrontal_SOURCE_DIR}/include)
 include_directories(${EIGEN_INCLUDE_DIRS})
 include_directories(${SCOTCH_INCLUDE_DIRS})
 include_directories(${PASTIX_INCLUDE_DIRS})
+include_directories(${HODLR_Path}/include/)
+include_directories(${HODLR_Path}/IML/include/)
 
 
 # Add HODLR library
@@ -19,7 +21,7 @@ add_executable(sparseBenchmarks benchmarks.cpp)
 #add_executable(bench EigenVsBLAS.cpp)
 
 # test should link to solver libraries
-target_link_libraries(sparseBenchmarks sparseSolver HODLRSolver  ${SCOTCH_LIBRARY} ${SCOTCH_scotcherr_LIBRARY} ${SCOTCH_scotcherrexit_LIBRARY} ${CPPUNIT_LIBRARIES}  ${PASTIX_LIBRARIES})
+target_link_libraries(sparseBenchmarks sparseSolver HODLRSolver  ${SCOTCH_LIBRARIES} ${CPPUNIT_LIBRARIES}  ${PASTIX_LIBRARIES})
 
 
 # Tests to run

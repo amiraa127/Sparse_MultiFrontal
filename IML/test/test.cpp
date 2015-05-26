@@ -1,13 +1,20 @@
+#include <iostream>
+
 #include <unsupported/Eigen/SparseExtra>
+#include <Eigen/Dense>
+#include <Eigen/Sparse>
+
+#include "sparseMF.hpp"
 #include "Eigen_IML_Vector.hpp"
 #include "Eigen_IML_Matrix.hpp"
 #include "fastSparse_IML_Precond.hpp"
 #include "diag_IML_Precond_sparse.hpp"
-#include <Eigen/Dense>
-#include <Eigen/Sparse>
-#include <iostream>
+
 #include "gmres.h"
-int main(){
+
+int main()
+{
+  using namespace smf;
 
   std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
   std::cout<<"Testing fast iterative solver on a 100k matrix...."<<std::endl;

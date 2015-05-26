@@ -1,21 +1,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include "scotch.h"
+#include <string>
+#include <random>
+#include <chrono>
+
+#include <scotch.h>
+
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
-#include "helperFunctions.hpp"
-#include "HODLR_Matrix.hpp"
-#include "sparseMF.hpp"
-#include "matrixIO.hpp"
-#include <string>
+
 #include <cppunit/ui/text/TestRunner.h>
 #include <cppunit/TestCase.h>
 #include <cppunit/TestCaller.h>
 #include <cppunit/extensions/HelperMacros.h>
-#include <random>
-#include <chrono>
+
+#include "sparseMF.hpp"
+#include "interfaceEigen.hpp"
+#include "HODLR_Matrix.hpp"
+#include "matrixIO.hpp"
+
 #define thresh 30
+
+using namespace smf;
 
 /*This file contains various tests for the Sparse Solver package*/
 

@@ -1,16 +1,17 @@
-#include "sparseMF.hpp"
-#include "matrixIO.hpp"
-#include "Eigen/Sparse"
-#include "Eigen/Dense"
-#include "helperFunctions.hpp" 
-
-#include "testSolve.hpp"
-
 #include <iostream>
 
+#include <Eigen/Sparse>
+#include <Eigen/Dense>
 
+#include "sparseMF.hpp"
+#include "matrixIO.hpp"
+#include "interfaceEigen.hpp" 
+#include "testSolve.hpp"
 
-int main(int argc, char* argv[]){
+int main(int argc, char* argv[])
+{
+  using namespace smf;
+  
   Eigen::SparseMatrix<double> inputSpMatrix;
   std::cout<<"_________________________________________"<<std::endl;
   std::cout<<"Benchmarking structured mesh matrices"<<std::endl;

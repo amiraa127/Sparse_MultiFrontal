@@ -13,8 +13,8 @@ if(CPPUNIT_INCLUDE_DIR)
   find_library(CPPUNIT_LIBRARY cppunit HINTS ${CPPUNIT_INCLUDE_DIR}/../lib $ENV{CPPUNIT_LIB})
   
   # read version nr rom Portability.h file
-  file(STRINGS "${CPPUNIT_INCLUDE_DIR}/Portability.h" cppunit_version_line 
-       REGEX "#define CPPUNIT_VERSION [0-9.]+" LIMIT_COUNT 1)
+  file(STRINGS "${CPPUNIT_INCLUDE_DIR}/cppunit/Portability.h" cppunit_version_line 
+       REGEX "#define CPPUNIT_VERSION \"[0-9.]+\"" LIMIT_COUNT 1)
   if(cppunit_version_line)
     string(REGEX MATCH "[0-9.]+" cppunit_version ${cppunit_version_line})
     set(CPPUNIT_VERSION "${cppunit_version}")
