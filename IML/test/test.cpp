@@ -71,7 +71,7 @@ int main()
   //precond.printResultInfo = false;
   std::cout<<"RHS norm = "<<RHS.norm()<<std::endl;
   double tol = 1e-4;
-  int result, maxit = 5000,restart = 32;
+  int result = -1, maxit = 5000,restart = 32;
   Eigen::MatrixXd H =Eigen::MatrixXd::Zero(restart+1,restart);
   //result = GMRES(inputSpMatrix,x0,RHS,precond,H,restart,maxit,tol);
   //precond.printResultInfo = true;
