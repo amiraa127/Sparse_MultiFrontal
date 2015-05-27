@@ -9,16 +9,18 @@
 #include <Eigen/Dense>
 
 #include "sparseMF.hpp"
+#include "output.hpp"
 
 namespace smf
 {
 
-  void testSolveSp(Eigen::SparseMatrix<double> & inputSpMatrix,std::string mode){
-    std::cout<<"MatrixSize = "<<inputSpMatrix.rows()<<std::endl;
+  void testSolveSp(Eigen::SparseMatrix<double> & inputSpMatrix,std::string mode)
+  {
+    msg("MatrixSize = ", inputSpMatrix.rows());
     Eigen::VectorXd exactSoln_Sp = Eigen::VectorXd::LinSpaced(Eigen::Sequential,inputSpMatrix.rows(),-2,2);
     Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
     sparseMF solver(inputSpMatrix);
-    solver.printResultInfo = true;
+    solver.setPrintResultInfo(true);
     Eigen::MatrixXd soln_Sp;
     if (mode == "fast_Implicit")
       soln_Sp = solver.fast_Solve(RHS_Sp);                                                                                                                                                
@@ -29,11 +31,10 @@ namespace smf
     else if (mode == "implicit")
       soln_Sp = solver.implicit_Solve(RHS_Sp);
     else{
-      std::cout<<"Error! Unknown operation mode"<<std::endl;
-      exit(EXIT_FAILURE);
+      error_exit("Unknown operation mode");
     }  
     double error = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
-    std::cout<<"Relative Error = "<<error<<std::endl;
+    msg("Relative Error = ", error);
   }
 
 } // end namespace smf

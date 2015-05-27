@@ -5,47 +5,119 @@
 #include <map>
 #include <ctime>
 
-#ifndef ENABLE_TIMER
+/** \addtogroup timer 
+ *  @{
+ */
+
+/** 
+ * \def SMF_ENABLE_TIMER
+ * \brief The preprocessor constant enables the timer functionality
+ * 
+ * If the value is set to 1 the class \ref smf::Timer provides implemented
+ * methods for time measurements, otherwise the class is empty.
+ **/
+#ifndef SMF_ENABLE_TIMER
   #ifndef NDEBUG
-    #define ENABLE_TIMER 0
+    #define SMF_ENABLE_TIMER 1
   #else
-    #define ENABLE_TIMER 1
+    #define SMF_ENABLE_TIMER 0
   #endif
 #endif
 
+/** @}*/
 
 namespace smf 
 {
   
-  /// Helper class to distinguish between different time measurement methods
+  /** \addtogroup timer 
+  *  @{
+  */
+  
+  /// \brief Static storage for time measurements
+  /**
+   * This class allows to store measurements based on a (key, value) pair
+   * in a static map. It provides two methods: \ref store and \ref get
+   * to access the map.
+   * 
+   * Example:
+   * ~~~~~~~~~~~~~~~~~~~
+   * TimerMap::store("foo", 0.1);
+   * TimerMap::get("foo");         // => 0.1
+   * ~~~~~~~~~~~~~~~~~~~
+   **/
   class TimerMap : public std::map<std::string, double>
   {
   public:
+    /// \brief call this method to store a measurement \p value for the given 
+    /// \p key in the map.
     static void store(std::string key, double value) 
     { 
       initIntern();
       (*singlett)[key] += value;
     }
     
+    /// Return the value stored for a given \p key
     static double get(std::string key)
     {
+      initIntern();
       return (*singlett)[key];
+    }
+    
+    /// Delete all stored values in the map
+    static void reset()
+    {
+      initIntern();
+      singlett->clear();
     }
 
   private:
+    // hidden constructor
     TimerMap() {}
     
+    // must be called before access to the singlett.
     static void initIntern() 
     {
       if (singlett == NULL)
 	singlett = new TimerMap;
     }
     
-    /// pointer to the singleton that contains the data
+    // pointer to the singleton that contains the data
     static TimerMap* singlett;
   };
   
   
+  /// Interface for \ref TimerMap::get 
+  inline double get_time(std::string key)
+  {
+    return TimerMap::get(key);
+  }
+  
+  
+#if SMF_ENABLE_TIMER
+  /// \brief Class to enable timing facilities.
+  /**
+   * Constructs a timer object that measures the time during the livetime
+   * of the object. When the destructor is called, the measured time is
+   * written into the \ref TimerMap static object, using the given key in
+   * the constructor.
+   * 
+   * Example:
+   * ~~~~~~~~~~~~~~~~~~~~
+   * void foo() {
+   *   Timer t("foo");
+   *   // do something time consuming...
+   * }
+   * ~~~~~~~~~~~~~~~~~~~~
+   * At the end of the scope the timer adds an entry "foo" into the 
+   * \ref TimerMap with the value of the measured time in the function foo.
+   * 
+   * With \ref start() and \ref stop() you can control the timer, i.e. break
+   * the timer to measure only in a part of the function scope. With 
+   * \ref elapsed() the already mesured time can be returned.
+   * 
+   * This class has an implementation only if the preprocessor constant 
+   * \ref SMF_ENABLE_TIMER is set to 1.
+   **/
   class Timer
   {
   public:
@@ -60,55 +132,58 @@ namespace smf
 	start();
     }
     
+    
     /// destructor stores time measurement in TimerMap
     ~Timer()
     {
-#if ENABLE_TIMER
       TimerMap::store(key, elapsed());
-#endif
     }
+    
 
+    /// stop the timer an store the measured time in the variable intermediate.
     inline void stop()
     {
-#if ENABLE_TIMER
       if (started)
 	intermediate += (clock() - startTime)/CLOCKS_PER_SEC;
       started = false;
-#endif
     }
     
-    /// resets the timer to current time
+    
+    /// resets the timer to current time.
     inline void start()
     {
-#if ENABLE_TIMER
       startTime = clock();
       started = true;
-#endif
     }
+    
 
     /// returns the elapsed time (from construction or last reset) to now in seconds
     inline double elapsed() const
     {
-#if ENABLE_TIMER
       return intermediate + (started ? (clock() - startTime)/CLOCKS_PER_SEC : 0.0);
-#else
-      return 0.0;
-#endif
     }
     
   private:
-    // key value to store measurement in TimerMap
-    std::string key;
+    std::string key;		///< key value to store measurement in TimerMap
     
-    /// begin value for measurement
-    double startTime;
-    
-    /// indicates whether timer is started or not
-    bool started;
-    
-    /// store intermediate measurements
-    double intermediate;
+    double startTime;		///< begin value for measurement
+    bool   started;		///< indicates whether timer is started or not
+    double intermediate;	///< store intermediate measurements
   };
+#else
+  /// \cond HIDDEN_SYMBOLS
+  // in release mode the timer object does nothing
+  struct Timer
+  {
+    Timer(std::string, bool = true) {}
+    inline void stop() const {}
+    inline void start() const {}
+    inline double elapsed() const { return 0.0; }
+  };
+  /// \endcond
+#endif
+  
+  /** @}*/
   
 } // end namespace timer
 

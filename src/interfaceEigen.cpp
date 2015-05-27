@@ -57,7 +57,7 @@ namespace smf
 	      "Could not initialize graph.");
     
     // Load graph from file
-    assert_msg(filePtr = fopen(graphFileName.c_str(), "r"), 
+    assert_msg((filePtr = fopen(graphFileName.c_str(), "r")), 
 	      "Could not open file.");
     assert_msg(SCOTCH_graphLoad(graphPtr, filePtr,0,0) == 0, 
 	      "Could not load graph.");

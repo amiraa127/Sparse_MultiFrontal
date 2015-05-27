@@ -15,6 +15,7 @@
 int main()
 {
   using namespace smf;
+  using namespace iml;
 
   std::cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++"<<std::endl;
   std::cout<<"Testing fast iterative solver on a 100k matrix...."<<std::endl;
@@ -63,18 +64,18 @@ int main()
   Eigen_IML_Vector RHS = Eigen::MatrixXd::Random(inputSpMatrix.rows(),1);
   
   fastSparse_IML_Precond precond(inputSpMatrix);
-  precond.printResultInfo = true;
+  precond.setPrintResultInfo(true);
   //Eigen_IML_Vector x1      = precond.implicit_Solve(RHS);
   //Eigen_IML_Vector x0      = precond.solve(RHS);
   //Eigen_IML_Vector soln_Sp = precond.iterative_Solve(RHS,10,1e-10,1e-1);
   //Eigen_IML_Vector x0 = Eigen::MatrixXd::Zero(inputSpMatrix.rows(),1);
-  //precond.printResultInfo = false;
+  //precond.setPrintResultInfo(false);
   std::cout<<"RHS norm = "<<RHS.norm()<<std::endl;
   double tol = 1e-4;
   int result = -1, maxit = 5000,restart = 32;
   Eigen::MatrixXd H =Eigen::MatrixXd::Zero(restart+1,restart);
   //result = GMRES(inputSpMatrix,x0,RHS,precond,H,restart,maxit,tol);
-  //precond.printResultInfo = true;
+  //precond.setPrintResultInfo(true);
   Eigen::MatrixXd y = precond.iterative_Solve(RHS,maxit,1e-6,1e-1);
   std::cout<<"GMRES flag = "<<result<<std::endl;
   std::cout<<"iterations performed "<<maxit<<std::endl;

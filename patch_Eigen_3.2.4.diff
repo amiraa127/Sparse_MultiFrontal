@@ -1,0 +1,6 @@
+71,72c71,72
+<   private:
+<     Index nonZeros() const;
+---
+>   public:
+>     Index nonZeros() const { return 0; }

@@ -315,7 +315,7 @@ public:
     Eigen::VectorXd exactSoln_Sp = Eigen::MatrixXd::Random(12,1);
     Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
     sparseMF solver(inputSpMatrix);
-    solver.printResultInfo = true;
+    solver.setPrintResultInfo(true);
     Eigen::MatrixXd soln_Sp = solver.LU_Solve(RHS_Sp);
     double error = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
     std::cout<<error<<std::endl;
@@ -347,7 +347,7 @@ public:
     Eigen::VectorXd exactSoln_Sp = Eigen::MatrixXd::Random(12,1);
     Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
     sparseMF solver(inputSpMatrix);
-    solver.printResultInfo = true;
+    solver.setPrintResultInfo(true);
     Eigen::MatrixXd soln_Sp = solver.implicit_Solve(RHS_Sp);
     double error = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
     std::cout<<error<<std::endl;
@@ -361,7 +361,7 @@ public:
     Eigen::VectorXd exactSoln_Sp = Eigen::MatrixXd::Random(inputSpMatrix.rows(),1);
     Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
     sparseMF solver(inputSpMatrix);
-    solver.printResultInfo = true;
+    solver.setPrintResultInfo(true);
     Eigen::MatrixXd soln_Sp = solver.LU_Solve(RHS_Sp);
     double error = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
     std::cout<<error<<std::endl;
@@ -375,7 +375,7 @@ public:
     Eigen::VectorXd exactSoln_Sp = Eigen::MatrixXd::Random(inputSpMatrix.rows(),1);
     Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
     sparseMF solver(inputSpMatrix);
-    solver.printResultInfo = true;
+    solver.setPrintResultInfo(true);
     Eigen::MatrixXd soln_Sp = solver.implicit_Solve(RHS_Sp);
     double error = (exactSoln_Sp - soln_Sp).norm()/exactSoln_Sp.norm();
     std::cout<<error<<std::endl;
@@ -392,7 +392,7 @@ public:
     Eigen::VectorXd exactSoln_Sp = Eigen::VectorXd::LinSpaced(Eigen::Sequential,inputSpMatrix.rows(),-2,2); 
     Eigen::VectorXd RHS_Sp = inputSpMatrix * exactSoln_Sp;
     sparseMF solver(inputSpMatrix);
-    solver.printResultInfo = true;
+    solver.setPrintResultInfo(true);
     //Eigen::MatrixXd soln_Sp = solver.fast_Solve(RHS_Sp);
     Eigen::MatrixXd soln_Sp_implicit = solver.implicit_Solve(RHS_Sp);
 
@@ -443,7 +443,7 @@ int main(int argc, char* argv[]){
   //denseHODLR.set_LRTolerance(1e-1);
   //solver.printLevelAccuracy = true;
   //solver.printLevelRankInfo = true;
-  denseHODLR.printResultInfo = true;
+  denseHODLR.setPrintResultInfo(true);
   //Eigen::MatrixXd dummy(denseSchur);
   //saveMatrixXdToBinary(dummy,"data/Schur_FETI/schur400k.bin");
   Eigen::VectorXd RHS = denseSchur * exactSoln;

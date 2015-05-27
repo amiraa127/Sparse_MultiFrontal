@@ -25,26 +25,62 @@
 
 namespace smf
 {
+  /** \addtogroup solver
+  *  @{
+  */
   
+  /// \brief Container to hold options for the sparseMF solver.
   struct sparseMF_options
   {
+    /// \brief This parameter determines where to switch from dense algebra to 
+    /// fast H algebra. 
+    /** 
+    * Set this parameter based on your time and memory constraints. 
+    * A small value will decrease the memory requirement significantly. But if 
+    * the value is too small, the accuracy and the running time might suffer 
+    * significantly. If you are dealing with a complicated 3D problem, you will 
+    * likely need to increase this threshold. See the paper for sample thresholds 
+    * for some problems and their respective memory and time performance. 
+    * **Default:** 3000
+    **/
     int fast_MatrixSizeThresh;
+    
+    /// \brief This value should typically be 1/10th of the value \ref fast_MatrixSizeThresh.
+    /** **Default:** 400 */
     int fast_HODLR_LeafSize;
+    
+    /// \brief This value refers to the `d` parameter in the BDLR method. 
+    /**
+     * It can be increased to get a better preconditioner at the expense of a 
+     * slower and more memory demanding solver. If the solver does not converge 
+     * as expected, it’s a good idea to increase this parameter.
+     * **Default:** 1
+     **/
     int fast_BoundaryDepth;
+    
     int fast_MaxRank;
+    
+    /// \brief This parameter can also be set using the PrecondTol parameter of 
+    /// the iterative_Solve function. 
+    /**
+     * Smaller values lead to a better preconditioner. Note that decreasing the 
+     * value of this parameter without sufficiently increasing the \ref fast_BoundaryDepth 
+     * parameter may result in a very inaccurate preconditioner. Decreasing this 
+     * value will result in a slower and more memory dependent preconditioner but 
+     * for some problems (specially unstructured grids), one needs to play with 
+     * this parameter to find the best value.
+     * **Default:** 1.e-1
+     **/
     double fast_LR_Tol;
+    
     double fast_MinPivot;
   };
   
   
-  /// \brief Base class for sparse Multi-Frontal solvers
-  class sparseMF{
-
+  /// \brief Base class for Sparse Multifrontal Solvers
+  class sparseMF
+  {
   public:
-
-    bool testResults;
-    bool printResultInfo;
-    
     /// default constructor
     sparseMF(Eigen::SparseMatrix<double>& inputSpMatrix);
     
@@ -64,11 +100,17 @@ namespace smf
 				    double LR_Tolerance);
 
     /// \brief In the case that you want to factorize multiple matrices with 
-    /// the same non-zero structore, you can update the values and perform
+    /// the same non-zero structure, you can update the values and perform
     /// the numerical facotrization only
     void updateNumericalEntries(Eigen::SparseMatrix<double> newMatrix);
 
+    /// set value of variable \ref printResultInfo
+    void setPrintResultInfo(bool v) { printResultInfo = v; }
+    
   private:
+    bool testResults;
+    bool printResultInfo;
+    
     Eigen::SparseMatrix<double> reorderedMatrix;
     Eigen::SparseMatrix<double> reorderedMatrix_T;
     Eigen::SparseMatrix<double> L_Matrix;
@@ -166,6 +208,8 @@ namespace smf
     /**************************************General Extend Add*************************************/
     std::vector<int> extendIdxVec(std::vector<int> & childIdxVec, std::vector<int> & parentIdxVec);
   };
+  
+  /** @}*/
 
 } // end namespace smf
   

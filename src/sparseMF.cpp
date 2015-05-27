@@ -102,14 +102,11 @@ namespace smf
     }
     
     SCOTCH_Graph* graphPtr = SCOTCH_graphAlloc();
-    assert_msg(graphPtr != NULL, 
-	      "Could not allocate graph.");
-    assert_msg(SCOTCH_graphInit(graphPtr) == 0, 
-	      "Could not initialize graph.");
+    assert_msg(graphPtr != NULL, "Could not allocate graph.");
+    assert_msg(SCOTCH_graphInit(graphPtr) == 0, "Could not initialize graph.");
     assert_msg(SCOTCH_graphBuild(graphPtr,baseval,vertnbr,verttab,verttab + 1,NULL,NULL,edgenbr,edgetab,NULL) ==0, 
 	      "Failed to build graph.");
-    assert_msg(SCOTCH_graphCheck(graphPtr) == 0, 
-	      "Graph inconsistent.");
+    assert_msg(SCOTCH_graphCheck(graphPtr) == 0, "Graph inconsistent.");
     t1.stop(); // matrixGraphConversionTime
 
     
@@ -121,14 +118,16 @@ namespace smf
     //******************** Order graph**********************                                                                                                                                                                   
     // Initialize ordering strategy                                                         
     SCOTCH_Strat* orderingStratPtr = SCOTCH_stratAlloc() ;
-    assert_msg(SCOTCH_stratInit(orderingStratPtr) == 0, "Could not initialize ordering strategy.");
+    assert_msg(SCOTCH_stratInit(orderingStratPtr) == 0, 
+	       "Could not initialize ordering strategy.");
     
     //std::string orderingStratStr = "n{sep=m{vert=50,low=h{pass=10},asc=f{bal=0.1}}|m{vert=50,low=h{pass=10},asc=f{bal=0.1}},ole=s,ose=g}";
     //std::string orderingStratStr = "n{sep=/(vert>2000)?m{vert=50,low=h{pass=10},asc=f{bal=0.1}}|m{vert=50,low=h{pass=10},asc=f{bal=0.1}};,ole=s,ose=g}"; 
     //std::string orderingStratStr =  "c{rat=0.7,cpr=n{sep=/(vert>120)?m{rat=0.8,vert=100,low=h{pass=10},asc=f{bal=0.2}}|m{rat=0.8,vert=100,low=h{pass=10},asc=f{bal=0.2}};,ole=f{cmin=0,cmax=100000,frat=0.0},ose=g},unc=n{sep=/(vert>120)?(m{rat=0.8,vert=100,low=h{pass=10},asc=f{bal=0.2}})|m{rat=0.8,vert=100,low=h{pass=10},asc=f{bal=0.2}};,ole=f{cmin=15,cmax=100000,frat=0.08},ose=g}}";
 
     std::string orderingStratStr =  "c{rat=0.7,cpr=n{sep=/(vert>120)?m{rat=0.8,vert=100,low=h{pass=10},asc=f{bal=0.2}}|m{rat=0.8,vert=100,low=h{pass=10},asc=f{bal=0.2}};,ole=f{cmin=0,cmax=100000,frat=0.0},ose=g},unc=n{sep=/(vert>120)?(m{rat=0.8,vert=100,low=h{pass=10},asc=f{bal=0.2}})|m{rat=0.8,vert=100,low=h{pass=10},asc=f{bal=0.2}};,ole=f{cmin=15,cmax=100000,frat=0.08},ose=g}}";
-    assert_msg(SCOTCH_stratGraphOrder(orderingStratPtr , orderingStratStr.c_str()) == 0, "Could not set strategy string.");
+    assert_msg(SCOTCH_stratGraphOrder(orderingStratPtr , orderingStratStr.c_str()) == 0, 
+	       "Could not set strategy string.");
   
     // Initialize variables                                                           
     SCOTCH_Num* permtab = (SCOTCH_Num*)calloc(numVertices,sizeof(SCOTCH_Num));
@@ -142,7 +141,8 @@ namespace smf
     Timer t2("SCOTCH_ReorderingTime");
     msg_dbg("reordering graph ...");
     
-    assert_msg(SCOTCH_graphOrder(graphPtr, orderingStratPtr, permtab, peritab, cblknbr, rangtab, treetab) == 0, "Graph ordering failed.");
+    assert_msg(SCOTCH_graphOrder(graphPtr, orderingStratPtr, permtab, peritab, cblknbr, rangtab, treetab) == 0, 
+	       "Graph ordering failed.");
     msg_dbg("reordering complete");
     t2.stop(); // SCOTCH_ReorderingTime
 
@@ -887,25 +887,25 @@ namespace smf
     Eigen::MatrixXd result = permuteRows(U_Soln,permVector,true);
     t.stop();
 
-    double LU_TotalTime = TimerMap::get("matrixReorderingTime") + 
-			  TimerMap::get("LU_FactorizationTime") + 
-			  TimerMap::get("symbolic_FactorizationTime") + 
-			  TimerMap::get("LU_AssemblyTime") + 
-			  TimerMap::get("LU_SolveTime") + t.elapsed();
+    double LU_TotalTime = get_time("matrixReorderingTime") + 
+			  get_time("LU_FactorizationTime") + 
+			  get_time("symbolic_FactorizationTime") + 
+			  get_time("LU_AssemblyTime") + 
+			  get_time("LU_SolveTime") + t.elapsed();
 
     if (printResultInfo){
       std::cout<<"**************************************************"<<std::endl;
       std::cout<<"Solver Type                           = "<<"LU"<<std::endl;
       std::cout<<"Average Large Front Size              = "<<averageLargeFrontSize<<std::endl;
       std::cout<<"Number of Large Fronts                = "<<numLargeFronts<<std::endl;
-      std::cout<<"Matrix Reordering Time                = "<<TimerMap::get("matrixReorderingTime")<<" seconds"<<std::endl;
-      std::cout<<"     Matrix Graph Conversion Time     = "<<TimerMap::get("matrixGraphConversionTime")<<" seconds"<<std::endl;
-      std::cout<<"     SCOTCH Reordering Time           = "<<TimerMap::get("SCOTCH_ReorderingTime")<<" seconds"<<std::endl;
-      std::cout<<"Factorization Time                    = "<<TimerMap::get("LU_FactorizationTime")<<" seconds"<<std::endl;
-      std::cout<<"     Extend Add Time                  = "<<TimerMap::get("LU_ExtendAddTime")<<" seconds"<<std::endl;   
-      std::cout<<"Symbolic Factorization Time           = "<<TimerMap::get("symbolic_FactorizationTime")<<" seconds"<<std::endl;
-      std::cout<<"LU Assembly Time                      = "<<TimerMap::get("LU_AssemblyTime")<<" seconds"<<std::endl;
-      std::cout<<"Solve Time                            = "<<TimerMap::get("LU_SolveTime")<<" seconds"<<std::endl;
+      std::cout<<"Matrix Reordering Time                = "<<get_time("matrixReorderingTime")<<" seconds"<<std::endl;
+      std::cout<<"     Matrix Graph Conversion Time     = "<<get_time("matrixGraphConversionTime")<<" seconds"<<std::endl;
+      std::cout<<"     SCOTCH Reordering Time           = "<<get_time("SCOTCH_ReorderingTime")<<" seconds"<<std::endl;
+      std::cout<<"Factorization Time                    = "<<get_time("LU_FactorizationTime")<<" seconds"<<std::endl;
+      std::cout<<"     Extend Add Time                  = "<<get_time("LU_ExtendAddTime")<<" seconds"<<std::endl;   
+      std::cout<<"Symbolic Factorization Time           = "<<get_time("symbolic_FactorizationTime")<<" seconds"<<std::endl;
+      std::cout<<"LU Assembly Time                      = "<<get_time("LU_AssemblyTime")<<" seconds"<<std::endl;
+      std::cout<<"Solve Time                            = "<<get_time("LU_SolveTime")<<" seconds"<<std::endl;
       std::cout<<"Total Solve Time                      = "<<LU_TotalTime<<" seconds"<<std::endl;
       std::cout<<"Residual l2 Relative Error            = "<<((reorderedMatrix * U_Soln) - permutedRHS).norm()/permutedRHS.norm()<<std::endl;
     }
@@ -933,10 +933,10 @@ namespace smf
     Eigen::MatrixXd result = permuteRows(finalSoln,permVector,true);
     t.stop();
   
-    double implicit_TotalTime = TimerMap::get("matrixReorderingTime") + 
-				TimerMap::get("implicit_FactorizationTime") + 
-				TimerMap::get("symbolic_FactorizationTime") + 
-				TimerMap::get("implicit_SolveTime") + t.elapsed();
+    double implicit_TotalTime = get_time("matrixReorderingTime") + 
+				get_time("implicit_FactorizationTime") + 
+				get_time("symbolic_FactorizationTime") + 
+				get_time("implicit_SolveTime") + t.elapsed();
     
     if (printResultInfo){
       std::cout<<"**************************************************"<<std::endl;
@@ -944,13 +944,13 @@ namespace smf
       std::cout<<"Average Large Front Size              = "<<averageLargeFrontSize<<std::endl;
       std::cout<<"Number of Large Fronts                = "<<numLargeFronts<<std::endl;
       std::cout<<"Low-Rank Tolerance                    = "<<options.fast_LR_Tol<<std::endl;
-      std::cout<<"Matrix Reordering Time                = "<<TimerMap::get("matrixReorderingTime")<<" seconds"<<std::endl;
-      std::cout<<"     Matrix Graph Conversion Time     = "<<TimerMap::get("matrixGraphConversionTime")<<" seconds"<<std::endl;
-      std::cout<<"     SCOTCH Reordering Time           = "<<TimerMap::get("SCOTCH_ReorderingTime")<<" seconds"<<std::endl;
-      std::cout<<"Factorization Time                    = "<<TimerMap::get("implicit_FactorizationTime")<<" seconds"<<std::endl;
-      std::cout<<"     Extend Add Time                  = "<<TimerMap::get("implicit_ExtendAddTime")<<" seconds"<<std::endl;   
-      std::cout<<"Symbolic Factorization Time           = "<<TimerMap::get("symbolic_FactorizationTime")<<" seconds"<<std::endl;
-      std::cout<<"Solve Time                            = "<<TimerMap::get("implicit_SolveTime")<<" seconds"<<std::endl;
+      std::cout<<"Matrix Reordering Time                = "<<get_time("matrixReorderingTime")<<" seconds"<<std::endl;
+      std::cout<<"     Matrix Graph Conversion Time     = "<<get_time("matrixGraphConversionTime")<<" seconds"<<std::endl;
+      std::cout<<"     SCOTCH Reordering Time           = "<<get_time("SCOTCH_ReorderingTime")<<" seconds"<<std::endl;
+      std::cout<<"Factorization Time                    = "<<get_time("implicit_FactorizationTime")<<" seconds"<<std::endl;
+      std::cout<<"     Extend Add Time                  = "<<get_time("implicit_ExtendAddTime")<<" seconds"<<std::endl;   
+      std::cout<<"Symbolic Factorization Time           = "<<get_time("symbolic_FactorizationTime")<<" seconds"<<std::endl;
+      std::cout<<"Solve Time                            = "<<get_time("implicit_SolveTime")<<" seconds"<<std::endl;
       std::cout<<"Total Solve Time                      = "<<implicit_TotalTime<<" seconds"<<std::endl;
       std::cout<<"Residual l2 Relative Error            = "<<((reorderedMatrix * finalSoln) - permutedRHS).norm()/permutedRHS.norm()<<std::endl;
     }
@@ -978,10 +978,10 @@ namespace smf
     Eigen::MatrixXd result = permuteRows(finalSoln,permVector,true);
     t.stop();
   
-    double fast_TotalTime = TimerMap::get("matrixReorderingTime") + 
-			    TimerMap::get("fast_FactorizationTime") + 
-			    TimerMap::get("symbolic_FactorizationTime") + 
-			    TimerMap::get("fast_SolveTime") + t.elapsed();
+    double fast_TotalTime = get_time("matrixReorderingTime") + 
+			    get_time("fast_FactorizationTime") + 
+			    get_time("symbolic_FactorizationTime") + 
+			    get_time("fast_SolveTime") + t.elapsed();
     
     if (printResultInfo == true){
       std::cout<<"**************************************************"<<std::endl;
@@ -990,13 +990,13 @@ namespace smf
       std::cout<<"Number of Large Fronts                = "<<numLargeFronts<<std::endl;
       std::cout<<"Low-Rank Tolerance                    = "<<options.fast_LR_Tol<<std::endl;
       std::cout<<"Boundary Depth                        = "<<options.fast_BoundaryDepth<<std::endl;
-      std::cout<<"Matrix Reordering Time                = "<<TimerMap::get("matrixReorderingTime")<<" seconds"<<std::endl;
-      std::cout<<"     Matrix Graph Conversion Time     = "<<TimerMap::get("matrixGraphConversionTime")<<" seconds"<<std::endl;
-      std::cout<<"     SCOTCH Reordering Time           = "<<TimerMap::get("SCOTCH_ReorderingTime")<<" seconds"<<std::endl;
-      std::cout<<"Factorization Time                    = "<<TimerMap::get("fast_FactorizationTime")<<" seconds"<<std::endl;
-      std::cout<<"     Extend Add Time                  = "<<TimerMap::get("fast_ExtendAddTime")<<" seconds"<<std::endl;   
-      std::cout<<"Symbolic Factorization Time           = "<<TimerMap::get("symbolic_FactorizationTime")<<" seconds"<<std::endl;
-      std::cout<<"Solve Time                            = "<<TimerMap::get("fast_SolveTime")<<" seconds"<<std::endl;
+      std::cout<<"Matrix Reordering Time                = "<<get_time("matrixReorderingTime")<<" seconds"<<std::endl;
+      std::cout<<"     Matrix Graph Conversion Time     = "<<get_time("matrixGraphConversionTime")<<" seconds"<<std::endl;
+      std::cout<<"     SCOTCH Reordering Time           = "<<get_time("SCOTCH_ReorderingTime")<<" seconds"<<std::endl;
+      std::cout<<"Factorization Time                    = "<<get_time("fast_FactorizationTime")<<" seconds"<<std::endl;
+      std::cout<<"     Extend Add Time                  = "<<get_time("fast_ExtendAddTime")<<" seconds"<<std::endl;   
+      std::cout<<"Symbolic Factorization Time           = "<<get_time("symbolic_FactorizationTime")<<" seconds"<<std::endl;
+      std::cout<<"Solve Time                            = "<<get_time("fast_SolveTime")<<" seconds"<<std::endl;
       std::cout<<"Total Solve Time                      = "<<fast_TotalTime<<" seconds"<<std::endl;
       std::cout<<"Residual l2 Relative Error            = "<<((reorderedMatrix * finalSoln) - permutedRHS).norm()/permutedRHS.norm()<<std::endl;
     }
@@ -1181,22 +1181,20 @@ namespace smf
   Eigen::MatrixXd sparseMF::fast_NodeToUpdateMultiply(eliminationTree::node* root,
 						      const Eigen::MatrixXd& RHS)
   {
-    if (root->nodeToUpdate_LR == false){
+    if (!root->nodeToUpdate_LR)
       return root->nodeToUpdate_U * RHS;
-    }else{
+    else
       return root->nodeToUpdate_U * ((root->nodeToUpdate_V.transpose()) * RHS);
-    }
   }
 
 
   Eigen::MatrixXd sparseMF::fast_UpdateToNodeMultiply(eliminationTree::node* root,
 						      const Eigen::MatrixXd& RHS)
   {
-    if (root->updateToNode_LR == false){
+    if (!root->updateToNode_LR)
       return root->updateToNode_U * RHS;
-    }else{
+    else
       return root->updateToNode_U * ((root->updateToNode_V.transpose()) * RHS);
-    }
   }
 
 
@@ -1204,7 +1202,7 @@ namespace smf
 					   const Eigen::MatrixXd & RHS)
   {
     Eigen::MatrixXd result;
-    if (root->criterion == true)
+    if (root->criterion)
       result = (root->fast_NodeMatrix_HODLR).recLU_Solve(RHS);
     else
       result = (root->nodeMatrix_LU).solve(RHS);
@@ -1241,13 +1239,13 @@ namespace smf
     Eigen_IML_Vector x0(init_Guess);
     Eigen_IML_Vector RHS(inputRHS);
     double tol = stopTolerance;
-    int GMRESResult = 0, maxit = maxIterations,restart = 32;
+    int maxit = maxIterations,restart = 32;
     Eigen::MatrixXd H =Eigen::MatrixXd::Zero(restart+1,restart);
     Eigen::SparseMatrix<double> origMatrix = permuteRows(reorderedMatrix,permVector,true);
     origMatrix = origMatrix.transpose();
     origMatrix = (permuteRows(origMatrix,permVector,true)).transpose();
     
-    GMRESResult = GMRES(origMatrix,x0,RHS,*this,H,restart,maxit,tol);
+    int GMRESResult = GMRES(origMatrix,x0,RHS,*this,H,restart,maxit,tol);
     int num_Iter = maxit;
     t.stop();
     
@@ -1261,12 +1259,12 @@ namespace smf
       std::cout<<"Number of Large Fronts                = "<<numLargeFronts<<std::endl;
       std::cout<<"Low-Rank Tolerance                    = "<<options.fast_LR_Tol<<std::endl;
       std::cout<<"Boundary Depth                        = "<<options.fast_BoundaryDepth<<std::endl;
-      std::cout<<"Matrix Reordering Time                = "<<TimerMap::get("matrixReorderingTime")<<" seconds"<<std::endl;
-      std::cout<<"     Matrix Graph Conversion Time     = "<<TimerMap::get("matrixGraphConversionTime")<<" seconds"<<std::endl;
-      std::cout<<"     SCOTCH Reordering Time           = "<<TimerMap::get("SCOTCH_ReorderingTime")<<" seconds"<<std::endl;
-      std::cout<<"Factorization Time                    = "<<TimerMap::get("fast_FactorizationTime")<<" seconds"<<std::endl;
-      std::cout<<"     Extend Add Time                  = "<<TimerMap::get("fast_ExtendAddTime")<<" seconds"<<std::endl;   
-      std::cout<<"Symbolic Factorization Time           = "<<TimerMap::get("symbolic_FactorizationTime")<<" seconds"<<std::endl;
+      std::cout<<"Matrix Reordering Time                = "<<get_time("matrixReorderingTime")<<" seconds"<<std::endl;
+      std::cout<<"     Matrix Graph Conversion Time     = "<<get_time("matrixGraphConversionTime")<<" seconds"<<std::endl;
+      std::cout<<"     SCOTCH Reordering Time           = "<<get_time("SCOTCH_ReorderingTime")<<" seconds"<<std::endl;
+      std::cout<<"Factorization Time                    = "<<get_time("fast_FactorizationTime")<<" seconds"<<std::endl;
+      std::cout<<"     Extend Add Time                  = "<<get_time("fast_ExtendAddTime")<<" seconds"<<std::endl;   
+      std::cout<<"Symbolic Factorization Time           = "<<get_time("symbolic_FactorizationTime")<<" seconds"<<std::endl;
       std::cout<<"Num Iterations                        = "<<num_Iter<<std::endl;
       std::cout<<"Total Solve Time                      = "<<t.elapsed()<<" seconds"<<std::endl;
       std::cout<<"Residual l2 Relative Error            = "<<tol<<std::endl;
